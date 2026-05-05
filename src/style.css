@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --rounded-btn: .5rem;
+    background-color: black
+}
+
+html {
+  height: -webkit-fill-available; /* For iOS compatibility */
+}
+
+body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available; /* For iOS compatibility */
+  overflow-x: hidden; 
+}
+
+.swv-dropdown {
+  @apply w-full rounded-xl !important;
+}
+
+.swv-button {
+  @apply rounded-xl w-full !important;
+}
+
+.swv-button-trigger {
+  @apply bg-neutral-900/30 border border-white/[0.05] justify-center 
+         text-neutral-300 hover:bg-white/[0.03] hover:text-white 
+         rounded-xl text-sm font-orbitron transition-all duration-200 
+         backdrop-blur-xl !important;
+}
+
+.swv-dropdown-list {
+  @apply top-auto bottom-full md:top-full md:bottom-auto md:left-0 md:right-auto 
+         rounded-xl text-neutral-300 bg-neutral-900/95 backdrop-blur-xl 
+         border border-white/[0.05] font-orbitron !important;
+}
+
+.swv-dropdown-list-active {
+  @apply transform -translate-y-3 md:translate-y-3 
+         bg-neutral-900/95 font-orbitron rounded-xl !important;
+}
+
+.swv-modal-wrapper {
+  @apply bg-neutral-900/95 font-orbitron backdrop-blur-xl 
+         rounded-xl border border-white/[0.05] !important;
+}
+
+.wallet-adapter-button-trigger {
+  @apply rounded-xl !important;
+}
+
+@font-face {
+  font-family: 'Orbitron';
+  src: url('./assets/fonts/Orbitron.ttf');
+}
+
+.font-orbitron {
+  font-family: 'Orbitron', sans-serif;
+}
+
+@font-face {
+  font-family: 'OpenSans';
+  src: url('./assets/fonts/OpenSans.ttf');
+}
+
+.font-opensans {
+  font-family: 'OpenSans', sans-serif;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('./assets/fonts/RobotoCondensed.ttf');
+}
+
+.font-roboto {
+  font-family: 'Roboto', sans-serif;
+}
+
+@font-face {
+  font-family: 'Exo2';
+  src: url('./assets/fonts/Exo2.ttf');
+}
+
+.font-exo {
+  font-family: 'Exo2', sans-serif;
+}
+
+.overflow-fix {
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.container {
+  width: 100%;
+  max-width: 100vw;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+

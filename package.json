@@ -1,0 +1,38 @@
+{
+  "name": "shizzle",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@metaplex-foundation/js": "^0.19.4",
+    "@solana/wallet-adapter-base": "^0.9.23",
+    "@solana/wallet-adapter-vue": "^0.4.5",
+    "@solana/wallet-adapter-wallets": "^0.19.30",
+    "@solana/web3.js": "^1.77.3",
+    "aos": "^2.3.4",
+    "axios": "^1.6.7",
+    "gsap": "^3.12.5",
+    "sass": "^1.71.1",
+    "sass-loader": "^14.1.1",
+    "solana-wallets-vue": "^0.6.1",
+    "tailwind": "^4.0.0",
+    "vue": "^3.2.47",
+    "vue-router": "^4.3.0"
+  },
+  "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@vitejs/plugin-vue": "^4.1.0",
+    "assert": "^2.0.0",
+    "crypto-browserify": "^3.12.0",
+    "daisyui": "^3.0.0",
+    "rollup-plugin-node-polyfills": "^0.2.1",
+    "tailwindcss": "^3.3.2",
+    "util": "^0.12.5",
+    "vite": "^4.3.9"
+  }
+}
