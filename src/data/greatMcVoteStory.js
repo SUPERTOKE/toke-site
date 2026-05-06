@@ -1,6 +1,7 @@
 import graph1 from '../assets/graph1.png';
 import mcVote2025 from '../assets/McVote_2025_Results.png';
 import mcVote2026 from '../assets/McVote_2026_Results.png';
+import vault from '../assets/vault.png';
 
 /** Total scroll track height (viewport units) for the pinned scrolly section */
 export const SCROLL_VH = 300;
@@ -10,43 +11,63 @@ export const FINALE_CTA_HREF = 'https://explorer.mctoken.xyz/';
 
 export const STEPS = [
   {
+    id: 'step0',
+    label: 'Three years. One mission.',
+    headline: 'The McVault',
+    body: [
+      'Idiot devs locked 7% of the supply total $TOKE supply.',
+      '60% quorum YES votes required to unlock.',
+      '1 $TOKE = 1 McVote.',
+    ],
+    emphasisLine: 'The Great McVote was held annually on 4/20.',
+    actionLabel: 'McVAULT',
+    actionHref: 'https://app.realms.today/dao/BEmzTQaiwyj69uvxmdL9fSEuETg9vsVrRDAkmDE1HWTD/treasury/v2',
+    image: vault,
+  },
+  {
     id: 'step1',
-    label: 'McVote #1',
-    headline: 'The Great McVote 2024',
+    label: 'April 20, 2024',
+    headline: 'Great McVote #1',
     body: [
       'The first Great McVote set the tone for what was possible.',
       'Strong participation kicked off the campaign and rallied the DAO.',
       'This round became the launch point for everything that followed.',
     ],
-    uniqueVoters: 34,
-    resultsHref: 'https://v2.realms.today/dao/BEmzTQaiwyj69uvxmdL9fSEuETg9vsVrRDAkmDE1HWTD/proposal/9VzHbqA9WoiXnyw1DxBT9oDW6RTUcaEgU9gpPgCM3qJ5',
+    metricLabel: 'Unique Voters:',
+    metricValue: '34',
+    actionLabel: 'Results',
+    actionHref: 'https://v2.realms.today/dao/BEmzTQaiwyj69uvxmdL9fSEuETg9vsVrRDAkmDE1HWTD/proposal/9VzHbqA9WoiXnyw1DxBT9oDW6RTUcaEgU9gpPgCM3qJ5',
     image: graph1,
   },
   {
     id: 'step2',
-    label: 'McVote #2',
-    headline: 'The Great McVote 2025',
+    label: 'April 20, 2025',
+    headline: 'Great McVote #2',
     body: [
       'Momentum accelerated as more holders joined the mission.',
       'Participation climbed and conviction across the community deepened.',
       'The path to opening the vault became clearer with each vote.',
     ],
-    uniqueVoters: 47,
-    resultsHref: 'https://v2.realms.today/dao/BEmzTQaiwyj69uvxmdL9fSEuETg9vsVrRDAkmDE1HWTD/proposal/GHq9epLWw5823Pwr8XGHmD6esrAq5FVzpaToYC1KxKKS',
+    metricLabel: 'Unique Voters:',
+    metricValue: '47',
+    actionLabel: 'Results',
+    actionHref: 'https://v2.realms.today/dao/BEmzTQaiwyj69uvxmdL9fSEuETg9vsVrRDAkmDE1HWTD/proposal/GHq9epLWw5823Pwr8XGHmD6esrAq5FVzpaToYC1KxKKS',
     image: mcVote2025,
   },
   {
     id: 'step3',
-    label: 'McVote #3',
-    headline: 'The Great McVote 2026',
+    label: 'April 20, 2026',
+    headline: 'Great McVote #3',
     body: [
       'The final push delivered a historic community result.',
       'Participation stayed high and quorum was decisively cleared.',
       '69% voted YES.',
-      '6.78% of supply—unlocked.',
+      '7% of supply—unlocked.',
     ],
-    uniqueVoters: 44,
-    resultsHref: 'https://v2.realms.today/dao/BEmzTQaiwyj69uvxmdL9fSEuETg9vsVrRDAkmDE1HWTD/proposal/5gJbKW2VsuPU2PmcVj9eJf6yW35CQksgvaz4viHAWA4z',
+    metricLabel: 'Unique Voters:',
+    metricValue: '44',
+    actionLabel: 'Results',
+    actionHref: 'https://v2.realms.today/dao/BEmzTQaiwyj69uvxmdL9fSEuETg9vsVrRDAkmDE1HWTD/proposal/5gJbKW2VsuPU2PmcVj9eJf6yW35CQksgvaz4viHAWA4z',
     image: mcVote2026,
   },
 ];
