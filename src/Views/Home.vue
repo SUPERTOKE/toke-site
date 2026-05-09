@@ -8,7 +8,7 @@ import Timeline from '../Components/Home/Timeline.vue'
 import GenesisEra from '../Components/Home/GenesisEra.vue'
 import EcosystemEra from '../Components/Home/EcosystemEra.vue';
 import GreatMcVoteScrolly from '../Components/Home/GreatMcVoteScrolly.vue';
-import { fetchLiveStatsPayload, statNum } from '../utils/statsApi';
+import { fetchLiveStatsPayload, statNum, formatMarketCapDisplay } from '../utils/statsApi';
 
 let heroStatsIntervalId = null;
 
@@ -30,16 +30,6 @@ const formatHolderStat = (value) => {
   }).format(value);
 };
 
-/** Same display rules as the navbar — `/api/toke-stats` marketCap + 3 decimal places */
-const formatMarketCapStat = (marketCapNumber) => {
-  if (!Number.isFinite(marketCapNumber) || marketCapNumber <= 0) return '—';
-  const formattedValue = new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 3,
-    maximumFractionDigits: 3
-  }).format(marketCapNumber);
-  return `$${formattedValue}`;
-};
-
 const totalSupplyStat = ref('—');
 const holdersStat = ref('—');
 const marketCapStat = ref('—');
@@ -52,7 +42,7 @@ const fetchHeroStats = async () => {
     ]);
 
     const marketCap = statNum(payload?.marketCap);
-    marketCapStat.value = formatMarketCapStat(marketCap);
+    marketCapStat.value = formatMarketCapDisplay(marketCap);
 
     if (path === '/api/toke-price') {
       totalSupplyStat.value = '—';

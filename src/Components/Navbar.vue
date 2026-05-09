@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref, onBeforeUnmount } from 'vue'
-import { fetchLiveStatsPayload, statNum } from '../utils/statsApi'
+import { fetchLiveStatsPayload, statNum, formatMarketCapDisplay } from '../utils/statsApi'
 
 const tokePrice = ref('—')
 const lastKnownPrice = ref(null)
@@ -22,17 +22,6 @@ const formatPrice = (priceNumber) => {
     return `$${priceNumber.toExponential(2)}`
 }
 
-const formatMarketCap = (marketCapNumber) => {
-    if (!Number.isFinite(marketCapNumber) || marketCapNumber <= 0) return '—'
-
-    const formattedValue = new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 3,
-        maximumFractionDigits: 3
-    }).format(marketCapNumber)
-
-    return `$${formattedValue}`
-}
-
 /** Prefer `/api/toke-stats`; fall back to `/api/toke-price` (same numeric snapshot, no holder RPC). */
 const fetchLiveStats = async () => {
     try {
@@ -48,7 +37,7 @@ const fetchLiveStats = async () => {
         }
 
         const formattedPrice = formatPrice(priceNumber)
-        const formattedMarketCap = formatMarketCap(marketCapNumber)
+        const formattedMarketCap = formatMarketCapDisplay(marketCapNumber)
         tokePrice.value = formattedPrice
         tokeMarketCap.value = formattedMarketCap
         lastKnownPrice.value = formattedPrice
