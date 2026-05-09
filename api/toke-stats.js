@@ -3,32 +3,9 @@ import { fetchTokeLiveMarket, TOKE_MINT, parseU64LE } from './tokeSnapshotShared
 
 const TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com';
-const JUPITER_TOKEN_SEARCH = 'https://lite-api.jup.ag/tokens/v2/search';
-/** Holders need on-chain enumeration + Jupiter can lag; allow RPC time after market snapshot. */
+/** Holders: on-chain only (no Jupiter index — its holderCount is stale and caused UI jumps). */
 const REQUEST_TIMEOUT_MS = 45000;
 const HOLDER_RPC_TIMEOUT_MS = 32000;
-const HOLDER_JUPITER_TIMEOUT_MS = 10000;
-
-/**
- * Jupiter token index (same tooling as swaps). Reliable vs public RPC getProgramAccounts (often 429).
- */
-async function getHolderCountFromJupiter(signal) {
-  const url = `${JUPITER_TOKEN_SEARCH}?query=${encodeURIComponent(TOKE_MINT)}`;
-  const res = await fetch(url, {
-    signal,
-    headers: { Accept: 'application/json' }
-  });
-  if (!res.ok) {
-    return null;
-  }
-  const data = await res.json();
-  if (!Array.isArray(data)) {
-    return null;
-  }
-  const token = data.find((t) => t?.id === TOKE_MINT);
-  const n = Number(token?.holderCount);
-  return Number.isFinite(n) && n >= 0 ? Math.round(n) : null;
-}
 
 async function rpcRequest(method, params, signal) {
   const response = await fetch(SOLANA_RPC_URL, {
@@ -108,25 +85,14 @@ export default async function handler(req, res) {
     // Price / mcap / supply first — must not share fate with heavy holder RPC (often slow or rate-limited).
     const live = await fetchTokeLiveMarket(controller.signal);
 
-    // Jupiter `holderCount` is often stale; prefer on-chain count when RPC succeeds (429/timeout → Jupiter).
     let holderCount = null;
     try {
       const rpcAbort = new AbortController();
-      const jupAbort = new AbortController();
       const rpcTimer = setTimeout(() => rpcAbort.abort(), HOLDER_RPC_TIMEOUT_MS);
-      const jupTimer = setTimeout(() => jupAbort.abort(), HOLDER_JUPITER_TIMEOUT_MS);
-
-      const [rpcHolders, jupHolders] = await Promise.all([
-        getHolderCount(rpcAbort.signal).catch(() => null),
-        getHolderCountFromJupiter(jupAbort.signal).catch(() => null)
-      ]);
+      holderCount = await getHolderCount(rpcAbort.signal).catch(() => null);
       clearTimeout(rpcTimer);
-      clearTimeout(jupTimer);
-
-      if (Number.isFinite(rpcHolders) && rpcHolders >= 0) {
-        holderCount = rpcHolders;
-      } else if (Number.isFinite(jupHolders) && jupHolders >= 0) {
-        holderCount = jupHolders;
+      if (!Number.isFinite(holderCount) || holderCount < 0) {
+        holderCount = null;
       }
     } catch (holderErr) {
       console.error('[toke-stats] holderCount:', holderErr?.message ?? holderErr);

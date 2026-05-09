@@ -37,12 +37,20 @@ const fetchLiveStats = async () => {
         }
 
         const formattedPrice = formatPrice(priceNumber)
-        const formattedMarketCap = formatMarketCapDisplay(marketCapNumber)
+        const freshMarketCap = formatMarketCapDisplay(marketCapNumber)
         tokePrice.value = formattedPrice
-        tokeMarketCap.value = formattedMarketCap
         lastKnownPrice.value = formattedPrice
-        lastKnownMarketCap.value = formattedMarketCap
-        isPriceStale.value = false
+
+        if (freshMarketCap !== '—') {
+            tokeMarketCap.value = freshMarketCap
+            lastKnownMarketCap.value = freshMarketCap
+        } else if (lastKnownMarketCap.value) {
+            tokeMarketCap.value = lastKnownMarketCap.value
+        } else {
+            tokeMarketCap.value = '—'
+        }
+
+        isPriceStale.value = freshMarketCap === '—'
     } catch (error) {
         console.error('Error fetching live stats:', error);
 

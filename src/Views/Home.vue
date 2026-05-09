@@ -34,6 +34,10 @@ const totalSupplyStat = ref('—');
 const holdersStat = ref('—');
 const marketCapStat = ref('—');
 
+const lastKnownSupply = ref(null);
+const lastKnownHolders = ref(null);
+const lastKnownMcap = ref(null);
+
 const fetchHeroStats = async () => {
   try {
     const { data: payload, path } = await fetchLiveStatsPayload([
@@ -42,26 +46,55 @@ const fetchHeroStats = async () => {
     ]);
 
     const marketCap = statNum(payload?.marketCap);
-    marketCapStat.value = formatMarketCapDisplay(marketCap);
+    const freshMcap = formatMarketCapDisplay(marketCap);
+    if (freshMcap !== '—') {
+      marketCapStat.value = freshMcap;
+      lastKnownMcap.value = freshMcap;
+    } else if (lastKnownMcap.value) {
+      marketCapStat.value = lastKnownMcap.value;
+    } else {
+      marketCapStat.value = '—';
+    }
 
     if (path === '/api/toke-price') {
-      totalSupplyStat.value = '—';
-      holdersStat.value = '—';
+      if (lastKnownSupply.value) totalSupplyStat.value = lastKnownSupply.value;
+      if (lastKnownHolders.value) holdersStat.value = lastKnownHolders.value;
       return;
     }
 
     const totalSupply = statNum(payload?.totalSupply);
-    totalSupplyStat.value = formatSupplyStat(totalSupply) ?? '—';
+    const supplyFmt = formatSupplyStat(totalSupply);
+    if (supplyFmt) {
+      totalSupplyStat.value = supplyFmt;
+      lastKnownSupply.value = supplyFmt;
+    } else if (lastKnownSupply.value) {
+      totalSupplyStat.value = lastKnownSupply.value;
+    } else {
+      totalSupplyStat.value = '—';
+    }
 
     const rawHolders = payload?.holderCount;
     if (rawHolders != null && rawHolders !== '') {
       const n = statNum(rawHolders);
-      holdersStat.value = formatHolderStat(n) ?? '—';
+      const holderFmt = formatHolderStat(n);
+      if (holderFmt != null) {
+        holdersStat.value = holderFmt;
+        lastKnownHolders.value = holderFmt;
+      } else if (lastKnownHolders.value) {
+        holdersStat.value = lastKnownHolders.value;
+      } else {
+        holdersStat.value = '—';
+      }
+    } else if (lastKnownHolders.value) {
+      holdersStat.value = lastKnownHolders.value;
     } else {
       holdersStat.value = '—';
     }
   } catch (error) {
     console.error('Error fetching hero stats:', error);
+    if (lastKnownMcap.value) marketCapStat.value = lastKnownMcap.value;
+    if (lastKnownSupply.value) totalSupplyStat.value = lastKnownSupply.value;
+    if (lastKnownHolders.value) holdersStat.value = lastKnownHolders.value;
   }
 };
 
