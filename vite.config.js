@@ -7,6 +7,15 @@ import nodePolyfills from "rollup-plugin-node-polyfills";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  server: {
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_ORIGIN || 'https://mctoken.xyz',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
   resolve: {
     alias: {
       stream: "rollup-plugin-node-polyfills/polyfills/stream",

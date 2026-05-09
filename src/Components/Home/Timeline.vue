@@ -10,7 +10,7 @@ onMounted(() => {
 
 <template>
   <!-- Roadmap Section -->
-  <div class="relative" id="Redacted">
+  <div class="relative scroll-mt-20" id="Timeline">
     <!-- Background Effects -->
     <div class="absolute inset-0 bg-gradient-to-b from-neutral-900/80 to-neutral-950/80">
       <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]">
@@ -22,12 +22,9 @@ onMounted(() => {
     <div class="relative container mx-auto px-6 py-32 pb-48">
       <!-- Section Title -->
       <div class="text-center mb-16">
-        <p class="font-orbitron text-6xl font-semibold text-center pb-3 relative">
+        <p class="font-orbitron text-3xl sm:text-5xl md:text-6xl font-semibold text-center pb-3 relative leading-tight">
           <span class="text-white">
-            <span class="bg-neutral-800 hover:bg-neutral-700/50 cursor-pointer select-none transition-all duration-300 rounded px-3 py-1">
-              <span class="text-transparent hover:text-neutral-300/30 transition-all duration-300">???</span>
-            </span>
-            <span class="text-white"> ERA</span>
+            <span class="text-white">TOKEVERSE BUILDS</span>
           </span>
         </p>
         <!-- <p class="text-neutral-400 font-exo max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">

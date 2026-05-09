@@ -23,8 +23,8 @@ onMounted(async () => {
                 
                 <!-- Text with gradient clip mask -->
                 <div class="flex items-center justify-center gap-4">
-                    <p class="font-orbitron text-6xl font-semibold text-start md:text-center pt-1 relative">
-                        <span class="text-white">G<span class="text-5xl">ENESIS</span> E<span class="text-5xl">RA</span></span>
+                    <p class="font-orbitron text-3xl sm:text-5xl md:text-6xl font-semibold text-start md:text-center pt-1 relative leading-tight">
+                        <span class="text-white">G<span class="text-2xl sm:text-4xl md:text-5xl">ENESIS</span> E<span class="text-2xl sm:text-4xl md:text-5xl">RA</span></span>
                     </p>
                     <div class="relative w-12 h-12 flex items-center justify-center hidden md:flex">
                         <div class="absolute inset-0 bg-gradient-to-r from-sky-500/20 to-indigo-500/20 rounded-full blur-xl"></div>
@@ -58,7 +58,7 @@ onMounted(async () => {
             <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500/5 rounded-full filter blur-3xl 
                         md:-left-24 left-[-50%]"></div>
 
-            <div class="relative container mx-auto px-6 py-24 lg:py-24">
+            <div class="relative container mx-auto px-4 sm:px-6 py-20 md:py-24 lg:py-24">
                 <div class="grid lg:grid-cols-3 gap-12">
                     <!-- Tokenomics Card -->
                     <div class="group bg-neutral-900/30 backdrop-blur-xl rounded-2xl border border-white/[0.05] 
@@ -101,7 +101,7 @@ onMounted(async () => {
 
                         <!-- Card Footer - Standardized Button Container -->
                         <div class="mt-auto py-8 px-5 pt-4">
-                            <div class="grid grid-cols-3 gap-4">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                                 <a href="https://solscan.io/token/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo" target="_blank"
                                     class="group relative px-4 py-3 bg-neutral-900/50 hover:bg-neutral-800/50 rounded-xl transition-all duration-300">
                                     <div class="absolute inset-0 bg-sky-500/10 rounded-xl blur-md group-hover:bg-sky-500/20 transition-all duration-300"></div>
@@ -169,8 +169,8 @@ onMounted(async () => {
 
                         <!-- Card Footer - Standardized Button Container -->
                         <div class="mt-auto p-8 pt-4">
-                            <div class="grid grid-cols-3 gap-4">
-                                <a href="https://x.com/TokeCommunity" target="_blank"
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                                <a href="https://verified.jup.ag/dashboard/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo" target="_blank"
                                     class="group relative px-4 py-3 bg-neutral-900/50 hover:bg-neutral-800/50 rounded-xl transition-all duration-300">
                                     <div class="absolute inset-0 bg-neutral-600/10 rounded-xl blur-md group-hover:bg-neutral-600/20 transition-all duration-300"></div>
                                     <button class="relative flex items-center justify-center w-full">
@@ -179,7 +179,7 @@ onMounted(async () => {
                                         </svg>
                                     </button>
                                 </a>
-                                <a href="https://discord.gg/TokeCommunity" target="_blank"
+                                <a href="https://discord.com/invite/gTYuUCthvC" target="_blank"
                                     class="group relative px-4 py-3 bg-neutral-900/50 hover:bg-neutral-800/50 rounded-xl transition-all duration-300">
                                     <div class="absolute inset-0 bg-indigo-500/10 rounded-xl blur-md group-hover:bg-indigo-500/20 transition-all duration-300"></div>
                                     <button class="relative flex items-center justify-center w-full">
@@ -228,22 +228,25 @@ onMounted(async () => {
                                 </p>
                                 <p data-aos="fade-in" data-aos-duration="1000" data-aos-delay="400" class="flex items-center gap-3">
                                     <span class="text-sky-500 text-xl leading-none">•</span> 
-                                    <span><span class="text-white font-semibold">McVault can only be opened by McVoters</span></span>
+                                    <span><span class="text-white font-semibold">Annual Great McVotes shaped whether it opened</span></span>
                                 </p>
                                 <p data-aos="fade-in" data-aos-duration="1000" data-aos-delay="500" class="flex items-center gap-3">
                                     <span class="text-sky-500 text-xl leading-none">•</span> 
-                                    <span><span class="text-white font-semibold">60% of $TOKE supply must vote Yes</span></span>
+                                    <span><span class="text-white font-semibold">60% YES quorum was required to unlock</span></span>
                                 </p>
                                 <p data-aos="fade-in" data-aos-duration="1000" data-aos-delay="600" class="flex items-center gap-3">
                                     <span class="text-sky-500 text-xl leading-none">•</span> 
                                     <span><span class="text-white font-semibold">1 $TOKE = 1 McVote</span></span>
+                                </p>
+                                <p class="text-neutral-500 text-sm pt-2 font-exo leading-snug">
+                                    The three-year arc lives below—then the vault, then whatever holders build next.
                                 </p>
                             </div>
                         </div>
 
                         <!-- Card Footer - Standardized Button Container -->
                         <div class="mt-auto p-8 pt-4">
-                            <div class="grid grid-cols-3 gap-4">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                                 <a href="https://app.realms.today/dao/BEmzTQaiwyj69uvxmdL9fSEuETg9vsVrRDAkmDE1HWTD"
                                     target="_blank"
                                     class="group relative px-4 py-3 bg-neutral-900/50 hover:bg-neutral-800/50 rounded-xl transition-all duration-300">

@@ -22,10 +22,17 @@ onMounted(() => {
     <div class="relative container mx-auto px-6 py-32 lg:pb-48">
       <!-- Section Title -->
       <div class="text-center mb-16">
-        <p class="font-orbitron text-6xl font-semibold text-center pb-3 relative">
+        <p class="font-orbitron text-3xl sm:text-5xl md:text-6xl font-semibold text-center pb-3 relative leading-tight">
           <span class="text-white">
             <span class="text-white">ECOSYSTEM ERA</span>
           </span>
+        </p>
+        <p
+          class="font-exo text-neutral-400 max-w-2xl mx-auto mt-6 text-base md:text-lg leading-relaxed"
+          data-aos="fade-up"
+          data-aos-delay="80"
+        >
+          A living network—governance, liquidity, and apps—keeps growing as holders build in public.
         </p>
       </div>
 

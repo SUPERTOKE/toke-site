@@ -20,10 +20,10 @@ onMounted(() => {
     <div class="absolute -top-24 -right-24 w-96 h-96 bg-purple-500/10 rounded-full filter blur-3xl"></div>
     <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500/10 rounded-full filter blur-3xl"></div>
 
-    <div class="relative container mx-auto px-6 py-24 lg:py-32">
+    <div class="relative container mx-auto px-4 sm:px-6 py-20 md:py-24 lg:py-32">
       <!-- Header Section -->
       <div class="text-center mb-10" data-aos="fade-down">
-        <p class="font-orbitron text-6xl font-semibold text-center pb-3 relative">
+        <p class="font-orbitron text-3xl sm:text-5xl md:text-6xl font-semibold text-center pb-3 relative leading-tight">
           <span class="text-white">UTILITY</span>
         </p>
         <!-- <p class="text-neutral-400 font-exo max-w-md mx-auto" data-aos="fade-up" data-aos-delay="100">
@@ -35,13 +35,13 @@ onMounted(() => {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- DeFi Section -->
         <div
-          class="bg-neutral-900/30 backdrop-blur-xs rounded-2xl p-8 transform hover:scale-105 transition-all duration-300"
+          class="bg-neutral-900/30 backdrop-blur-xs rounded-2xl p-5 sm:p-8 transform md:hover:scale-105 transition-all duration-300"
           data-aos="fade-right">
           <h2 class="uppercase text-2xl text-neutral-200 font-orbitron mb-8 text-center">
             DeFi Ecosystem
           </h2>
           <div
-            class="grid grid-cols-3 gap-6 items-center justify-items-center bg-neutral-900/30 backdrop-blur-xs rounded-2xl md:p-8">
+            class="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 items-center justify-items-center bg-neutral-900/30 backdrop-blur-xs rounded-2xl p-4 md:p-8">
             <div
               class="p-3 bg-white/[0.01] hover:bg-white/[0.03] border border-white/[0.02] rounded-lg transition-all duration-200">
               <img src="../../assets/logos/defi/coinmc.png"
@@ -87,13 +87,13 @@ onMounted(() => {
 
         <!-- Integrations Section -->
         <div
-          class="bg-neutral-900/30 backdrop-blur-xs rounded-2xl p-8 transform hover:scale-105 transition-all duration-300"
+          class="bg-neutral-900/30 backdrop-blur-xs rounded-2xl p-5 sm:p-8 transform md:hover:scale-105 transition-all duration-300"
           data-aos="fade-right">
           <h2 class="uppercase text-2xl text-neutral-200 font-orbitron mb-8 text-center">
             Integrations
           </h2>
           <div
-            class="grid grid-cols-3 gap-6 items-center justify-items-center bg-neutral-900/30 backdrop-blur-xs rounded-2xl md:p-8">
+            class="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 items-center justify-items-center bg-neutral-900/30 backdrop-blur-xs rounded-2xl p-4 md:p-8">
             <div
               class="p-3 bg-white/[0.01] hover:bg-white/[0.03] border border-white/[0.02] rounded-lg transition-all duration-200">
               <img src="../../assets/logos/integrations/helio.png"
