@@ -30,12 +30,43 @@ const formatHolderStat = (value) => {
   }).format(value);
 };
 
+const LS_HERO_HOLDERS = 'mctoken.hero.holderCount';
+
+function readHoldersFromStorage() {
+  if (typeof localStorage === 'undefined') {
+    return { display: '—', last: null };
+  }
+  try {
+    const raw = localStorage.getItem(LS_HERO_HOLDERS);
+    if (raw == null || raw === '') return { display: '—', last: null };
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 0) return { display: '—', last: null };
+    const fmt = formatHolderStat(n);
+    if (!fmt) return { display: '—', last: null };
+    return { display: fmt, last: fmt };
+  } catch {
+    return { display: '—', last: null };
+  }
+}
+
+function persistHolderCount(n) {
+  if (typeof localStorage === 'undefined') return;
+  if (!Number.isFinite(n) || n < 0) return;
+  try {
+    localStorage.setItem(LS_HERO_HOLDERS, String(Math.round(n)));
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+const initialHolders = readHoldersFromStorage();
+
 const totalSupplyStat = ref('—');
-const holdersStat = ref('—');
+const holdersStat = ref(initialHolders.display);
 const marketCapStat = ref('—');
 
 const lastKnownSupply = ref(null);
-const lastKnownHolders = ref(null);
+const lastKnownHolders = ref(initialHolders.last);
 const lastKnownMcap = ref(null);
 
 const fetchHeroStats = async () => {
@@ -80,6 +111,7 @@ const fetchHeroStats = async () => {
       if (holderFmt != null) {
         holdersStat.value = holderFmt;
         lastKnownHolders.value = holderFmt;
+        persistHolderCount(n);
       } else if (lastKnownHolders.value) {
         holdersStat.value = lastKnownHolders.value;
       } else {
