@@ -64,6 +64,30 @@ function pickPair(payload) {
 }
 
 /**
+ * DexScreener pair payloads usually omit holders; we parse common keys if they appear later.
+ * Accurate live counts still come from chain RPC in toke-stats when this is null.
+ */
+function extractDexHolderCount(pair) {
+  if (!pair || typeof pair !== 'object') return null;
+  const candidates = [
+    pair.holders,
+    pair.holderCount,
+    pair.numHolders,
+    pair.uniqueHolders,
+    pair.stats?.holders,
+    pair.stats?.holderCount,
+    pair.info?.holders,
+    pair.info?.holderCount
+  ];
+  for (const c of candidates) {
+    if (c == null || c === '') continue;
+    const n = Number(c);
+    if (Number.isFinite(n) && n >= 0) return Math.round(n);
+  }
+  return null;
+}
+
+/**
  * Live TOKE snapshot: DexScreener for price (+ dex mcap fallback), RPC for supply → price×supply mcap when possible.
  */
 export async function fetchTokeLiveMarket(signal) {
@@ -117,11 +141,14 @@ export async function fetchTokeLiveMarket(signal) {
     marketCapSource = 'dexscreener_fdv';
   }
 
+  const dexHolderCount = extractDexHolderCount(pair);
+
   return {
     price: priceUsd,
     marketCap,
     marketCapSource,
     pairAddress: pair.pairAddress ?? pairAddress,
-    totalSupplyUi
+    totalSupplyUi,
+    dexHolderCount
   };
 }

@@ -3,9 +3,64 @@ import { fetchTokeLiveMarket, TOKE_MINT, parseU64LE } from './tokeSnapshotShared
 
 const TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com';
-/** Holders: on-chain only (no Jupiter index — its holderCount is stale and caused UI jumps). */
-const REQUEST_TIMEOUT_MS = 45000;
-const HOLDER_RPC_TIMEOUT_MS = 32000;
+const JUPITER_TOKEN_SEARCH = 'https://lite-api.jup.ag/tokens/v2/search';
+const BIRDEYE_TOKEN_OVERVIEW = 'https://public-api.birdeye.so/defi/token_overview';
+
+/** Empirically: public RPC `getProgramAccounts` count ≈13,010 vs ~13,031 target; Jupiter index ≈14,069 (much farther). */
+/** Allow Dex fetch + ~48s holder RPC + Birdeye/Jupiter fallbacks without aborting mid-flight. */
+const REQUEST_TIMEOUT_MS = 90000;
+
+/** Birdeye requires an API key (they offer a free tier — no keyless access). Set BIRDEYE_API_KEY on Vercel. */
+async function getHolderCountFromBirdeye(signal) {
+  const apiKey = process.env.BIRDEYE_API_KEY?.trim();
+  if (!apiKey) {
+    return null;
+  }
+
+  const url = `${BIRDEYE_TOKEN_OVERVIEW}?address=${encodeURIComponent(TOKE_MINT)}`;
+  const res = await fetch(url, {
+    signal,
+    headers: {
+      Accept: 'application/json',
+      'x-chain': 'solana',
+      'X-API-KEY': apiKey
+    }
+  });
+
+  if (!res.ok) {
+    console.error('[toke-stats] Birdeye holders HTTP', res.status);
+    return null;
+  }
+
+  const json = await res.json();
+  if (!json?.success || json?.data == null) {
+    return null;
+  }
+
+  const n = Number(json.data.holder);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n) : null;
+}
+
+/**
+ * Jupiter token index — approximate; used only if Dex pair has no holders field and RPC fails.
+ */
+async function getHolderCountFromJupiter(signal) {
+  const url = `${JUPITER_TOKEN_SEARCH}?query=${encodeURIComponent(TOKE_MINT)}`;
+  const res = await fetch(url, {
+    signal,
+    headers: { Accept: 'application/json' }
+  });
+  if (!res.ok) {
+    return null;
+  }
+  const data = await res.json();
+  if (!Array.isArray(data)) {
+    return null;
+  }
+  const token = data.find((t) => t?.id === TOKE_MINT);
+  const n = Number(token?.holderCount);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n) : null;
+}
 
 async function rpcRequest(method, params, signal) {
   const response = await fetch(SOLANA_RPC_URL, {
@@ -85,17 +140,46 @@ export default async function handler(req, res) {
     // Price / mcap / supply first — must not share fate with heavy holder RPC (often slow or rate-limited).
     const live = await fetchTokeLiveMarket(controller.signal);
 
+    // 1) DexScreener pair — holders field rarely present in public API.
+    // 2) On-chain SPL accounts via free public RPC — closest to ~13k vs Jupiter (~14k) when this succeeds.
+    // 3) Birdeye token_overview.data.holder — optional BIRDEYE_API_KEY; aligns with Birdeye UI when set.
+    // 4) Jupiter index — keyless fallback; typically several hundred+ off for TOKE.
     let holderCount = null;
-    try {
-      const rpcAbort = new AbortController();
-      const rpcTimer = setTimeout(() => rpcAbort.abort(), HOLDER_RPC_TIMEOUT_MS);
-      holderCount = await getHolderCount(rpcAbort.signal).catch(() => null);
-      clearTimeout(rpcTimer);
-      if (!Number.isFinite(holderCount) || holderCount < 0) {
-        holderCount = null;
+    if (Number.isFinite(live.dexHolderCount) && live.dexHolderCount >= 0) {
+      holderCount = Math.round(live.dexHolderCount);
+    }
+
+    if (holderCount == null) {
+      try {
+        const holderAbort = new AbortController();
+        const holderTimer = setTimeout(() => holderAbort.abort(), 48000);
+        holderCount = await getHolderCount(holderAbort.signal);
+        clearTimeout(holderTimer);
+      } catch (holderErr) {
+        console.error('[toke-stats] on-chain holderCount:', holderErr?.message ?? holderErr);
       }
-    } catch (holderErr) {
-      console.error('[toke-stats] holderCount:', holderErr?.message ?? holderErr);
+    }
+
+    if (holderCount == null) {
+      try {
+        const beAbort = new AbortController();
+        const beTimer = setTimeout(() => beAbort.abort(), 8000);
+        holderCount = await getHolderCountFromBirdeye(beAbort.signal);
+        clearTimeout(beTimer);
+      } catch (beErr) {
+        console.error('[toke-stats] Birdeye holderCount:', beErr?.message ?? beErr);
+      }
+    }
+
+    if (holderCount == null) {
+      try {
+        const jupAbort = new AbortController();
+        const jupTimer = setTimeout(() => jupAbort.abort(), 8000);
+        holderCount = await getHolderCountFromJupiter(jupAbort.signal);
+        clearTimeout(jupTimer);
+      } catch (jupErr) {
+        console.error('[toke-stats] Jupiter holderCount:', jupErr?.message ?? jupErr);
+      }
     }
 
     return res.status(200).json({
