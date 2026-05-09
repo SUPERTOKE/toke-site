@@ -162,7 +162,7 @@ onBeforeUnmount(() => {
 
 <template>
   <section ref="rootRef" class="relative" aria-labelledby="great-mcvote-scrolly-title">
-    <div class="absolute -top-16 right-0 md:left-auto md:right-8 h-16 bg-gradient-to-b from-neutral-900/80 to-neutral-900/80 rounded-t-2xl border-t border-l border-r border-white/[0.05] px-6 [border-bottom:none] z-20">
+    <div class="absolute -top-16 right-0 md:left-auto md:right-8 h-16 bg-neutral-900/90 backdrop-blur-md rounded-t-2xl border-t border-l border-r border-white/[0.05] px-6 [border-bottom:none] z-20">
       <div class="relative">
         <div class="absolute -top-8 right-12 w-32 h-32 bg-purple-500/20 rounded-full filter blur-3xl"></div>
         <div class="absolute -bottom-8 left-12 w-32 h-32 bg-blue-500/20 rounded-full filter blur-3xl"></div>
@@ -184,7 +184,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div
-      class="relative bg-gradient-to-b from-neutral-900/80 to-neutral-950/80 border border-white/[0.05] md:rounded-tl-3xl rounded-tr-md rounded-b-3xl overflow-hidden z-10"
+      class="relative bg-neutral-900/35 backdrop-blur-md border border-white/[0.05] md:rounded-tl-3xl rounded-tr-md rounded-b-3xl overflow-hidden z-10"
     >
     <!-- Fallback: reduced motion / init failure — stacked sections -->
     <div

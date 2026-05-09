@@ -13,7 +13,7 @@ onMounted(async () => {
     <!-- Add a container with relative positioning for the folder effect -->
     <div class="relative">
         <!-- Folder tab effect - adjust styling -->
-        <div class="absolute -top-16 left-0 md:right-auto md:left-8 h-16 bg-gradient-to-b from-neutral-900/80 to-neutral-900/80 
+        <div class="absolute -top-16 left-0 md:right-auto md:left-8 h-16 bg-neutral-900/90 backdrop-blur-md
                     rounded-t-2xl border-t border-l border-r border-white/[0.05] px-6 
                     [border-bottom:none] z-10">
             <div class="relative">
@@ -48,16 +48,9 @@ onMounted(async () => {
             </div>
         </div>
         
-        <!-- Main content - adjust background to match tab -->
-        <div class="bg-gradient-to-b from-neutral-900/80 to-neutral-950/80 relative overflow-hidden 
+        <!-- Main content panel (surface only — page gradient lives on Home.vue) -->
+        <div class="bg-neutral-900/35 backdrop-blur-md relative overflow-hidden 
                     border border-white/[0.05] md:rounded-tr-3xl rounded-tl-md rounded-b-3xl pb-24">
-            <!-- Background decoration -->
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]"></div>
-            <div class="absolute -top-24 -right-24 w-96 h-96 bg-purple-500/5 rounded-full filter blur-3xl 
-                        md:-right-24 right-[-50%]"></div>
-            <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500/5 rounded-full filter blur-3xl 
-                        md:-left-24 left-[-50%]"></div>
-
             <div class="relative container mx-auto px-4 sm:px-6 py-20 md:py-24 lg:py-24">
                 <div class="grid lg:grid-cols-3 gap-12">
                     <!-- Tokenomics Card -->

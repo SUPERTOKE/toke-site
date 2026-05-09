@@ -11,14 +11,6 @@ onMounted(() => {
 <template>
   <!-- Roadmap Section -->
   <div class="relative scroll-mt-20" id="Timeline">
-    <!-- Background Effects -->
-    <div class="absolute inset-0 bg-gradient-to-b from-neutral-900/80 to-neutral-950/80">
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]">
-      </div>
-      <div class="absolute -top-24 -right-24 w-96 h-96 bg-purple-500/5 rounded-full filter blur-3xl"></div>
-      <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500/5 rounded-full filter blur-3xl"></div>
-    </div>
-
     <div class="relative container mx-auto px-6 py-32 pb-48">
       <!-- Section Title -->
       <div class="text-center mb-16">

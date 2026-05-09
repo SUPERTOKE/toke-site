@@ -146,28 +146,33 @@ onBeforeUnmount(() => {
 <template>
   <div class="overflow-fix">
     <Navbar />
-    <div class="bg-gradient-to-b from-indigo-950/50 to-indigo-950/30 overflow-x-hidden">
-      <!-- Hero Section -->
-      <div class="relative min-h-screen md:min-h-[110vh] flex items-center justify-center">
-        <!-- Background Effects -->
-        <div class="absolute inset-0 bg-gradient-to-b from-neutral-900/80 to-neutral-950/80">
-          <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]"></div>
-          <div class="absolute -top-24 -right-24 w-96 h-96 bg-purple-500/5 rounded-full filter blur-3xl"></div>
-          <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500/5 rounded-full filter blur-3xl"></div>
-        </div>
-
-        <!-- Stars Animation Container -->
-        <div class="fixed top-0 main-container">
-          <div class="sub-container">
-            <div class="sky">
-              <div class="stars"></div>
-              <div class="stars2"></div>
-              <div class="stars3"></div>
-              <div class="comet"></div>
-            </div>
+    <div class="relative overflow-x-hidden">
+      <!-- Stars (behind global overlay — z-index from scoped .main-container) -->
+      <div class="fixed top-0 main-container">
+        <div class="sub-container">
+          <div class="sky">
+            <div class="stars"></div>
+            <div class="stars2"></div>
+            <div class="stars3"></div>
+            <div class="comet"></div>
           </div>
         </div>
+      </div>
 
+      <!-- Single page-wide star mute -->
+      <div
+        class="pointer-events-none fixed inset-0 z-0"
+        aria-hidden="true"
+      >
+        <div class="absolute inset-0 bg-gradient-to-b from-neutral-900/80 to-neutral-950/80"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))]"></div>
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-purple-500/5 rounded-full filter blur-3xl"></div>
+        <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500/5 rounded-full filter blur-3xl"></div>
+      </div>
+
+      <div class="relative z-10">
+      <!-- Hero Section -->
+      <div class="relative min-h-screen md:min-h-[110vh] flex items-center justify-center">
         <!-- Content Container -->
         <div class="relative container mx-auto px-4 sm:px-6 py-24 md:py-32">
           <div class="flex flex-col items-center text-center space-y-8">
@@ -217,6 +222,39 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
+      <!-- Trade $TOKE -->
+      <div class="relative">
+        <div class="relative container mx-auto px-4 sm:px-6 pt-10 pb-14 md:pt-12 md:pb-20">
+          <div class="flex flex-col items-center text-center space-y-6 max-w-lg mx-auto w-full"
+               data-aos="fade-up"
+               data-aos-duration="800">
+            <div class="grid grid-cols-2 gap-3 sm:gap-4 w-full">
+              <a href="https://www.coinbase.com/price/mctoken-solana-amgumqeqw8h74trc8ukkjzzwtxbdps496wh4gly2mcpo-token"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="group relative px-4 py-4 sm:py-5 bg-neutral-900/50 hover:bg-neutral-800/50 rounded-xl transition-all duration-300">
+                <div class="absolute inset-0 bg-sky-500/10 rounded-xl blur-md group-hover:bg-sky-500/20 transition-all duration-300"></div>
+                <span class="relative flex items-center justify-center w-full font-orbitron text-sm sm:text-base text-neutral-100 tracking-wide">
+                  Coinbase
+                </span>
+              </a>
+              <a href="https://jup.ag/tokens/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="group relative px-4 py-4 sm:py-5 bg-neutral-900/50 hover:bg-neutral-800/50 rounded-xl transition-all duration-300">
+                <div class="absolute inset-0 bg-purple-500/10 rounded-xl blur-md group-hover:bg-purple-500/20 transition-all duration-300"></div>
+                <span class="relative flex items-center justify-center w-full font-orbitron text-sm sm:text-base text-neutral-100 tracking-wide">
+                  Jupiter
+                </span>
+              </a>
+            </div>
+            <p class="font-exo text-neutral-400 text-base sm:text-lg leading-relaxed">
+              Buy or trade $TOKE on official exchanges to participate in the Tokeverse.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Rest of the sections: ecosystem first, then foundations → lore → what’s next -->
       <div id="Ecosystem" class="scroll-mt-20">
         <EcosystemEra />
@@ -228,6 +266,7 @@ onBeforeUnmount(() => {
         <GreatMcVoteScrolly />
       </div>
       <Timeline />
+      </div>
     </div>
     <Footer />
   </div>
