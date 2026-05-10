@@ -222,35 +222,47 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <!-- Trade $TOKE -->
+      <!-- Trade $TOKE (logo CTAs — visual shell matches hero stat cards) -->
       <div class="relative">
         <div class="relative container mx-auto px-4 sm:px-6 pt-10 pb-14 md:pt-12 md:pb-20">
-          <div class="flex flex-col items-center text-center space-y-6 max-w-lg mx-auto w-full"
+          <div class="flex flex-col items-center text-center space-y-8 max-w-4xl mx-auto w-full"
                data-aos="fade-up"
                data-aos-duration="800">
-            <div class="grid grid-cols-2 gap-3 sm:gap-4 w-full">
+            <p class="font-orbitron text-3xl sm:text-5xl md:text-6xl font-semibold text-center pb-1 relative leading-tight tracking-wide">
+              <span class="text-white">BUY / TRADE</span>
+            </p>
+            <div class="grid grid-cols-2 gap-2 md:gap-[1.125rem] w-full items-stretch">
               <a href="https://www.coinbase.com/price/mctoken-solana-amgumqeqw8h74trc8ukkjzzwtxbdps496wh4gly2mcpo-token"
                  target="_blank"
                  rel="noopener noreferrer"
-                 class="group relative px-4 py-4 sm:py-5 bg-neutral-900/50 hover:bg-neutral-800/50 rounded-xl transition-all duration-300">
-                <div class="absolute inset-0 bg-sky-500/10 rounded-xl blur-md group-hover:bg-sky-500/20 transition-all duration-300"></div>
-                <span class="relative flex items-center justify-center w-full font-orbitron text-sm sm:text-base text-neutral-100 tracking-wide">
-                  Coinbase
+                 class="group relative flex min-h-[99px] md:min-h-[111px] items-center justify-center overflow-hidden rounded-2xl border border-white/[0.05] bg-neutral-900/30 px-3 py-[1.125rem] backdrop-blur-xl transition-all duration-300 hover:bg-neutral-900/45 md:px-4 md:py-5">
+                <div class="pointer-events-none absolute inset-0 rounded-2xl bg-purple-500/10 blur-xl transition-all duration-300 group-hover:bg-purple-500/[0.18]"></div>
+                <span class="relative z-[1] flex w-full min-h-[2.625rem] items-center justify-center px-1.5 sm:min-h-[3rem]">
+                  <img
+                    src="../assets/logos/trade/coinbase-wordmark.svg"
+                    alt="Coinbase"
+                    class="h-9 w-auto max-h-9 max-w-full origin-center scale-[0.75] object-contain object-center select-none sm:h-10 sm:max-h-10 md:scale-[0.78]"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </span>
               </a>
               <a href="https://jup.ag/tokens/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo"
                  target="_blank"
                  rel="noopener noreferrer"
-                 class="group relative px-4 py-4 sm:py-5 bg-neutral-900/50 hover:bg-neutral-800/50 rounded-xl transition-all duration-300">
-                <div class="absolute inset-0 bg-purple-500/10 rounded-xl blur-md group-hover:bg-purple-500/20 transition-all duration-300"></div>
-                <span class="relative flex items-center justify-center w-full font-orbitron text-sm sm:text-base text-neutral-100 tracking-wide">
-                  Jupiter
+                 class="group relative flex min-h-[99px] md:min-h-[111px] items-center justify-center overflow-hidden rounded-2xl border border-white/[0.05] bg-neutral-900/30 px-3 py-[1.125rem] backdrop-blur-xl transition-all duration-300 hover:bg-neutral-900/45 md:px-4 md:py-5">
+                <div class="pointer-events-none absolute inset-0 rounded-2xl bg-sky-500/10 blur-xl transition-all duration-300 group-hover:bg-sky-500/[0.18]"></div>
+                <span class="relative z-[1] flex w-full min-h-[2.625rem] items-center justify-center px-1.5 sm:min-h-[3rem]">
+                  <img
+                    src="../assets/logos/trade/jupiter-wordmark.svg"
+                    alt="Jupiter"
+                    class="h-8 w-auto max-h-8 max-w-full object-contain object-center select-none sm:h-9 sm:max-h-9 md:h-10 md:max-h-10"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </span>
               </a>
             </div>
-            <p class="font-exo text-neutral-400 text-base sm:text-lg leading-relaxed">
-              Buy or trade $TOKE on official exchanges to participate in the Tokeverse.
-            </p>
           </div>
         </div>
       </div>
