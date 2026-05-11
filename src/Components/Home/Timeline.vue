@@ -16,7 +16,7 @@ onMounted(() => {
       <div class="text-center mb-16">
         <p class="font-orbitron text-3xl sm:text-5xl md:text-6xl font-semibold text-center pb-3 relative leading-tight">
           <span class="text-white">
-            <span class="text-white">TOKEVERSE BUILDS</span>
+            <span class="text-white">COMMUNITY ERA</span>
           </span>
         </p>
         <!-- <p class="text-neutral-400 font-exo max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">

@@ -42,10 +42,10 @@ export function statNum(value) {
   return Number.isFinite(n) ? n : NaN;
 }
 
-/** USD market cap with thousands separators and exactly 3 fractional digits (hero + navbar). */
+/** USD market cap with thousands separators and exactly 2 fractional digits (hero stat box + navbar). */
 export function formatMarketCapDisplay(value) {
   if (!Number.isFinite(value) || value <= 0) return '—';
-  const [intRaw, frac = '000'] = value.toFixed(3).split('.');
+  const [intRaw, frac = '00'] = value.toFixed(2).split('.');
   const intNum = Number.parseInt(intRaw, 10);
   const intFormatted = new Intl.NumberFormat('en-US').format(intNum);
   return `$${intFormatted}.${frac}`;

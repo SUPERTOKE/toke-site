@@ -3,9 +3,6 @@ import mcVote2025 from '../assets/McVote_2025_Results.png';
 import mcVote2026 from '../assets/McVote_2026_Results.png';
 import vault from '../assets/vault.png';
 
-/** Total scroll track height (viewport units) for the pinned scrolly section */
-export const SCROLL_VH = 300;
-
 /** CTA after finale — same explorer as hero by default */
 export const FINALE_CTA_HREF = 'https://explorer.mctoken.xyz/';
 

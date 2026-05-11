@@ -12,11 +12,11 @@ import { fetchLiveStatsPayload, statNum, formatMarketCapDisplay } from '../utils
 
 let heroStatsIntervalId = null;
 
-/** Total supply: grouping + up to 3 decimal places (matches live chain/Jupiter ui amounts). */
+/** Total supply in hero stat box: grouping + exactly 3 fractional digits. */
 const formatSupplyStat = (value) => {
   if (!Number.isFinite(value) || value <= 0) return null;
   return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 3,
     maximumFractionDigits: 3
   }).format(value);
 };
