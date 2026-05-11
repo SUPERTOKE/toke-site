@@ -127,13 +127,7 @@ export async function fetchTokeLiveMarket(signal) {
   let marketCap = null;
   let marketCapSource = null;
 
-  const computed =
-    Number.isFinite(totalSupplyUi) && totalSupplyUi > 0 ? priceUsd * totalSupplyUi : null;
-
-  if (Number.isFinite(computed) && computed > 0) {
-    marketCap = computed;
-    marketCapSource = 'computed';
-  } else if (Number.isFinite(dexMarketCap) && dexMarketCap > 0) {
+  if (Number.isFinite(dexMarketCap) && dexMarketCap > 0) {
     marketCap = dexMarketCap;
     marketCapSource = 'dexscreener';
   } else if (Number.isFinite(dexFdv) && dexFdv > 0) {

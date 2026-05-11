@@ -3,44 +3,12 @@ import { fetchTokeLiveMarket, TOKE_MINT, parseU64LE } from './tokeSnapshotShared
 
 const TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com';
-const BIRDEYE_TOKEN_OVERVIEW = 'https://public-api.birdeye.so/defi/token_overview';
 
-/** Dex fetch + holder RPC + optional Birdeye; no Jupiter for holders. */
 const REQUEST_TIMEOUT_MS = 90000;
 
-/** Warm-instance fallback when current holder resolution fails (cold starts have no cache). */
-let lastSuccessfulHolderCount = null;
-
-/** Birdeye requires an API key (free tier). Set BIRDEYE_API_KEY on Vercel. */
-async function getHolderCountFromBirdeye(signal) {
-  const apiKey = process.env.BIRDEYE_API_KEY?.trim();
-  if (!apiKey) {
-    return null;
-  }
-
-  const url = `${BIRDEYE_TOKEN_OVERVIEW}?address=${encodeURIComponent(TOKE_MINT)}`;
-  const res = await fetch(url, {
-    signal,
-    headers: {
-      Accept: 'application/json',
-      'x-chain': 'solana',
-      'X-API-KEY': apiKey
-    }
-  });
-
-  if (!res.ok) {
-    console.error('[toke-stats] Birdeye holders HTTP', res.status);
-    return null;
-  }
-
-  const json = await res.json();
-  if (!json?.success || json?.data == null) {
-    return null;
-  }
-
-  const n = Number(json.data.holder);
-  return Number.isFinite(n) && n >= 0 ? Math.round(n) : null;
-}
+/** Server-side holder count cache — refreshed at most once every 5 minutes. */
+const HOLDER_CACHE_TTL_MS = 5 * 60 * 1000;
+let holderCache = { count: null, fetchedAt: 0, inFlight: false };
 
 async function rpcRequest(method, params, signal) {
   const response = await fetch(SOLANA_RPC_URL, {
@@ -119,42 +87,33 @@ export default async function handler(req, res) {
   try {
     const live = await fetchTokeLiveMarket(controller.signal);
 
-    // 1) DexScreener pair — holders field rarely present.
-    // 2) On-chain SPL accounts (public RPC by default).
-    // 3) Birdeye if BIRDEYE_API_KEY set.
-    let holderCount = null;
-    if (Number.isFinite(live.dexHolderCount) && live.dexHolderCount >= 0) {
-      holderCount = Math.round(live.dexHolderCount);
+    // Resolve holder count from cache or trigger a background refresh.
+    const now = Date.now();
+    const cacheAge = now - holderCache.fetchedAt;
+    const cacheStale = cacheAge >= HOLDER_CACHE_TTL_MS;
+
+    if (cacheStale && !holderCache.inFlight) {
+      holderCache.inFlight = true;
+      const holderAbort = new AbortController();
+      const holderTimer = setTimeout(() => holderAbort.abort(), 48000);
+
+      getHolderCount(holderAbort.signal)
+        .then((count) => {
+          if (Number.isFinite(count) && count >= 0) {
+            holderCache.count = count;
+            holderCache.fetchedAt = Date.now();
+          }
+        })
+        .catch((err) => {
+          console.error('[toke-stats] on-chain holderCount:', err?.message ?? err);
+        })
+        .finally(() => {
+          clearTimeout(holderTimer);
+          holderCache.inFlight = false;
+        });
     }
 
-    if (holderCount == null) {
-      try {
-        const holderAbort = new AbortController();
-        const holderTimer = setTimeout(() => holderAbort.abort(), 48000);
-        holderCount = await getHolderCount(holderAbort.signal);
-        clearTimeout(holderTimer);
-      } catch (holderErr) {
-        console.error('[toke-stats] on-chain holderCount:', holderErr?.message ?? holderErr);
-      }
-    }
-
-    if (holderCount == null) {
-      try {
-        const beAbort = new AbortController();
-        const beTimer = setTimeout(() => beAbort.abort(), 8000);
-        holderCount = await getHolderCountFromBirdeye(beAbort.signal);
-        clearTimeout(beTimer);
-      } catch (beErr) {
-        console.error('[toke-stats] Birdeye holderCount:', beErr?.message ?? beErr);
-      }
-    }
-
-    let resolvedHolders = holderCount;
-    if (Number.isFinite(resolvedHolders) && resolvedHolders >= 0) {
-      lastSuccessfulHolderCount = resolvedHolders;
-    } else if (lastSuccessfulHolderCount != null) {
-      resolvedHolders = lastSuccessfulHolderCount;
-    }
+    const resolvedHolders = holderCache.count;
 
     return res.status(200).json({
       price: live.price,
