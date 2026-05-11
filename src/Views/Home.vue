@@ -231,6 +231,9 @@ onBeforeUnmount(() => {
             <p class="font-orbitron text-3xl sm:text-5xl md:text-6xl font-semibold text-center pb-1 relative leading-tight tracking-wide">
               <span class="text-white">BUY / TRADE</span>
             </p>
+            <p class="font-exo text-neutral-400 max-w-2xl mx-auto text-base md:text-lg leading-relaxed [text-wrap:balance]">
+              Add $TOKE to your wallet through Coinbase, Jupiter, or your preferred Solana trading platform. Connect, swap, and join the Tokeverse in seconds.
+            </p>
             <div class="grid grid-cols-2 gap-2 md:gap-[1.125rem] w-full items-stretch">
               <a href="https://www.coinbase.com/price/mctoken-solana-amgumqeqw8h74trc8ukkjzzwtxbdps496wh4gly2mcpo-token"
                  target="_blank"
