@@ -2,7 +2,8 @@ import { Buffer } from 'node:buffer';
 import { fetchTokeLiveMarket, TOKE_MINT, parseU64LE } from './tokeSnapshotShared.js';
 import {
   maybeRecordHolderSnapshot,
-  holderCountChange24h as globalHolderDelta24h
+  holderCountChange24h as globalHolderDelta24h,
+  latestRecordedHolderCount
 } from './holderSnapshotsKv.js';
 import { maybeRecordMcapSnapshot, mcapPctChange24h } from './mcapSnapshotsKv.js';
 import { buildStatsMeta, fetchSnapshotMetas } from './statsMeta.js';
@@ -122,7 +123,10 @@ export default async function handler(req, res) {
         });
     }
 
-    const resolvedHolders = holderCache.count;
+    let resolvedHolders = holderCache.count;
+    if (!Number.isFinite(resolvedHolders) || resolvedHolders < 0) {
+      resolvedHolders = await latestRecordedHolderCount();
+    }
 
     let holderCountChange24h = null;
     if (Number.isFinite(resolvedHolders) && resolvedHolders >= 0) {

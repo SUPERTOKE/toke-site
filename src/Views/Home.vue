@@ -133,9 +133,6 @@ const lastKnownMcapNumeric = ref(readMcapNumericFromStorage());
 
 /** Redis-backed `marketCapChangePct24h` from `/api/toke-stats` only. */
 const marketCapChangePct = ref(null);
-/** Dex price 24h % — shown separately when mcap Redis metric is still warming. */
-const dexPriceChangeH24 = ref(null);
-
 /** Burned % string only (no emoji) — pairs with 🔥 in template for even emoji–value spacing. */
 const supplyBurnedPctStr = computed(() => {
   const cur = currentSupplyUi.value;
@@ -181,7 +178,7 @@ const holdersChangeFormatted = computed(() => {
     if (d > 0) return `+${d}`;
     return String(d);
   }
-  if (holdersChangeIsWarming.value) return '—';
+  if (holdersChangeIsWarming.value) return null;
   return null;
 });
 
@@ -209,7 +206,7 @@ const marketCapChangeFormatted = computed(() => {
     const prefix = rounded > 0 ? '+' : '';
     return `${prefix}${rounded.toFixed(2)}%`;
   }
-  if (marketCapChangeIsWarming.value) return '—';
+  if (marketCapChangeIsWarming.value) return null;
   return null;
 });
 
@@ -222,29 +219,6 @@ const marketCapChangeClass = computed(() => {
   if (rounded > 0) return 'text-green-400/90';
   return 'text-red-400/90';
 });
-
-const dexPriceChangeFormatted = computed(() => {
-  if (!marketCapChangeIsWarming.value) return null;
-  const p = dexPriceChangeH24.value;
-  if (p == null || !Number.isFinite(p)) return null;
-  const rounded = Math.round(p * 100) / 100;
-  if (rounded === 0) return '+0.00%';
-  const prefix = rounded > 0 ? '+' : '';
-  return `${prefix}${rounded.toFixed(2)}%`;
-});
-
-function formatRelativeUpdated(iso) {
-  if (!iso) return null;
-  const t = Date.parse(iso);
-  if (!Number.isFinite(t)) return null;
-  const sec = Math.max(0, Math.floor((Date.now() - t) / 1000));
-  if (sec < 60) return 'Updated just now';
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `Updated ${min}m ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 48) return `Updated ${hr}h ago`;
-  return `Updated ${Math.floor(hr / 24)}d ago`;
-}
 
 function warmingTooltip(kind) {
   const meta = statsMeta.value;
@@ -281,12 +255,10 @@ const marketCapChangeTitle = computed(() =>
   marketCapChangeIsWarming.value ? warmingTooltip('mcap') : undefined
 );
 
-const holdersTimeLabel = computed(() => {
-  const rel = formatRelativeUpdated(holderCountFetchedAt.value);
-  if (rel) return rel;
-  if (holderChangeFromRedis.value) return '24 hr';
-  return '24 hr';
-});
+/** Telemetry clock row — always the 24h window label (not on-chain refresh time). */
+const holdersTimeLabel = computed(() => '24 hr');
+
+const marketCapTimeLabel = computed(() => '24 hr');
 
 const holdersTimeTitle = computed(() => {
   if (holderCountFetchedAt.value) {
@@ -317,9 +289,6 @@ function applyStatsMetaFromPayload(payload) {
 
 function applyHeroStatsPayload(payload, path) {
     const marketCap = statNum(payload?.marketCap);
-    const dexPctH24 = statNum(payload?.priceChangeH24);
-    const dexPctOk = Number.isFinite(dexPctH24) ? dexPctH24 : null;
-    if (dexPctOk != null) dexPriceChangeH24.value = dexPctOk;
 
     function resolveMarketCapPctLine() {
       if (!Object.prototype.hasOwnProperty.call(payload, 'marketCapChangePct24h')) {
@@ -590,8 +559,11 @@ onBeforeUnmount(() => {
                           <span class="hero-stat-card__metric-ico" aria-hidden="true">👤</span>
                           <span>{{ holdersChangeFormatted }}</span>
                         </span>
-                        <span v-else class="hero-stat-card__metric shrink-0 text-neutral-400">—</span>
-                        <span class="hero-stat-card__sep" aria-hidden="true" />
+                        <span
+                          v-if="holdersChangeFormatted != null"
+                          class="hero-stat-card__sep"
+                          aria-hidden="true"
+                        />
                         <span
                           class="hero-stat-card__metric shrink-0 text-neutral-500"
                           :title="holdersTimeTitle"
@@ -633,24 +605,17 @@ onBeforeUnmount(() => {
                           <span class="hero-stat-card__metric-ico" aria-hidden="true">📈</span>
                           <span>{{ marketCapChangeFormatted }}</span>
                         </span>
-                        <span v-else class="hero-stat-card__metric shrink-0 text-neutral-400">—</span>
                         <span
-                          v-if="dexPriceChangeFormatted"
+                          v-if="marketCapChangeFormatted != null"
                           class="hero-stat-card__sep"
                           aria-hidden="true"
                         />
                         <span
-                          v-if="dexPriceChangeFormatted"
                           class="hero-stat-card__metric shrink-0 text-neutral-500"
-                          title="Dex price change (24h) — not the Redis market-cap track until history is ready"
+                          :title="marketCapChangeTitle"
                         >
-                          <span class="hero-stat-card__metric-ico" aria-hidden="true">💱</span>
-                          <span>Price {{ dexPriceChangeFormatted }}</span>
-                        </span>
-                        <span class="hero-stat-card__sep" aria-hidden="true" />
-                        <span class="hero-stat-card__metric shrink-0 text-neutral-500">
                           <span class="hero-stat-card__metric-ico" aria-hidden="true">🕔</span>
-                          <span>{{ mcapChangeFromRedis ? '24 hr' : 'Mcap 24h' }}</span>
+                          <span>{{ marketCapTimeLabel }}</span>
                         </span>
                       </div>
                     </div>

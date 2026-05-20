@@ -44,6 +44,22 @@ export async function maybeRecordHolderSnapshot(count, now = Date.now()) {
   }
 }
 
+/** Latest recorded count from Redis (display fallback while on-chain cache is cold). */
+export async function latestRecordedHolderCount() {
+  try {
+    const redis = getRedis();
+    if (!redis) return null;
+    const last = await readNewestSnapshot(redis, SNAPSHOT_KEY);
+    const c = last?.c;
+    if (c == null || c === '') return null;
+    const n = Math.round(Number(c));
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  } catch (e) {
+    console.error('[holderSnapshotsKv] latestRecordedHolderCount:', e?.message ?? e);
+  }
+  return null;
+}
+
 /** `current − baseline` where baseline is the newest snapshot with `t <= now − 24h` (list is newest-first). */
 export async function holderCountChange24h(currentCount, now = Date.now()) {
   const c = Math.round(Number(currentCount));
