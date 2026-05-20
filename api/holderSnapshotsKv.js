@@ -11,37 +11,81 @@ import {
   findSnapshotAtOrBefore,
   readNewestSnapshot,
   appendSnapshotIfAllowed,
-  pruneSnapshotsOlderThan,
   shouldAppendPeriodic
 } from './snapshotKvShared.js';
+import {
+  EMPTY_SNAPSHOT_LIST_META,
+  getSnapshotListMeta,
+  HOLDER_SNAPSHOT_KEY
+} from './statsMeta.js';
 
-const SNAPSHOT_KEY = 'mctoken:toke:holder_snapshots';
+const SNAPSHOT_KEY = HOLDER_SNAPSHOT_KEY;
 const WRITE_LOCK_KEY = 'mctoken:toke:holder_snapshots:write_lock';
 
-/**
- * Append `{ t, c }` when count changes or at most hourly — keeps list small; safe to call every GET.
- */
-export async function maybeRecordHolderSnapshot(count, now = Date.now()) {
+function holderShouldAppend(last, count, now) {
   const c = Math.round(Number(count));
-  if (!Number.isFinite(c) || c < 0) return;
+  const changed = last && Math.round(Number(last.c)) !== c;
+  const periodic = shouldAppendPeriodic(last, now);
+  return !last || changed || periodic;
+}
+
+/**
+ * One Redis pass: list meta + 24h delta + optional append (prune only runs inside append).
+ * @param {number} currentCount
+ * @param {number} [now]
+ * @param {{ record?: boolean }} [options]
+ */
+export async function resolveHolderSnapshotStats(
+  currentCount,
+  now = Date.now(),
+  { record = false } = {}
+) {
+  const c = Math.round(Number(currentCount));
   try {
     const redis = getRedis();
-    if (!redis) return;
-    const last = await readNewestSnapshot(redis, SNAPSHOT_KEY);
-    const changed = last && Math.round(Number(last.c)) !== c;
-    const periodic = shouldAppendPeriodic(last, now);
-    if (!last || changed || periodic) {
-      await appendSnapshotIfAllowed(redis, {
-        listKey: SNAPSHOT_KEY,
-        lockKey: WRITE_LOCK_KEY,
-        payloadJson: JSON.stringify({ t: now, c }),
-        now
-      });
+    if (!redis) {
+      return { change24h: null, meta: { ...EMPTY_SNAPSHOT_LIST_META } };
     }
-    await pruneSnapshotsOlderThan(redis, SNAPSHOT_KEY, now);
+
+    let meta = await getSnapshotListMeta(redis, SNAPSHOT_KEY, now);
+    let change24h = null;
+
+    if (Number.isFinite(c) && c >= 0) {
+      const baseline = await findSnapshotAtOrBefore(redis, SNAPSHOT_KEY, now - MS_DAY);
+      if (baseline && Number.isFinite(baseline.c)) {
+        change24h = c - Math.round(Number(baseline.c));
+      }
+
+      if (record && holderShouldAppend(meta.newestRow, c, now)) {
+        const appended = await appendSnapshotIfAllowed(redis, {
+          listKey: SNAPSHOT_KEY,
+          lockKey: WRITE_LOCK_KEY,
+          payloadJson: JSON.stringify({ t: now, c }),
+          now
+        });
+        if (appended) {
+          meta = {
+            ...meta,
+            count: meta.count + 1,
+            newestT: now,
+            newestRow: { t: now, c },
+            oldestT: meta.oldestT ?? now,
+            oldestRow: meta.oldestRow ?? { t: now, c }
+          };
+        }
+      }
+    }
+
+    return { change24h, meta };
   } catch (e) {
-    console.error('[holderSnapshotsKv] maybeRecordHolderSnapshot:', e?.message ?? e);
+    console.error('[holderSnapshotsKv] resolveHolderSnapshotStats:', e?.message ?? e);
   }
+  return { change24h: null, meta: { ...EMPTY_SNAPSHOT_LIST_META } };
+}
+
+/** @deprecated Prefer `resolveHolderSnapshotStats(..., { record: true })` */
+export async function maybeRecordHolderSnapshot(count, now = Date.now()) {
+  await resolveHolderSnapshotStats(count, now, { record: true });
 }
 
 /** Latest recorded count from Redis (display fallback while on-chain cache is cold). */
@@ -50,29 +94,20 @@ export async function latestRecordedHolderCount() {
     const redis = getRedis();
     if (!redis) return null;
     const last = await readNewestSnapshot(redis, SNAPSHOT_KEY);
-    const c = last?.c;
-    if (c == null || c === '') return null;
-    const n = Math.round(Number(c));
-    return Number.isFinite(n) && n >= 0 ? n : null;
+    const n = last?.c;
+    if (n == null || n === '') return null;
+    const rounded = Math.round(Number(n));
+    return Number.isFinite(rounded) && rounded >= 0 ? rounded : null;
   } catch (e) {
     console.error('[holderSnapshotsKv] latestRecordedHolderCount:', e?.message ?? e);
   }
   return null;
 }
 
-/** `current − baseline` where baseline is the newest snapshot with `t <= now − 24h` (list is newest-first). */
+/** @deprecated Prefer `resolveHolderSnapshotStats` */
 export async function holderCountChange24h(currentCount, now = Date.now()) {
-  const c = Math.round(Number(currentCount));
-  if (!Number.isFinite(c) || c < 0) return null;
-  try {
-    const redis = getRedis();
-    if (!redis) return null;
-    const cutoff = now - MS_DAY;
-    const baseline = await findSnapshotAtOrBefore(redis, SNAPSHOT_KEY, cutoff);
-    if (!baseline || !Number.isFinite(baseline.c)) return null;
-    return c - Math.round(Number(baseline.c));
-  } catch (e) {
-    console.error('[holderSnapshotsKv] holderCountChange24h:', e?.message ?? e);
-  }
-  return null;
+  const { change24h } = await resolveHolderSnapshotStats(currentCount, now, {
+    record: false
+  });
+  return change24h;
 }

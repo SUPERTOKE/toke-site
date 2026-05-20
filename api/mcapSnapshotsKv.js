@@ -6,13 +6,16 @@ import { getRedis } from './redisClient.js';
 import {
   MS_DAY,
   findSnapshotAtOrBefore,
-  readNewestSnapshot,
   appendSnapshotIfAllowed,
-  pruneSnapshotsOlderThan,
   shouldAppendPeriodic
 } from './snapshotKvShared.js';
+import {
+  EMPTY_SNAPSHOT_LIST_META,
+  getSnapshotListMeta,
+  MCAP_SNAPSHOT_KEY
+} from './statsMeta.js';
 
-const SNAPSHOT_KEY = 'mctoken:toke:mcap_snapshots';
+const SNAPSHOT_KEY = MCAP_SNAPSHOT_KEY;
 const WRITE_LOCK_KEY = 'mctoken:toke:mcap_snapshots:write_lock';
 
 /** Meaningful mcap move: ≥0.5% or ≥$50 (whichever is larger). */
@@ -22,48 +25,77 @@ function mcapMeaningfullyChanged(lastM, m) {
   return diff >= Math.max(50, lastM * 0.005);
 }
 
+function mcapShouldAppend(last, stored, now) {
+  const changed = last && mcapMeaningfullyChanged(Number(last.m), stored);
+  const periodic = shouldAppendPeriodic(last, now);
+  return !last || changed || periodic;
+}
+
 /**
- * Append `{ t, m }` when value moves meaningfully or at most hourly.
+ * One Redis pass: list meta + 24h % + optional append (prune only runs inside append).
+ * @param {number} mcapUsd
+ * @param {number} [now]
+ * @param {{ record?: boolean }} [options]
  */
-export async function maybeRecordMcapSnapshot(mcapUsd, now = Date.now()) {
+export async function resolveMcapSnapshotStats(mcapUsd, now = Date.now(), { record = false } = {}) {
   const m = Number(mcapUsd);
-  if (!Number.isFinite(m) || m <= 0) return;
+  if (!Number.isFinite(m) || m <= 0) {
+    return { changePct24h: null, meta: { ...EMPTY_SNAPSHOT_LIST_META } };
+  }
   const stored = Math.round(m * 100) / 100;
+
   try {
     const redis = getRedis();
-    if (!redis) return;
-    const last = await readNewestSnapshot(redis, SNAPSHOT_KEY);
-    const changed = last && mcapMeaningfullyChanged(Number(last.m), stored);
-    const periodic = shouldAppendPeriodic(last, now);
-    if (!last || changed || periodic) {
-      await appendSnapshotIfAllowed(redis, {
+    if (!redis) {
+      return { changePct24h: null, meta: { ...EMPTY_SNAPSHOT_LIST_META } };
+    }
+
+    let meta = await getSnapshotListMeta(redis, SNAPSHOT_KEY, now);
+    let changePct24h = null;
+
+    const baseline = await findSnapshotAtOrBefore(redis, SNAPSHOT_KEY, now - MS_DAY);
+    if (baseline && Number.isFinite(baseline.m)) {
+      const b = Number(baseline.m);
+      if (Number.isFinite(b) && b > 0) {
+        changePct24h = ((m - b) / b) * 100;
+      }
+    }
+
+    if (record && mcapShouldAppend(meta.newestRow, stored, now)) {
+      const appended = await appendSnapshotIfAllowed(redis, {
         listKey: SNAPSHOT_KEY,
         lockKey: WRITE_LOCK_KEY,
         payloadJson: JSON.stringify({ t: now, m: stored }),
         now
       });
+      if (appended) {
+        meta = {
+          ...meta,
+          count: meta.count + 1,
+          newestT: now,
+          newestRow: { t: now, m: stored },
+          oldestT: meta.oldestT ?? now,
+          oldestRow: meta.oldestRow ?? { t: now, m: stored }
+        };
+      }
     }
-    await pruneSnapshotsOlderThan(redis, SNAPSHOT_KEY, now);
+
+    return { changePct24h, meta };
   } catch (e) {
-    console.error('[mcapSnapshotsKv] maybeRecordMcapSnapshot:', e?.message ?? e);
+    console.error('[mcapSnapshotsKv] resolveMcapSnapshotStats:', e?.message ?? e);
   }
+  return { changePct24h: null, meta: { ...EMPTY_SNAPSHOT_LIST_META } };
 }
 
-/** % change vs newest snapshot with `t <= now − 24h` (list is newest-first). */
+/** @deprecated Prefer `resolveMcapSnapshotStats(..., { record: true })` */
+export async function maybeRecordMcapSnapshot(mcapUsd, now = Date.now()) {
+  await resolveMcapSnapshotStats(mcapUsd, now, { record: true });
+}
+
+/** @deprecated Prefer `resolveMcapSnapshotStats` */
 export async function mcapPctChange24h(currentMcapUsd, now = Date.now()) {
-  const m = Number(currentMcapUsd);
-  if (!Number.isFinite(m) || m <= 0) return null;
-  try {
-    const redis = getRedis();
-    if (!redis) return null;
-    const cutoff = now - MS_DAY;
-    const baseline = await findSnapshotAtOrBefore(redis, SNAPSHOT_KEY, cutoff);
-    if (!baseline || !Number.isFinite(baseline.m)) return null;
-    const b = Number(baseline.m);
-    if (!Number.isFinite(b) || b <= 0) return null;
-    return ((m - b) / b) * 100;
-  } catch (e) {
-    console.error('[mcapSnapshotsKv] mcapPctChange24h:', e?.message ?? e);
-  }
-  return null;
+  const { changePct24h } = await resolveMcapSnapshotStats(currentMcapUsd, now, {
+    record: false
+  });
+  return changePct24h;
 }

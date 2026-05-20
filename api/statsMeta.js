@@ -7,6 +7,15 @@ import { MS_DAY, parseSnapshotRow } from './snapshotKvShared.js';
 export const HOLDER_SNAPSHOT_KEY = 'mctoken:toke:holder_snapshots';
 export const MCAP_SNAPSHOT_KEY = 'mctoken:toke:mcap_snapshots';
 
+export const EMPTY_SNAPSHOT_LIST_META = {
+  count: 0,
+  oldestT: null,
+  newestT: null,
+  hasBaseline24h: false,
+  newestRow: null,
+  oldestRow: null
+};
+
 /**
  * @param {import('@upstash/redis').Redis | null} redis
  * @param {string} listKey
@@ -14,36 +23,31 @@ export const MCAP_SNAPSHOT_KEY = 'mctoken:toke:mcap_snapshots';
  */
 export async function getSnapshotListMeta(redis, listKey, now = Date.now()) {
   if (!redis) {
-    return {
-      count: 0,
-      oldestT: null,
-      newestT: null,
-      hasBaseline24h: false
-    };
+    return { ...EMPTY_SNAPSHOT_LIST_META };
   }
 
   try {
     const count = await redis.llen(listKey);
     if (!count) {
-      return { count: 0, oldestT: null, newestT: null, hasBaseline24h: false };
+      return { ...EMPTY_SNAPSHOT_LIST_META };
     }
 
     const [head, tail] = await Promise.all([
       redis.lrange(listKey, 0, 0),
       redis.lrange(listKey, count - 1, count - 1)
     ]);
-    const newest = parseSnapshotRow(head[0]);
-    const oldest = parseSnapshotRow(tail[0]);
-    const newestT = newest?.t ?? null;
-    const oldestT = oldest?.t ?? null;
+    const newestRow = parseSnapshotRow(head[0]);
+    const oldestRow = parseSnapshotRow(tail[0]);
+    const newestT = newestRow?.t ?? null;
+    const oldestT = oldestRow?.t ?? null;
     const cutoff = now - MS_DAY;
     const hasBaseline24h =
       Number.isFinite(oldestT) && oldestT <= cutoff;
 
-    return { count, oldestT, newestT, hasBaseline24h };
+    return { count, oldestT, newestT, hasBaseline24h, newestRow, oldestRow };
   } catch (e) {
     console.error('[statsMeta] getSnapshotListMeta:', e?.message ?? e);
-    return { count: 0, oldestT: null, newestT: null, hasBaseline24h: false };
+    return { ...EMPTY_SNAPSHOT_LIST_META };
   }
 }
 

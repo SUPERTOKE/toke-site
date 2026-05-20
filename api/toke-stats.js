@@ -1,21 +1,22 @@
 import { Buffer } from 'node:buffer';
 import { fetchTokeLiveMarket, TOKE_MINT, parseU64LE } from './tokeSnapshotShared.js';
-import {
-  maybeRecordHolderSnapshot,
-  holderCountChange24h as globalHolderDelta24h,
-  latestRecordedHolderCount
-} from './holderSnapshotsKv.js';
-import { maybeRecordMcapSnapshot, mcapPctChange24h } from './mcapSnapshotsKv.js';
-import { buildStatsMeta, fetchSnapshotMetas } from './statsMeta.js';
+import { resolveHolderSnapshotStats, latestRecordedHolderCount } from './holderSnapshotsKv.js';
+import { resolveMcapSnapshotStats } from './mcapSnapshotsKv.js';
+import { getRedis } from './redisClient.js';
+import { buildStatsMeta, EMPTY_SNAPSHOT_LIST_META } from './statsMeta.js';
+import { SNAPSHOT_RECORD_INTERVAL_MS } from './snapshotKvShared.js';
 
 const TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com';
 
 const REQUEST_TIMEOUT_MS = 90000;
+/** CDN cache for public stats JSON (pairs with ~30s client poll). */
+const STATS_CACHE_CONTROL = 'public, s-maxage=45, stale-while-revalidate=90';
 
 /** Server-side holder count cache — refreshed at most once every 5 minutes. */
 const HOLDER_CACHE_TTL_MS = 5 * 60 * 1000;
 let holderCache = { count: null, fetchedAt: 0, inFlight: false };
+let lastSnapshotRecordAt = 0;
 
 async function rpcRequest(method, params, signal) {
   const response = await fetch(SOLANA_RPC_URL, {
@@ -87,8 +88,8 @@ function onHolderCountResolved(count) {
   if (!Number.isFinite(count) || count < 0) return;
   holderCache.count = count;
   holderCache.fetchedAt = Date.now();
-  maybeRecordHolderSnapshot(count).catch((err) => {
-    console.error('[toke-stats] maybeRecordHolderSnapshot:', err?.message ?? err);
+  resolveHolderSnapshotStats(count, Date.now(), { record: true }).catch((err) => {
+    console.error('[toke-stats] resolveHolderSnapshotStats (RPC):', err?.message ?? err);
   });
 }
 
@@ -128,10 +129,9 @@ export default async function handler(req, res) {
       resolvedHolders = await latestRecordedHolderCount();
     }
 
-    let holderCountChange24h = null;
-    if (Number.isFinite(resolvedHolders) && resolvedHolders >= 0) {
-      holderCountChange24h = await globalHolderDelta24h(resolvedHolders);
-      await maybeRecordHolderSnapshot(resolvedHolders);
+    const shouldRecordSnapshots = now - lastSnapshotRecordAt >= SNAPSHOT_RECORD_INTERVAL_MS;
+    if (shouldRecordSnapshots) {
+      lastSnapshotRecordAt = now;
     }
 
     const price = live.price;
@@ -143,24 +143,35 @@ export default async function handler(req, res) {
       mcapTrack = live.marketCap;
     }
 
-    let marketCapChangePct24h = null;
-    if (mcapTrack != null && Number.isFinite(mcapTrack) && mcapTrack > 0) {
-      marketCapChangePct24h = await mcapPctChange24h(mcapTrack);
-      await maybeRecordMcapSnapshot(mcapTrack);
-    }
+    const holderPromise =
+      Number.isFinite(resolvedHolders) && resolvedHolders >= 0
+        ? resolveHolderSnapshotStats(resolvedHolders, now, {
+            record: shouldRecordSnapshots
+          })
+        : Promise.resolve({ change24h: null, meta: null });
 
-    const { redisConfigured, holderMeta, mcapMeta } = await fetchSnapshotMetas(now);
+    const mcapPromise =
+      mcapTrack != null && Number.isFinite(mcapTrack) && mcapTrack > 0
+        ? resolveMcapSnapshotStats(mcapTrack, now, { record: shouldRecordSnapshots })
+        : Promise.resolve({ changePct24h: null, meta: null });
+
+    const [holderSnap, mcapSnap] = await Promise.all([holderPromise, mcapPromise]);
+
+    const holderCountChange24h = holderSnap.change24h;
+    const marketCapChangePct24h = mcapSnap.changePct24h;
+
     const statsMeta = buildStatsMeta({
       fetchedAtMs: holderCache.fetchedAt,
       ttlMs: HOLDER_CACHE_TTL_MS,
-      redisConfigured,
-      holderMeta,
-      mcapMeta,
+      redisConfigured: !!getRedis(),
+      holderMeta: holderSnap.meta ?? { ...EMPTY_SNAPSHOT_LIST_META },
+      mcapMeta: mcapSnap.meta ?? { ...EMPTY_SNAPSHOT_LIST_META },
       holderCountChange24h,
       marketCapChangePct24h,
       now
     });
 
+    res.setHeader('Cache-Control', STATS_CACHE_CONTROL);
     return res.status(200).json({
       price: live.price,
       marketCap: live.marketCap,

@@ -10,6 +10,8 @@ export const MAX_SNAPSHOTS = 96;
 export const SNAPSHOT_READ_BATCH = 32;
 /** Collapse concurrent serverless writes (same value, same second). */
 export const SNAPSHOT_WRITE_LOCK_SEC = 45;
+/** Min interval between snapshot record attempts on hot `/api/toke-stats` polls (aligns with holder RPC TTL). */
+export const SNAPSHOT_RECORD_INTERVAL_MS = 5 * 60 * 1000;
 
 /**
  * Normalize a list element from Upstash LRANGE (JSON string or pre-parsed object).
