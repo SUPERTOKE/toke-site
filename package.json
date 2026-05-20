@@ -5,8 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:vercel": "node scripts/free-dev-port.mjs 3000 && rm -rf node_modules/.vite dist && vercel dev",
     "build": "vite build",
-    "preview": "vite preview"
+    "process:moonman": "node scripts/knockout-moonman-bg.mjs",
+    "process:trade-previews": "node scripts/knockout-edge-transparent.mjs src/assets/trade-previews/toke-coinbase-mobile.png src/assets/trade-previews/toke-coinbase-mobile.png --max=58 --spread=34 && node scripts/knockout-edge-transparent.mjs src/assets/trade-previews/toke-jupiter-mobile.png src/assets/trade-previews/toke-jupiter-mobile.png --max=58 --spread=34",
+    "preview": "vite preview",
+    "verify:redis": "node scripts/verify-redis-snapshots.mjs",
+    "check:stats-api": "node scripts/check-stats-api.mjs"
   },
   "dependencies": {
     "@metaplex-foundation/js": "^0.19.4",
@@ -14,13 +19,14 @@
     "@solana/wallet-adapter-vue": "^0.4.5",
     "@solana/wallet-adapter-wallets": "^0.19.30",
     "@solana/web3.js": "^1.77.3",
-    "aos": "^2.3.4",
+    "@upstash/redis": "^1.38.0",
     "axios": "^1.6.7",
     "gsap": "^3.12.5",
     "sass": "^1.71.1",
     "sass-loader": "^14.1.1",
     "solana-wallets-vue": "^0.6.1",
     "tailwind": "^4.0.0",
+    "three": "^0.160.0",
     "vue": "^3.2.47",
     "vue-router": "^4.3.0"
   },
@@ -31,6 +37,7 @@
     "crypto-browserify": "^3.12.0",
     "daisyui": "^3.0.0",
     "rollup-plugin-node-polyfills": "^0.2.1",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.3.2",
     "util": "^0.12.5",
     "vite": "^4.3.9"

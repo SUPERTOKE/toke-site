@@ -1,5 +1,11 @@
 import { Buffer } from 'node:buffer';
 import { fetchTokeLiveMarket, TOKE_MINT, parseU64LE } from './tokeSnapshotShared.js';
+import {
+  maybeRecordHolderSnapshot,
+  holderCountChange24h as globalHolderDelta24h
+} from './holderSnapshotsKv.js';
+import { maybeRecordMcapSnapshot, mcapPctChange24h } from './mcapSnapshotsKv.js';
+import { buildStatsMeta, fetchSnapshotMetas } from './statsMeta.js';
 
 const TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com';
@@ -76,6 +82,15 @@ async function getHolderCount(signal) {
   return ownerSet.size;
 }
 
+function onHolderCountResolved(count) {
+  if (!Number.isFinite(count) || count < 0) return;
+  holderCache.count = count;
+  holderCache.fetchedAt = Date.now();
+  maybeRecordHolderSnapshot(count).catch((err) => {
+    console.error('[toke-stats] maybeRecordHolderSnapshot:', err?.message ?? err);
+  });
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -87,7 +102,6 @@ export default async function handler(req, res) {
   try {
     const live = await fetchTokeLiveMarket(controller.signal);
 
-    // Resolve holder count from cache or trigger a background refresh.
     const now = Date.now();
     const cacheAge = now - holderCache.fetchedAt;
     const cacheStale = cacheAge >= HOLDER_CACHE_TTL_MS;
@@ -98,12 +112,7 @@ export default async function handler(req, res) {
       const holderTimer = setTimeout(() => holderAbort.abort(), 48000);
 
       getHolderCount(holderAbort.signal)
-        .then((count) => {
-          if (Number.isFinite(count) && count >= 0) {
-            holderCache.count = count;
-            holderCache.fetchedAt = Date.now();
-          }
-        })
+        .then(onHolderCountResolved)
         .catch((err) => {
           console.error('[toke-stats] on-chain holderCount:', err?.message ?? err);
         })
@@ -115,15 +124,53 @@ export default async function handler(req, res) {
 
     const resolvedHolders = holderCache.count;
 
+    let holderCountChange24h = null;
+    if (Number.isFinite(resolvedHolders) && resolvedHolders >= 0) {
+      holderCountChange24h = await globalHolderDelta24h(resolvedHolders);
+      await maybeRecordHolderSnapshot(resolvedHolders);
+    }
+
+    const price = live.price;
+    const supplyUi = live.totalSupplyUi;
+    let mcapTrack = null;
+    if (Number.isFinite(price) && price > 0 && Number.isFinite(supplyUi) && supplyUi > 0) {
+      mcapTrack = price * supplyUi;
+    } else if (Number.isFinite(live.marketCap) && live.marketCap > 0) {
+      mcapTrack = live.marketCap;
+    }
+
+    let marketCapChangePct24h = null;
+    if (mcapTrack != null && Number.isFinite(mcapTrack) && mcapTrack > 0) {
+      marketCapChangePct24h = await mcapPctChange24h(mcapTrack);
+      await maybeRecordMcapSnapshot(mcapTrack);
+    }
+
+    const { redisConfigured, holderMeta, mcapMeta } = await fetchSnapshotMetas(now);
+    const statsMeta = buildStatsMeta({
+      fetchedAtMs: holderCache.fetchedAt,
+      ttlMs: HOLDER_CACHE_TTL_MS,
+      redisConfigured,
+      holderMeta,
+      mcapMeta,
+      holderCountChange24h,
+      marketCapChangePct24h,
+      now
+    });
+
     return res.status(200).json({
       price: live.price,
       marketCap: live.marketCap,
       marketCapSource: live.marketCapSource,
       pairAddress: live.pairAddress,
+      priceChangeH24: live.priceChangeH24,
+      marketCapChangePct24h,
       totalSupply:
         Number.isFinite(live.totalSupplyUi) && live.totalSupplyUi > 0 ? live.totalSupplyUi : null,
       holderCount:
         Number.isFinite(resolvedHolders) && resolvedHolders >= 0 ? resolvedHolders : null,
+      holderCountChange24h,
+      holderCountFetchedAt: statsMeta.holderCountFetchedAt,
+      statsMeta,
       updatedAt: new Date().toISOString()
     });
   } catch (error) {

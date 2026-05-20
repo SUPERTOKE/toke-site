@@ -1,5 +1,5 @@
 /** Primary Meteora pair linked from the site (Dexscreener). Override via env if the canonical pair moves. */
-const DEFAULT_PAIR_ADDRESS = '6cVMwWp6gmz697WyX9JedHu6Mxey8hV5ct8BhJNVdCwg';
+const DEFAULT_PAIR_ADDRESS = 'Ad6NEGrxHSBAGwfSTtBSHmKQgedHotCJZyFwCgRRAXc9';
 
 /** SPL mint for TOKE (McToken). Must match Jupiter index / on-chain filters. */
 export const TOKE_MINT =
@@ -7,6 +7,7 @@ export const TOKE_MINT =
 
 const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com';
 const DEX_SCREENER_PAIR = 'https://api.dexscreener.com/latest/dex/pairs/solana';
+const DEX_SCREENER_TOKEN = 'https://api.dexscreener.com/latest/dex/tokens';
 
 export function parseU64LE(buf, offset = 0) {
   let n = BigInt(0);
@@ -63,6 +64,89 @@ function pickPair(payload) {
   return null;
 }
 
+function pairLiquidityUsd(pair) {
+  const n = Number(pair?.liquidity?.usd);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+function isValidDexPair(pair) {
+  const priceUsd = Number(pair?.priceUsd);
+  return Boolean(pair) && Number.isFinite(priceUsd) && priceUsd > 0;
+}
+
+/** When the configured pair is delisted, pick the highest-liquidity USD pair for the mint. */
+function pickBestPairFromTokenList(pairs) {
+  if (!Array.isArray(pairs) || pairs.length === 0) return null;
+  const valid = pairs.filter(isValidDexPair);
+  if (valid.length === 0) return null;
+  if (valid.length === 1) return valid[0];
+
+  const prices = valid
+    .map((p) => Number(p.priceUsd))
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .sort((a, b) => a - b);
+  const median = prices[Math.floor(prices.length / 2)];
+
+  const inBand = valid.filter((p) => {
+    const price = Number(p.priceUsd);
+    return price >= median * 0.25 && price <= median * 4;
+  });
+  const pool = inBand.length > 0 ? inBand : valid;
+
+  let best = null;
+  let bestLiq = -1;
+  for (const p of pool) {
+    const liq = pairLiquidityUsd(p);
+    if (liq > bestLiq) {
+      bestLiq = liq;
+      best = p;
+    }
+  }
+  return best;
+}
+
+async function fetchDexPairByAddress(pairAddress, signal) {
+  const dexUrl = `${DEX_SCREENER_PAIR}/${encodeURIComponent(pairAddress)}`;
+  const dexRes = await fetch(dexUrl, {
+    signal,
+    headers: { Accept: 'application/json' }
+  });
+  if (!dexRes.ok) {
+    throw new Error(`DexScreener HTTP ${dexRes.status}`);
+  }
+  const dexJson = await dexRes.json();
+  return pickPair(dexJson);
+}
+
+async function fetchDexBestPairByMint(signal) {
+  const dexUrl = `${DEX_SCREENER_TOKEN}/${encodeURIComponent(TOKE_MINT)}`;
+  const dexRes = await fetch(dexUrl, {
+    signal,
+    headers: { Accept: 'application/json' }
+  });
+  if (!dexRes.ok) {
+    throw new Error(`DexScreener token HTTP ${dexRes.status}`);
+  }
+  const dexJson = await dexRes.json();
+  const best = pickBestPairFromTokenList(dexJson?.pairs);
+  if (!best) {
+    throw new Error('DexScreener token lookup returned no valid pair');
+  }
+  return best;
+}
+
+async function resolveDexPair(signal) {
+  const configured = process.env.TOKE_DEX_PAIR_ADDRESS ?? DEFAULT_PAIR_ADDRESS;
+  let pair = await fetchDexPairByAddress(configured, signal);
+  if (!pair) {
+    console.warn(
+      `[tokeSnapshotShared] no pair for ${configured}; falling back to token lookup ${TOKE_MINT}`
+    );
+    pair = await fetchDexBestPairByMint(signal);
+  }
+  return pair;
+}
+
 /**
  * DexScreener pair payloads usually omit holders; we parse common keys if they appear later.
  * Accurate live counts still come from chain RPC in toke-stats when this is null.
@@ -91,22 +175,7 @@ function extractDexHolderCount(pair) {
  * Live TOKE snapshot: DexScreener for price (+ dex mcap fallback), RPC for supply → price×supply mcap when possible.
  */
 export async function fetchTokeLiveMarket(signal) {
-  const pairAddress = process.env.TOKE_DEX_PAIR_ADDRESS ?? DEFAULT_PAIR_ADDRESS;
-  const dexUrl = `${DEX_SCREENER_PAIR}/${encodeURIComponent(pairAddress)}`;
-
-  const dexRes = await fetch(dexUrl, {
-    signal,
-    headers: { Accept: 'application/json' }
-  });
-  if (!dexRes.ok) {
-    throw new Error(`DexScreener HTTP ${dexRes.status}`);
-  }
-
-  const dexJson = await dexRes.json();
-  const pair = pickPair(dexJson);
-  if (!pair) {
-    throw new Error('DexScreener returned no pair');
-  }
+  const pair = await resolveDexPair(signal);
 
   const priceUsd = Number(pair.priceUsd);
   if (!Number.isFinite(priceUsd) || priceUsd <= 0) {
@@ -137,12 +206,17 @@ export async function fetchTokeLiveMarket(signal) {
 
   const dexHolderCount = extractDexHolderCount(pair);
 
+  const h24Raw = pair.priceChange?.h24;
+  const h24Num = h24Raw != null && h24Raw !== '' ? Number(h24Raw) : Number.NaN;
+  const priceChangeH24 = Number.isFinite(h24Num) ? h24Num : null;
+
   return {
     price: priceUsd,
     marketCap,
     marketCapSource,
-    pairAddress: pair.pairAddress ?? pairAddress,
+    pairAddress: pair.pairAddress ?? process.env.TOKE_DEX_PAIR_ADDRESS ?? DEFAULT_PAIR_ADDRESS,
     totalSupplyUi,
-    dexHolderCount
+    dexHolderCount,
+    priceChangeH24
   };
 }

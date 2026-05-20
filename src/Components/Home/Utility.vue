@@ -1,17 +1,3 @@
-<script setup>
-import { onMounted, ref } from 'vue';
-import AOS from 'aos'
-import 'aos/dist/aos.css'
-
-onMounted(() => {
-  AOS.init({
-    duration: 1000,
-    once: true,
-    mirror: false
-  });
-});
-</script>
-
 <template>
   <div class="min-h-screen bg-gradient-to-b from-neutral-900/80 to-neutral-950/80 relative overflow-hidden">
     <!-- Background decoration -->
@@ -22,7 +8,7 @@ onMounted(() => {
 
     <div class="relative container mx-auto px-4 sm:px-6 py-20 md:py-24 lg:py-32">
       <!-- Header Section -->
-      <div class="text-center mb-10" data-aos="fade-down">
+      <div class="text-center mb-10">
         <p class="font-orbitron text-3xl sm:text-5xl md:text-6xl font-semibold text-center pb-3 relative leading-tight">
           <span class="text-white">UTILITY</span>
         </p>
@@ -35,8 +21,7 @@ onMounted(() => {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- DeFi Section -->
         <div
-          class="bg-neutral-900/30 backdrop-blur-xs rounded-2xl p-5 sm:p-8 transform md:hover:scale-105 transition-all duration-300"
-          data-aos="fade-right">
+          class="bg-neutral-900/30 backdrop-blur-xs rounded-2xl p-5 sm:p-8 transform md:hover:scale-105 transition-all duration-300">
           <h2 class="uppercase text-2xl text-neutral-200 font-orbitron mb-8 text-center">
             DeFi Ecosystem
           </h2>
@@ -87,8 +72,7 @@ onMounted(() => {
 
         <!-- Integrations Section -->
         <div
-          class="bg-neutral-900/30 backdrop-blur-xs rounded-2xl p-5 sm:p-8 transform md:hover:scale-105 transition-all duration-300"
-          data-aos="fade-right">
+          class="bg-neutral-900/30 backdrop-blur-xs rounded-2xl p-5 sm:p-8 transform md:hover:scale-105 transition-all duration-300">
           <h2 class="uppercase text-2xl text-neutral-200 font-orbitron mb-8 text-center">
             Integrations
           </h2>

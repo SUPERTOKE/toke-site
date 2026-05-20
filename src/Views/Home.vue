@@ -1,16 +1,44 @@
 <script setup>
-import { onMounted, ref, onBeforeUnmount } from 'vue';
+import { onMounted, ref, onBeforeUnmount, shallowRef, computed, defineAsyncComponent } from 'vue';
 import Navbar from '../Components/Navbar.vue';
 import Footer from '../Components/Footer.vue';
-import AOS from 'aos'
-import 'aos/dist/aos.css'
-import Timeline from '../Components/Home/Timeline.vue'
-import GenesisEra from '../Components/Home/GenesisEra.vue'
-import EcosystemEra from '../Components/Home/EcosystemEra.vue';
-import GreatMcVoteScrolly from '../Components/Home/GreatMcVoteScrolly.vue';
-import { fetchLiveStatsPayload, statNum, formatMarketCapDisplay } from '../utils/statsApi';
+import McVoteEraTimeline from '../Components/Home/McVoteEraTimeline.vue';
+import TradeSpotlight from '../Components/Home/TradeSpotlight.vue';
+import { statNum, formatMarketCapDisplay } from '../utils/statsApi';
+import { subscribeLiveStats } from '../utils/liveStatsPoll';
 
-let heroStatsIntervalId = null;
+const HeroMoonGlobe = defineAsyncComponent(() =>
+  import('../Components/Home/HeroMoonGlobe.vue')
+);
+
+let unsubscribeLiveStats = null;
+
+/** Moon dim overlay: update opacity on the node directly (no Vue re-render per scroll frame). */
+const moonShadeEl = shallowRef(null);
+let moonShadeRaf = 0;
+
+function flushMoonShadeOpacity() {
+  moonShadeRaf = 0;
+  const el = moonShadeEl.value;
+  if (!el) return;
+  const y = window.scrollY || document.documentElement.scrollTop;
+  const fadeRange = Math.max(380, window.innerHeight * 0.5);
+  const p = Math.min(1, Math.max(0, y / fadeRange));
+  el.style.opacity = String(p * 0.48);
+}
+
+function scheduleMoonShadeOpacity() {
+  if (moonShadeRaf) return;
+  moonShadeRaf = requestAnimationFrame(flushMoonShadeOpacity);
+}
+
+/** Original minted supply (constant) — used for burned % and mint copy in the Supply stat. */
+const ORIGINAL_TOKE_SUPPLY = 420_000_069;
+/** Grouped integer for hero subline (🪙 …) — stays in sync with `ORIGINAL_TOKE_SUPPLY`. */
+const ORIGINAL_MINT_GROUPED = new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 0,
+  minimumFractionDigits: 0,
+}).format(ORIGINAL_TOKE_SUPPLY);
 
 /** Total supply in hero stat box: grouping + exactly 3 fractional digits. */
 const formatSupplyStat = (value) => {
@@ -30,67 +58,325 @@ const formatHolderStat = (value) => {
   }).format(value);
 };
 
-const LS_HERO_HOLDERS = 'mctoken.hero.holderCount';
+const MS_DAY = 24 * 60 * 60 * 1000;
 
-function readHoldersFromStorage() {
-  if (typeof localStorage === 'undefined') {
-    return { display: '—', last: null };
-  }
-  try {
-    const raw = localStorage.getItem(LS_HERO_HOLDERS);
-    if (raw == null || raw === '') return { display: '—', last: null };
-    const n = Number(raw);
-    if (!Number.isFinite(n) || n < 0) return { display: '—', last: null };
-    const fmt = formatHolderStat(n);
-    if (!fmt) return { display: '—', last: null };
-    return { display: fmt, last: fmt };
-  } catch {
-    return { display: '—', last: null };
-  }
-}
+const LS_MCAP_LAST_USD = 'mctoken.hero.marketCapLastUsd';
 
-function persistHolderCount(n) {
+/** Birdeye-aligned one-shot bootstrap only if no persisted live mcap yet (never written as LS mcap). */
+const PHONY_LAST_KNOWN_MCAP_USD = 82356.51;
+const LS_MCAP_PHONY_INJECTED = 'mctoken.hero.phonyMcapInjectedOnce';
+
+/**
+ * At most once before any live mcap is in LS: fills `lastKnownMcapNumeric` for first-paint
+ * fallbacks. The phony value is never written to `LS_MCAP_LAST_USD`. After the
+ * one-shot inject, `LS_MCAP_PHONY_INJECTED` stays set so the placeholder is never reused even if
+ * `marketCapLastUsd` is cleared later.
+ */
+function tryInjectPhonyMcapBootstrapOnce(lastKnownMcapNumericRef, marketCapStatRef, lastKnownMcapRef) {
   if (typeof localStorage === 'undefined') return;
-  if (!Number.isFinite(n) || n < 0) return;
+  if (readMcapNumericFromStorage() != null) return;
+  if (localStorage.getItem(LS_MCAP_PHONY_INJECTED) === '1') return;
   try {
-    localStorage.setItem(LS_HERO_HOLDERS, String(Math.round(n)));
+    localStorage.setItem(LS_MCAP_PHONY_INJECTED, '1');
   } catch {
-    /* quota / private mode */
+    return;
+  }
+  lastKnownMcapNumericRef.value = PHONY_LAST_KNOWN_MCAP_USD;
+  const fmt = formatMarketCapDisplay(PHONY_LAST_KNOWN_MCAP_USD);
+  if (marketCapStatRef.value === '—') marketCapStatRef.value = fmt;
+  if (lastKnownMcapRef.value == null) lastKnownMcapRef.value = fmt;
+}
+
+function readMcapNumericFromStorage() {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(LS_MCAP_LAST_USD);
+    if (raw == null || raw === '') return null;
+    const n = Number(String(raw).replace(/,/g, ''));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  } catch {
+    return null;
   }
 }
 
-const initialHolders = readHoldersFromStorage();
+function persistMcapUsd(n) {
+  if (typeof localStorage === 'undefined') return;
+  if (!Number.isFinite(n) || n <= 0) return;
+  try {
+    localStorage.setItem(LS_MCAP_LAST_USD, String(n));
+  } catch {
+    /* quota */
+  }
+}
 
+const holdersStat = ref('—');
 const totalSupplyStat = ref('—');
-const holdersStat = ref(initialHolders.display);
+/** Numeric supply for burned % (computed); mirrors last known API value. */
+const currentSupplyUi = ref(null);
+/** From `/api/toke-stats` (`holderCountChange24h`); cached when falling back to `/api/toke-price`. */
+const holdersChangeDelta = ref(null);
+const lastKnownHolderDelta = ref(null);
+/** Redis-backed mcap % only; Dex price % is not substituted on the hero card. */
+const lastKnownMcapChangePct = ref(null);
 const marketCapStat = ref('—');
+/** `/api/toke-stats` diagnostics; preserved across `/api/toke-price` fallback. */
+const statsMeta = ref(null);
+const lastKnownStatsMeta = ref(null);
+const holderCountFetchedAt = ref(null);
+const lastKnownHolderCountFetchedAt = ref(null);
 
 const lastKnownSupply = ref(null);
-const lastKnownHolders = ref(initialHolders.last);
+const lastKnownSupplyNumeric = ref(null);
+const lastKnownHolders = ref(null);
 const lastKnownMcap = ref(null);
+const lastKnownMcapNumeric = ref(readMcapNumericFromStorage());
 
-const fetchHeroStats = async () => {
-  try {
-    const { data: payload, path } = await fetchLiveStatsPayload([
-      '/api/toke-stats',
-      '/api/toke-price'
-    ]);
+/** Redis-backed `marketCapChangePct24h` from `/api/toke-stats` only. */
+const marketCapChangePct = ref(null);
+/** Dex price 24h % — shown separately when mcap Redis metric is still warming. */
+const dexPriceChangeH24 = ref(null);
 
+/** Burned % string only (no emoji) — pairs with 🔥 in template for even emoji–value spacing. */
+const supplyBurnedPctStr = computed(() => {
+  const cur = currentSupplyUi.value;
+  if (cur == null || !Number.isFinite(cur) || cur <= 0) return null;
+  const burned = ORIGINAL_TOKE_SUPPLY - cur;
+  if (burned <= 0) return '0%';
+  const pct = (burned / ORIGINAL_TOKE_SUPPLY) * 100;
+  if (pct < 0.01) return `${pct.toFixed(4)}%`;
+  if (pct < 1) return `${pct.toFixed(2)}%`;
+  if (pct < 10) return `${pct.toFixed(1)}%`;
+  return `${pct.toFixed(0)}%`;
+});
+
+/** Burn row text color (e.g. 0.07%). */
+const supplyBurnedMetricClass = computed(() => {
+  const cur = currentSupplyUi.value;
+  if (cur == null || !Number.isFinite(cur) || cur <= 0) return 'text-neutral-400';
+  return 'text-orange-400/90';
+});
+
+const hasLiveHoldersCount = computed(() => holdersStat.value !== '—');
+const hasLiveMcapStat = computed(() => marketCapStat.value !== '—');
+
+const holderChangeFromRedis = computed(
+  () => statsMeta.value?.holderChange24hSource === 'redis'
+);
+
+const mcapChangeFromRedis = computed(
+  () => statsMeta.value?.mcapChange24hSource === 'redis'
+);
+
+const holdersChangeIsWarming = computed(
+  () =>
+    hasLiveHoldersCount.value &&
+    !holderChangeFromRedis.value &&
+    (holdersChangeDelta.value == null || !Number.isFinite(holdersChangeDelta.value))
+);
+
+const holdersChangeFormatted = computed(() => {
+  const d = holdersChangeDelta.value;
+  if (holderChangeFromRedis.value && d != null && Number.isFinite(d)) {
+    if (d === 0) return '+0';
+    if (d > 0) return `+${d}`;
+    return String(d);
+  }
+  if (holdersChangeIsWarming.value) return '—';
+  return null;
+});
+
+const holdersChangeClass = computed(() => {
+  if (holdersChangeIsWarming.value) return 'text-neutral-400';
+  const d = holdersChangeDelta.value;
+  if (d == null || !Number.isFinite(d)) return 'text-neutral-400';
+  if (d > 0) return 'text-green-400/90';
+  if (d < 0) return 'text-red-400/90';
+  return 'text-neutral-500';
+});
+
+const marketCapChangeIsWarming = computed(
+  () =>
+    hasLiveMcapStat.value &&
+    !mcapChangeFromRedis.value &&
+    (marketCapChangePct.value == null || !Number.isFinite(marketCapChangePct.value))
+);
+
+const marketCapChangeFormatted = computed(() => {
+  const p = marketCapChangePct.value;
+  if (mcapChangeFromRedis.value && p != null && Number.isFinite(p)) {
+    const rounded = Math.round(p * 100) / 100;
+    if (rounded === 0) return '+0.00%';
+    const prefix = rounded > 0 ? '+' : '';
+    return `${prefix}${rounded.toFixed(2)}%`;
+  }
+  if (marketCapChangeIsWarming.value) return '—';
+  return null;
+});
+
+const marketCapChangeClass = computed(() => {
+  if (marketCapChangeIsWarming.value) return 'text-neutral-400';
+  const p = marketCapChangePct.value;
+  if (p == null || !Number.isFinite(p)) return 'text-neutral-400';
+  const rounded = Math.round(p * 100) / 100;
+  if (rounded === 0) return 'text-neutral-500';
+  if (rounded > 0) return 'text-green-400/90';
+  return 'text-red-400/90';
+});
+
+const dexPriceChangeFormatted = computed(() => {
+  if (!marketCapChangeIsWarming.value) return null;
+  const p = dexPriceChangeH24.value;
+  if (p == null || !Number.isFinite(p)) return null;
+  const rounded = Math.round(p * 100) / 100;
+  if (rounded === 0) return '+0.00%';
+  const prefix = rounded > 0 ? '+' : '';
+  return `${prefix}${rounded.toFixed(2)}%`;
+});
+
+function formatRelativeUpdated(iso) {
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return null;
+  const sec = Math.max(0, Math.floor((Date.now() - t) / 1000));
+  if (sec < 60) return 'Updated just now';
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `Updated ${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 48) return `Updated ${hr}h ago`;
+  return `Updated ${Math.floor(hr / 24)}d ago`;
+}
+
+function warmingTooltip(kind) {
+  const meta = statsMeta.value;
+  if (!meta) {
+    return kind === 'holder'
+      ? '24h holder change unavailable.'
+      : '24h market cap change unavailable.';
+  }
+  if (meta.redisConfigured === false) {
+    return 'Snapshot database is not configured on the server. Add Redis env vars on Vercel and redeploy.';
+  }
+  const oldest =
+    kind === 'holder' ? meta.holderOldestSnapshotAt : meta.mcapOldestSnapshotAt;
+  if (!oldest) {
+    return 'Collecting history — first snapshot will appear after the next stats refresh.';
+  }
+  const oldestMs = Date.parse(oldest);
+  if (!Number.isFinite(oldestMs)) {
+    return 'Collecting 24h history — metric will appear after about 24 hours.';
+  }
+  const remainMs = MS_DAY - (Date.now() - oldestMs);
+  if (remainMs > 0) {
+    const hrs = Math.max(1, Math.ceil(remainMs / (60 * 60 * 1000)));
+    return `Collecting 24h history — live in about ${hrs}h.`;
+  }
+  return 'Collecting 24h history — metric will appear on the next refresh.';
+}
+
+const holdersChangeTitle = computed(() =>
+  holdersChangeIsWarming.value ? warmingTooltip('holder') : undefined
+);
+
+const marketCapChangeTitle = computed(() =>
+  marketCapChangeIsWarming.value ? warmingTooltip('mcap') : undefined
+);
+
+const holdersTimeLabel = computed(() => {
+  const rel = formatRelativeUpdated(holderCountFetchedAt.value);
+  if (rel) return rel;
+  if (holderChangeFromRedis.value) return '24 hr';
+  return '24 hr';
+});
+
+const holdersTimeTitle = computed(() => {
+  if (holderCountFetchedAt.value) {
+    return `On-chain holder count as of ${holderCountFetchedAt.value}`;
+  }
+  if (statsMeta.value?.holderCountStale) {
+    return 'Holder count refresh in progress';
+  }
+  return undefined;
+});
+
+function applyStatsMetaFromPayload(payload) {
+  if (payload?.statsMeta && typeof payload.statsMeta === 'object') {
+    statsMeta.value = payload.statsMeta;
+    lastKnownStatsMeta.value = payload.statsMeta;
+  } else if (lastKnownStatsMeta.value) {
+    statsMeta.value = lastKnownStatsMeta.value;
+  }
+
+  const fetchedAt = payload?.holderCountFetchedAt ?? payload?.statsMeta?.holderCountFetchedAt;
+  if (fetchedAt) {
+    holderCountFetchedAt.value = fetchedAt;
+    lastKnownHolderCountFetchedAt.value = fetchedAt;
+  } else if (lastKnownHolderCountFetchedAt.value) {
+    holderCountFetchedAt.value = lastKnownHolderCountFetchedAt.value;
+  }
+}
+
+function applyHeroStatsPayload(payload, path) {
     const marketCap = statNum(payload?.marketCap);
+    const dexPctH24 = statNum(payload?.priceChangeH24);
+    const dexPctOk = Number.isFinite(dexPctH24) ? dexPctH24 : null;
+    if (dexPctOk != null) dexPriceChangeH24.value = dexPctOk;
+
+    function resolveMarketCapPctLine() {
+      if (!Object.prototype.hasOwnProperty.call(payload, 'marketCapChangePct24h')) {
+        return lastKnownMcapChangePct.value;
+      }
+      const srv = payload.marketCapChangePct24h;
+      if (srv != null && srv !== '' && Number.isFinite(Number(srv))) {
+        const pct = Number(srv);
+        lastKnownMcapChangePct.value = pct;
+        return pct;
+      }
+      return null;
+    }
+
     const freshMcap = formatMarketCapDisplay(marketCap);
-    if (freshMcap !== '—') {
+    if (Number.isFinite(marketCap) && marketCap > 0) {
       marketCapStat.value = freshMcap;
       lastKnownMcap.value = freshMcap;
+      lastKnownMcapNumeric.value = marketCap;
+      persistMcapUsd(marketCap);
+      marketCapChangePct.value = resolveMarketCapPctLine();
     } else if (lastKnownMcap.value) {
       marketCapStat.value = lastKnownMcap.value;
+      marketCapChangePct.value = resolveMarketCapPctLine();
     } else {
       marketCapStat.value = '—';
+      marketCapChangePct.value = null;
     }
 
     if (path === '/api/toke-price') {
       if (lastKnownSupply.value) totalSupplyStat.value = lastKnownSupply.value;
+      if (lastKnownSupplyNumeric.value != null) {
+        currentSupplyUi.value = lastKnownSupplyNumeric.value;
+      }
       if (lastKnownHolders.value) holdersStat.value = lastKnownHolders.value;
+      holdersChangeDelta.value = lastKnownHolderDelta.value;
+      marketCapChangePct.value = lastKnownMcapChangePct.value;
+      if (lastKnownStatsMeta.value) statsMeta.value = lastKnownStatsMeta.value;
+      if (lastKnownHolderCountFetchedAt.value) {
+        holderCountFetchedAt.value = lastKnownHolderCountFetchedAt.value;
+      }
       return;
+    }
+
+    applyStatsMetaFromPayload(payload);
+
+    if (Object.prototype.hasOwnProperty.call(payload, 'holderCountChange24h')) {
+      const v = payload.holderCountChange24h;
+      if (v != null && v !== '') {
+        const n = Number(v);
+        holdersChangeDelta.value = Number.isFinite(n) ? Math.round(n) : null;
+      } else {
+        holdersChangeDelta.value = null;
+      }
+      lastKnownHolderDelta.value = holdersChangeDelta.value;
+    } else {
+      holdersChangeDelta.value = lastKnownHolderDelta.value;
     }
 
     const totalSupply = statNum(payload?.totalSupply);
@@ -98,10 +384,14 @@ const fetchHeroStats = async () => {
     if (supplyFmt) {
       totalSupplyStat.value = supplyFmt;
       lastKnownSupply.value = supplyFmt;
+      currentSupplyUi.value = totalSupply;
+      lastKnownSupplyNumeric.value = totalSupply;
     } else if (lastKnownSupply.value) {
       totalSupplyStat.value = lastKnownSupply.value;
+      currentSupplyUi.value = lastKnownSupplyNumeric.value;
     } else {
       totalSupplyStat.value = '—';
+      currentSupplyUi.value = null;
     }
 
     const rawHolders = payload?.holderCount;
@@ -111,7 +401,6 @@ const fetchHeroStats = async () => {
       if (holderFmt != null) {
         holdersStat.value = holderFmt;
         lastKnownHolders.value = holderFmt;
-        persistHolderCount(n);
       } else if (lastKnownHolders.value) {
         holdersStat.value = lastKnownHolders.value;
       } else {
@@ -122,33 +411,55 @@ const fetchHeroStats = async () => {
     } else {
       holdersStat.value = '—';
     }
-  } catch (error) {
-    console.error('Error fetching hero stats:', error);
-    if (lastKnownMcap.value) marketCapStat.value = lastKnownMcap.value;
-    if (lastKnownSupply.value) totalSupplyStat.value = lastKnownSupply.value;
-    if (lastKnownHolders.value) holdersStat.value = lastKnownHolders.value;
+}
+
+function applyHeroStatsError() {
+  if (lastKnownMcap.value) marketCapStat.value = lastKnownMcap.value;
+  if (lastKnownSupply.value) totalSupplyStat.value = lastKnownSupply.value;
+  if (lastKnownSupplyNumeric.value != null) {
+    currentSupplyUi.value = lastKnownSupplyNumeric.value;
   }
-};
+  if (lastKnownHolders.value) holdersStat.value = lastKnownHolders.value;
+  holdersChangeDelta.value = lastKnownHolderDelta.value;
+  marketCapChangePct.value = lastKnownMcapChangePct.value;
+  if (lastKnownStatsMeta.value) statsMeta.value = lastKnownStatsMeta.value;
+  if (lastKnownHolderCountFetchedAt.value) {
+    holderCountFetchedAt.value = lastKnownHolderCountFetchedAt.value;
+  }
+}
 
 onMounted(() => {
-  AOS.init();
-  fetchHeroStats();
-  heroStatsIntervalId = window.setInterval(fetchHeroStats, 5000);
+  tryInjectPhonyMcapBootstrapOnce(lastKnownMcapNumeric, marketCapStat, lastKnownMcap);
+  unsubscribeLiveStats = subscribeLiveStats(({ data, path, error }) => {
+    tryInjectPhonyMcapBootstrapOnce(lastKnownMcapNumeric, marketCapStat, lastKnownMcap);
+    if (error) {
+      console.error('Error fetching hero stats:', error);
+      applyHeroStatsError();
+      return;
+    }
+    if (data) applyHeroStatsPayload(data, path);
+  });
+  flushMoonShadeOpacity();
+  window.addEventListener('scroll', scheduleMoonShadeOpacity, { passive: true });
+  window.addEventListener('resize', flushMoonShadeOpacity, { passive: true });
 });
 
 onBeforeUnmount(() => {
-  if (heroStatsIntervalId) {
-    window.clearInterval(heroStatsIntervalId);
+  if (unsubscribeLiveStats) {
+    unsubscribeLiveStats();
+    unsubscribeLiveStats = null;
   }
+  window.removeEventListener('scroll', scheduleMoonShadeOpacity, { passive: true });
+  window.removeEventListener('resize', flushMoonShadeOpacity, { passive: true });
+  if (moonShadeRaf) cancelAnimationFrame(moonShadeRaf);
 });
 </script>
 
 <template>
   <div class="overflow-fix">
     <Navbar />
-    <div class="relative overflow-x-hidden">
-      <!-- Stars (behind global overlay — z-index from scoped .main-container) -->
-      <div class="fixed top-0 main-container">
+    <!-- Fixed layers must NOT be descendants of overflow-x-hidden (CSS forces overflow-y:auto and clips the moon). -->
+    <div class="fixed top-0 main-container">
         <div class="sub-container">
           <div class="sky">
             <div class="stars"></div>
@@ -159,7 +470,19 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <!-- Single page-wide star mute -->
+      <!-- Moon above dim overlay so the albedo reads; fixed sibling avoids .main-container overflow clip -->
+      <div class="hero-moon-layer">
+        <div class="hero-moon-wrap">
+          <HeroMoonGlobe />
+        </div>
+        <div
+          ref="moonShadeEl"
+          class="hero-moon-scroll-shade"
+          aria-hidden="true"
+        />
+      </div>
+
+      <!-- Single page-wide star mute (matches deployed site) -->
       <div
         class="pointer-events-none fixed inset-0 z-0"
         aria-hidden="true"
@@ -170,117 +493,178 @@ onBeforeUnmount(() => {
         <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500/5 rounded-full filter blur-3xl"></div>
       </div>
 
+    <div class="home-scroll-surface relative overflow-x-hidden">
       <div class="relative z-10">
-      <!-- Hero Section -->
-      <div class="relative min-h-screen md:min-h-[110vh] flex items-center justify-center">
-        <!-- Content Container -->
-        <div class="relative container mx-auto px-4 sm:px-6 py-24 md:py-32">
-          <div class="flex flex-col items-center text-center space-y-8">
-            <!-- Main Title -->
-            <h1 class="font-orbitron text-4xl sm:text-6xl md:text-8xl font-semibold tracking-widest text-transparent bg-clip-text 
+      <!-- Hero: headline under navbar, stats pinned to lower hero (moon layout) -->
+      <div class="relative flex min-h-screen min-h-[100dvh] flex-col md:min-h-[110vh]">
+        <div
+          class="hero-headline hero-headline--tight relative flex min-h-0 w-full flex-1 flex-col isolate"
+        >
+          <div
+            class="container mx-auto flex min-h-0 flex-1 flex-col px-4 sm:px-6 pb-16 md:pb-20 hero-stats-pad"
+          >
+            <div class="flex shrink-0 flex-col items-center space-y-5 text-center md:space-y-6">
+              <h1
+                class="font-orbitron text-4xl font-semibold tracking-widest text-transparent bg-clip-text sm:text-6xl md:text-8xl
                        bg-gradient-to-r from-neutral-100 via-neutral-300 to-neutral-100
                        [text-shadow:0_0_30px_rgba(255,255,255,0.2)]"
-                data-aos="fade-in" 
-                data-aos-duration="1000" 
-                data-aos-delay="200">
-              TOKE
-            </h1>
+              >
+                TOKE
+              </h1>
 
-            <!-- Subtitle -->
-            <p class="font-exo text-base sm:text-xl text-neutral-400 max-w-2xl"
-               data-aos="fade-up" 
-               data-aos-duration="1000" 
-               data-aos-delay="400">
-               $TOKE is the cannabis-inspired utility token at the center of a decentralized movement — built by engineers, artists, traders, and tokers worldwide.<br><br>Designed for participation, not speculation, $TOKE unlocks governance, powers community-driven initiatives, and connects global cannabis culture to Web3 infrastructure.<br><br>The Tokeverse isn’t controlled by corporations. It’s shaped by holders.<br><br>Vote. Activate. Elevate.            </p>
-
-            <!-- Quick Stats -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-6 mt-10 md:mt-12 max-w-4xl w-full items-stretch"
-                 data-aos="fade-up" 
-                 data-aos-duration="1000" 
-                 data-aos-delay="600">
-              <div class="flex flex-col items-center justify-between bg-neutral-900/30 backdrop-blur-xl rounded-2xl border border-white/[0.05] px-4 py-6 md:px-5 md:py-7 min-h-[132px] md:min-h-[148px]">
-                <div class="flex min-h-[3.25rem] w-full items-center justify-center px-1">
-                  <p class="font-orbitron tabular-nums text-white text-base sm:text-lg md:text-xl leading-tight text-center [overflow-wrap:anywhere]">{{ totalSupplyStat }}</p>
-                </div>
-                <p class="font-exo text-neutral-400 text-sm mt-3 shrink-0">Total Supply</p>
-              </div>
-              <div class="flex flex-col items-center justify-between bg-neutral-900/30 backdrop-blur-xl rounded-2xl border border-white/[0.05] px-4 py-6 md:px-5 md:py-7 min-h-[132px] md:min-h-[148px]">
-                <div class="flex min-h-[3.25rem] w-full items-center justify-center px-1">
-                  <p class="font-orbitron tabular-nums text-white text-base sm:text-lg md:text-xl leading-tight text-center [overflow-wrap:anywhere]">{{ holdersStat }}</p>
-                </div>
-                <p class="font-exo text-neutral-400 text-sm mt-3 shrink-0">Holders</p>
-              </div>
-              <div class="flex flex-col items-center justify-between bg-neutral-900/30 backdrop-blur-xl rounded-2xl border border-white/[0.05] px-4 py-6 md:px-5 md:py-7 min-h-[132px] md:min-h-[148px]">
-                <div class="flex min-h-[3.25rem] w-full items-center justify-center px-1">
-                  <p class="font-orbitron tabular-nums text-white text-base sm:text-lg md:text-xl leading-tight text-center [overflow-wrap:anywhere]">{{ marketCapStat }}</p>
-                </div>
-                <p class="font-exo text-neutral-400 text-sm mt-3 shrink-0">Market Cap</p>
+              <div class="hero-tagline" aria-label="The Vault has been unlocked. A new Era begins.">
+                <p class="hero-tagline__lead font-orbitron">The Vault has been unlocked.</p>
+                <p class="hero-tagline__era font-exo">A new Era begins.</p>
               </div>
             </div>
 
+            <div class="min-h-[clamp(1.25rem,5vmin,3.5rem)] w-full flex-1" aria-hidden="true" />
+
+            <div class="mx-auto mt-auto w-full max-w-4xl min-w-0 shrink-0 pt-2">
+              <div class="grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:gap-5">
+                <div class="hero-stat-card">
+                  <p
+                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
+                  >
+                    Supply
+                  </p>
+                  <div class="hero-stat-card__figure">
+                    <p
+                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white [overflow-wrap:anywhere] sm:text-lg md:text-xl"
+                    >
+                      {{ totalSupplyStat }}
+                    </p>
+                  </div>
+                  <div class="hero-stat-card__telemetry">
+                    <div
+                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
+                      <div
+                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                      >
+                        <span class="hero-stat-card__metric shrink-0 text-neutral-400">
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">🪙</span>
+                          <span>{{ ORIGINAL_MINT_GROUPED }}</span>
+                        </span>
+                        <span class="hero-stat-card__sep" aria-hidden="true" />
+                        <span
+                          v-if="supplyBurnedPctStr"
+                          class="hero-stat-card__metric shrink-0"
+                          :class="supplyBurnedMetricClass"
+                        >
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">🔥</span>
+                          <span>{{ supplyBurnedPctStr }}</span>
+                        </span>
+                        <span v-else class="hero-stat-card__metric shrink-0 text-neutral-400">—</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="hero-stat-card">
+                  <p
+                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
+                  >
+                    Holders
+                  </p>
+                  <div class="hero-stat-card__figure">
+                    <p
+                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white [overflow-wrap:anywhere] sm:text-lg md:text-xl"
+                    >
+                      {{ holdersStat }}
+                    </p>
+                  </div>
+                  <div class="hero-stat-card__telemetry">
+                    <div
+                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
+                      <div
+                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                      >
+                        <span
+                          v-if="holdersChangeFormatted != null"
+                          class="hero-stat-card__metric shrink-0"
+                          :class="holdersChangeClass"
+                          :title="holdersChangeTitle"
+                        >
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">👤</span>
+                          <span>{{ holdersChangeFormatted }}</span>
+                        </span>
+                        <span v-else class="hero-stat-card__metric shrink-0 text-neutral-400">—</span>
+                        <span class="hero-stat-card__sep" aria-hidden="true" />
+                        <span
+                          class="hero-stat-card__metric shrink-0 text-neutral-500"
+                          :title="holdersTimeTitle"
+                        >
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">🕔</span>
+                          <span>{{ holdersTimeLabel }}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="hero-stat-card">
+                  <p
+                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
+                  >
+                    Market Cap
+                  </p>
+                  <div class="hero-stat-card__figure">
+                    <p
+                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white [overflow-wrap:anywhere] sm:text-lg md:text-xl"
+                    >
+                      {{ marketCapStat }}
+                    </p>
+                  </div>
+                  <div class="hero-stat-card__telemetry">
+                    <div
+                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
+                      <div
+                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                      >
+                        <span
+                          v-if="marketCapChangeFormatted != null"
+                          class="hero-stat-card__metric shrink-0"
+                          :class="marketCapChangeClass"
+                          :title="marketCapChangeTitle"
+                        >
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">📈</span>
+                          <span>{{ marketCapChangeFormatted }}</span>
+                        </span>
+                        <span v-else class="hero-stat-card__metric shrink-0 text-neutral-400">—</span>
+                        <span
+                          v-if="dexPriceChangeFormatted"
+                          class="hero-stat-card__sep"
+                          aria-hidden="true"
+                        />
+                        <span
+                          v-if="dexPriceChangeFormatted"
+                          class="hero-stat-card__metric shrink-0 text-neutral-500"
+                          title="Dex price change (24h) — not the Redis market-cap track until history is ready"
+                        >
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">💱</span>
+                          <span>Price {{ dexPriceChangeFormatted }}</span>
+                        </span>
+                        <span class="hero-stat-card__sep" aria-hidden="true" />
+                        <span class="hero-stat-card__metric shrink-0 text-neutral-500">
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">🕔</span>
+                          <span>{{ mcapChangeFromRedis ? '24 hr' : 'Mcap 24h' }}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Trade $TOKE (logo CTAs — visual shell matches hero stat cards) -->
-      <div class="relative">
-        <div class="relative container mx-auto px-4 sm:px-6 pt-10 pb-14 md:pt-12 md:pb-20">
-          <div class="flex flex-col items-center text-center space-y-8 max-w-4xl mx-auto w-full"
-               data-aos="fade-up"
-               data-aos-duration="800">
-            <p class="font-orbitron text-3xl sm:text-5xl md:text-6xl font-semibold text-center pb-1 relative leading-tight tracking-wide">
-              <span class="text-white">BUY / TRADE</span>
-            </p>
-            <p class="font-exo text-neutral-400 max-w-2xl mx-auto text-base md:text-lg leading-relaxed [text-wrap:balance]">
-              Add $TOKE to your wallet through Coinbase, Jupiter, or your preferred Solana trading platform. Connect, swap, and join the Tokeverse in seconds.
-            </p>
-            <div class="grid grid-cols-2 gap-2 md:gap-[1.125rem] w-full items-stretch">
-              <a href="https://www.coinbase.com/price/mctoken-solana-amgumqeqw8h74trc8ukkjzzwtxbdps496wh4gly2mcpo-token"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 class="group relative flex min-h-[99px] md:min-h-[111px] items-center justify-center overflow-hidden rounded-2xl border border-white/[0.05] bg-neutral-900/30 px-3 py-[1.125rem] backdrop-blur-xl transition-all duration-300 hover:bg-neutral-900/45 md:px-4 md:py-5">
-                <div class="pointer-events-none absolute inset-0 rounded-2xl bg-purple-500/10 blur-xl transition-all duration-300 group-hover:bg-purple-500/[0.18]"></div>
-                <span class="relative z-[1] flex w-full min-h-[2.625rem] items-center justify-center px-1.5 sm:min-h-[3rem]">
-                  <img
-                    src="../assets/logos/trade/coinbase-wordmark.svg"
-                    alt="Coinbase"
-                    class="h-9 w-auto max-h-9 max-w-full origin-center scale-[0.75] object-contain object-center select-none sm:h-10 sm:max-h-10 md:scale-[0.78]"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </span>
-              </a>
-              <a href="https://jup.ag/tokens/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 class="group relative flex min-h-[99px] md:min-h-[111px] items-center justify-center overflow-hidden rounded-2xl border border-white/[0.05] bg-neutral-900/30 px-3 py-[1.125rem] backdrop-blur-xl transition-all duration-300 hover:bg-neutral-900/45 md:px-4 md:py-5">
-                <div class="pointer-events-none absolute inset-0 rounded-2xl bg-sky-500/10 blur-xl transition-all duration-300 group-hover:bg-sky-500/[0.18]"></div>
-                <span class="relative z-[1] flex w-full min-h-[2.625rem] items-center justify-center px-1.5 sm:min-h-[3rem]">
-                  <img
-                    src="../assets/logos/trade/jupiter-wordmark.svg"
-                    alt="Jupiter"
-                    class="h-8 w-auto max-h-8 max-w-full object-contain object-center select-none sm:h-9 sm:max-h-9 md:h-10 md:max-h-10"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+      <TradeSpotlight />
 
-      <!-- Rest of the sections: ecosystem first, then foundations → lore → what’s next -->
-      <div id="Ecosystem" class="scroll-mt-20">
-        <EcosystemEra />
-      </div>
-      <div id="Genesis" class="scroll-mt-20">
-        <GenesisEra />
-      </div>
-      <div>
-        <GreatMcVoteScrolly />
-      </div>
-      <Timeline />
+      <McVoteEraTimeline />
       </div>
     </div>
     <Footer />
@@ -295,6 +679,10 @@ $starStartOffset: 600px;
 $starOneScrollDuration: 150s;
 $starTwoScrollDuration: 175s;
 $starThreeScrollDuration: 200s;
+$numStarOneMobile: 160;
+$numStarTwoMobile: 80;
+$numStarThreeMobile: 36;
+$numCometMobile: 2;
 $numStarOneStars: 800;
 $numStarTwoStars: 400;
 $numStarThreeStars: 100;
@@ -302,14 +690,313 @@ $numComet: 5;
 
 .main-container {
   overflow: hidden;
+  position: fixed;
+  inset: 0;
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   z-index: -1;
   pointer-events: none;
+  isolation: isolate;
+}
+
+/* Hero tagline — orbitron lead, glow, hairline, italic coda */
+.hero-tagline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 28rem;
+  text-align: center;
+}
+
+.hero-tagline__lead {
+  margin: 0;
+  font-size: clamp(0.9375rem, 2.1vw, 1.125rem);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.55;
+  color: rgb(229 229 229 / 0.92);
+  text-shadow:
+    0 0 20px rgb(255 255 255 / 0.14),
+    0 0 40px rgb(147 197 253 / 0.06);
+}
+
+.hero-tagline__lead::after {
+  content: '';
+  display: block;
+  width: 2.75rem;
+  height: 1px;
+  margin: 0.85rem auto 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.22) 50%,
+    transparent
+  );
+}
+
+.hero-tagline__era {
+  margin: 0.65rem 0 0;
+  font-size: clamp(1.0625rem, 2.35vw, 1.3125rem);
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: 0.05em;
+  line-height: 1.45;
+  color: rgb(163 163 163 / 0.88);
+  text-shadow: 0 0 18px rgb(255 255 255 / 0.08);
+}
+
+@media (min-width: 768px) {
+  .hero-tagline {
+    max-width: 32rem;
+  }
+
+  .hero-tagline__lead {
+    letter-spacing: 0.14em;
+  }
+}
+
+/* Hero headline: clear fixed navbar (~5.25rem + notch inset) + symmetric rail */
+.hero-headline {
+  --hero-copy-rail: clamp(0.75rem, 2.8vmin, 2rem);
+  --hero-nav-offset: calc(5.25rem + env(safe-area-inset-top, 0px));
+  padding-top: calc(
+    var(--hero-nav-offset) + var(--hero-copy-rail) + var(--hero-headline-extra-copy-inset, 0px)
+  );
+  padding-bottom: var(--hero-copy-rail);
+}
+
+.hero-headline--tight {
+  --hero-copy-rail: clamp(0.35rem, 1.2vmin, 1rem);
+  --hero-headline-extra-copy-inset: clamp(0.65rem, 2.4vmin, 1.75rem);
+}
+
+@media (min-width: 768px) {
+  .hero-headline {
+    --hero-copy-rail: clamp(0.875rem, 3.2vmin, 2rem);
+  }
+
+  .hero-headline--tight {
+    --hero-copy-rail: clamp(0.4rem, 1.6vmin, 1rem);
+    --hero-headline-extra-copy-inset: clamp(0.85rem, 2.8vmin, 2rem);
+  }
+}
+
+/* Bottom breathing room — moon layer + home indicator safe area */
+.hero-stats-pad {
+  padding-bottom: max(clamp(5rem, 20vmin, 11rem), env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .hero-stats-pad {
+    padding-bottom: max(clamp(6rem, 24vmin, 12rem), env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Hero stat HUD — glass tile, cyan/violet rim, telemetry inset (matches trade spotlight vibe) */
+.hero-stat-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 168px;
+  flex-direction: column;
+  padding: 0.7rem 0.75rem 0.65rem;
+  border-radius: 1rem;
+  isolation: isolate;
+  background: linear-gradient(
+    160deg,
+    rgba(12, 18, 32, 0.78) 0%,
+    rgba(6, 10, 22, 0.9) 45%,
+    rgba(3, 7, 18, 0.96) 100%
+  );
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 10px 36px -18px rgba(56, 189, 248, 0.22),
+    0 28px 64px -32px rgba(139, 92, 246, 0.14);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+@media (min-width: 640px) {
+  .hero-stat-card {
+    min-height: 178px;
+    padding: 0.85rem 0.9rem 0.75rem;
+    border-radius: 1.05rem;
+  }
+}
+
+.hero-stat-card::before {
+  content: '';
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(103, 232, 249, 0.4) 22%,
+    rgba(167, 139, 250, 0.45) 50%,
+    rgba(56, 189, 248, 0.38) 78%,
+    transparent
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-stat-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 13px 13px;
+  opacity: 0.5;
+  mask-image: radial-gradient(ellipse 100% 90% at 50% 0%, rgba(0, 0, 0, 0.65), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-stat-card__eyebrow {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  line-height: 1.2;
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.06);
+}
+
+@media (min-width: 640px) {
+  .hero-stat-card__eyebrow {
+    line-height: 1.15;
+  }
+}
+
+.hero-stat-card__figure {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.15rem;
+  padding: 0.3rem 0.2rem 0.4rem;
+}
+
+.hero-stat-card__value {
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.08);
+}
+
+.hero-stat-card__telemetry {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.11);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.hero-stat-card__telemetry-row {
+  display: inline-flex;
+  min-width: min-content;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.hero-stat-card__metric {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.375rem;
+}
+
+.hero-stat-card__metric-ico {
+  flex-shrink: 0;
+  display: inline-block;
+  line-height: 1;
+}
+
+.hero-stat-card__sep {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1px;
+  height: 0.875rem;
+  margin: 0 0.75rem;
+  align-self: center;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(148, 163, 184, 0.28) 20%,
+    rgba(103, 232, 249, 0.35) 50%,
+    rgba(148, 163, 184, 0.28) 80%,
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-stat-card__eyebrow {
+    text-shadow: none;
+  }
+
+  .hero-stat-card__value {
+    text-shadow: none;
+  }
+}
+
+.home-scroll-surface {
+  position: relative;
+  z-index: 2; /* above .hero-moon-layer (1), below Navbar/Footer (50) */
+}
+
+.hero-moon-layer {
   position: fixed;
   top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  min-height: 100dvh;
+  /* Full viewport: lets us pin moon top to 50dvh; pointer-events none so hero stays clickable */
+  /* Above page dim overlay (z-0); below hero copy (z-10) — not inside overflow:hidden .main-container */
+  z-index: 1;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.hero-moon-wrap {
+  position: absolute;
+  top: 50dvh;
   left: 0;
   right: 0;
+  bottom: 0;
+  z-index: 0;
+  overflow: visible;
+}
+
+.hero-moon-scroll-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  will-change: opacity;
+  background: linear-gradient(
+    to bottom,
+    rgba(2, 6, 23, 0) 0%,
+    rgba(2, 6, 23, 0.08) 42%,
+    rgba(0, 0, 0, 0.38) 76%,
+    rgba(0, 0, 0, 0.72) 100%
+  );
+}
+
+.sub-container {
+  position: absolute;
+  inset: 0;
 }
 
 @function create-stars($n) {
@@ -359,23 +1046,56 @@ $numComet: 5;
 }
 
 .stars {
-  @include star-template($numStarOneStars, 1px, $starOneScrollDuration);
+  @include star-template($numStarOneMobile, 1px, $starOneScrollDuration);
   will-change: transform;
+}
+
+@media (min-width: 768px) {
+  .stars {
+    @include star-template($numStarOneStars, 1px, $starOneScrollDuration);
+  }
 }
 
 .stars2 {
-  @include star-template($numStarTwoStars, 2px, $starTwoScrollDuration);
+  @include star-template($numStarTwoMobile, 2px, $starTwoScrollDuration);
   will-change: transform;
+}
+
+@media (min-width: 768px) {
+  .stars2 {
+    @include star-template($numStarTwoStars, 2px, $starTwoScrollDuration);
+  }
 }
 
 .stars3 {
-  @include star-template($numStarThreeStars, 3px, $starThreeScrollDuration);
+  @include star-template($numStarThreeMobile, 3px, $starThreeScrollDuration);
   will-change: transform;
 }
 
+@media (min-width: 768px) {
+  .stars3 {
+    @include star-template($numStarThreeStars, 3px, $starThreeScrollDuration);
+  }
+}
+
 .comet {
-  @include shooting-star-template($numComet, 5px, 10s);
+  @include shooting-star-template($numCometMobile, 5px, 10s);
   will-change: transform;
+}
+
+@media (min-width: 768px) {
+  .comet {
+    @include shooting-star-template($numComet, 5px, 10s);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stars,
+  .stars2,
+  .stars3,
+  .comet {
+    animation: none !important;
+  }
 }
 
 @keyframes animStar {

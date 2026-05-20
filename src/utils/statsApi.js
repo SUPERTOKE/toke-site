@@ -42,11 +42,9 @@ export function statNum(value) {
   return Number.isFinite(n) ? n : NaN;
 }
 
-/** USD market cap with thousands separators and exactly 2 fractional digits (hero stat box + navbar). */
+/** USD market cap with thousands separators, whole dollars only (Dex mcap is integer-scale). */
 export function formatMarketCapDisplay(value) {
   if (!Number.isFinite(value) || value <= 0) return '—';
-  const [intRaw, frac = '00'] = value.toFixed(2).split('.');
-  const intNum = Number.parseInt(intRaw, 10);
-  const intFormatted = new Intl.NumberFormat('en-US').format(intNum);
-  return `$${intFormatted}.${frac}`;
+  const rounded = Math.round(value);
+  return `$${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(rounded)}`;
 }

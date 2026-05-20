@@ -8,7 +8,7 @@
 
 <style>
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   width: 100%;
@@ -20,7 +20,7 @@ body {
 #app {
   min-height: 100vh;
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow-x: clip;
   position: relative;
 }
 

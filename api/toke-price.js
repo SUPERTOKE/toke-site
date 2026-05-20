@@ -18,6 +18,7 @@ export default async function handler(req, res) {
       marketCap: live.marketCap,
       marketCapSource: live.marketCapSource,
       pairAddress: live.pairAddress,
+      priceChangeH24: live.priceChangeH24,
       updatedAt: new Date().toISOString()
     });
   } catch (error) {

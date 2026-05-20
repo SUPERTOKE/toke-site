@@ -14,7 +14,7 @@ html {
 body {
   min-height: 100vh;
   min-height: -webkit-fill-available; /* For iOS compatibility */
-  overflow-x: hidden; 
+  overflow-x: clip;
 }
 
 .swv-dropdown {
@@ -89,7 +89,8 @@ body {
 }
 
 .overflow-fix {
-  overflow-x: hidden;
+  /* clip avoids horizontal scroll without forcing overflow-y:auto (which clips fixed moon vertically) */
+  overflow-x: clip;
   width: 100%;
   position: relative;
 }
