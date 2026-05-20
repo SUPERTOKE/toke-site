@@ -178,7 +178,7 @@ const holdersChangeFormatted = computed(() => {
     if (d > 0) return `+${d}`;
     return String(d);
   }
-  if (holdersChangeIsWarming.value) return null;
+  if (holdersChangeIsWarming.value) return '—';
   return null;
 });
 
@@ -206,7 +206,7 @@ const marketCapChangeFormatted = computed(() => {
     const prefix = rounded > 0 ? '+' : '';
     return `${prefix}${rounded.toFixed(2)}%`;
   }
-  if (marketCapChangeIsWarming.value) return null;
+  if (marketCapChangeIsWarming.value) return '—';
   return null;
 });
 
