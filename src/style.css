@@ -17,41 +17,6 @@ body {
   overflow-x: clip;
 }
 
-.swv-dropdown {
-  @apply w-full rounded-xl !important;
-}
-
-.swv-button {
-  @apply rounded-xl w-full !important;
-}
-
-.swv-button-trigger {
-  @apply bg-neutral-900/30 border border-white/[0.05] justify-center 
-         text-neutral-300 hover:bg-white/[0.03] hover:text-white 
-         rounded-xl text-sm font-orbitron transition-all duration-200 
-         backdrop-blur-xl !important;
-}
-
-.swv-dropdown-list {
-  @apply top-auto bottom-full md:top-full md:bottom-auto md:left-0 md:right-auto 
-         rounded-xl text-neutral-300 bg-neutral-900/95 backdrop-blur-xl 
-         border border-white/[0.05] font-orbitron !important;
-}
-
-.swv-dropdown-list-active {
-  @apply transform -translate-y-3 md:translate-y-3 
-         bg-neutral-900/95 font-orbitron rounded-xl !important;
-}
-
-.swv-modal-wrapper {
-  @apply bg-neutral-900/95 font-orbitron backdrop-blur-xl 
-         rounded-xl border border-white/[0.05] !important;
-}
-
-.wallet-adapter-button-trigger {
-  @apply rounded-xl !important;
-}
-
 @font-face {
   font-family: 'Orbitron';
   src: url('./assets/fonts/Orbitron.ttf');
@@ -59,24 +24,6 @@ body {
 
 .font-orbitron {
   font-family: 'Orbitron', sans-serif;
-}
-
-@font-face {
-  font-family: 'OpenSans';
-  src: url('./assets/fonts/OpenSans.ttf');
-}
-
-.font-opensans {
-  font-family: 'OpenSans', sans-serif;
-}
-
-@font-face {
-  font-family: 'Roboto';
-  src: url('./assets/fonts/RobotoCondensed.ttf');
-}
-
-.font-roboto {
-  font-family: 'Roboto', sans-serif;
 }
 
 @font-face {

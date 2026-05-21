@@ -1,11 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { subscribeTokeChart } from '../../utils/tokeChartPoll';
-import {
-  prepareSparklineValues,
-  buildSmoothSvgPaths,
-  toneFromChangePct
-} from '../../utils/tokeChartSeries';
+import { computed, toRef } from 'vue';
+import { useTokePriceSeries } from '../../composables/useTokePriceSeries';
 
 const props = defineProps({
   /** SVG viewport height (width is always 100 via viewBox). */
@@ -26,20 +21,26 @@ const props = defineProps({
   aspectFit: { type: String, default: 'none' }
 });
 
-const rawPoints = ref([]);
-const changePct24h = ref(null);
-const loading = ref(true);
-const loadError = ref(null);
-const isStale = ref(false);
-
-let unsubscribe = null;
 let sparkIdCounter = 0;
 const uid = `s${++sparkIdCounter}-${Math.random().toString(36).slice(2, 9)}`;
 
-const resolvedTone = computed(() => {
-  if (props.tone !== 'auto') return props.tone;
-  return toneFromChangePct(changePct24h.value);
+const {
+  changePct24h,
+  loading,
+  error: loadError,
+  isStale,
+  tone: autoTone,
+  paths,
+  hasSeries: hasPath
+} = useTokePriceSeries({
+  height: toRef(props, 'height'),
+  pathPadding: toRef(props, 'pathPadding'),
+  yInset: toRef(props, 'yInset')
 });
+
+const resolvedTone = computed(() =>
+  props.tone !== 'auto' ? props.tone : autoTone.value
+);
 
 const strokeClass = computed(() => {
   const t = resolvedTone.value;
@@ -48,40 +49,9 @@ const strokeClass = computed(() => {
   return 'toke-sparkline--neutral';
 });
 
-const paths = computed(() => {
-  const values = prepareSparklineValues(rawPoints.value);
-  return buildSmoothSvgPaths(values, 100, props.height, props.pathPadding, props.yInset);
-});
-
 const preserveAspectRatio = computed(() =>
   props.aspectFit === 'meet' ? 'xMidYMid meet' : 'none'
 );
-
-const hasPath = computed(() => Boolean(paths.value.line));
-
-function applyPayload({ data, error }) {
-  if (error) {
-    loadError.value = error?.message ?? 'Unavailable';
-    if (!rawPoints.value.length) loading.value = false;
-    return;
-  }
-  loadError.value = null;
-  rawPoints.value = data.points ?? [];
-  changePct24h.value =
-    data.changePct24h != null && Number.isFinite(Number(data.changePct24h))
-      ? Number(data.changePct24h)
-      : null;
-  isStale.value = Boolean(data.stale);
-  loading.value = false;
-}
-
-onMounted(() => {
-  unsubscribe = subscribeTokeChart(applyPayload);
-});
-
-onBeforeUnmount(() => {
-  unsubscribe?.();
-});
 
 defineExpose({
   changePct24h,

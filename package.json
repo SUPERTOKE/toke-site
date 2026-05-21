@@ -11,35 +11,29 @@
     "process:trade-previews": "node scripts/knockout-edge-transparent.mjs src/assets/trade-previews/toke-coinbase-mobile.png src/assets/trade-previews/toke-coinbase-mobile.png --max=58 --spread=34 && node scripts/knockout-edge-transparent.mjs src/assets/trade-previews/toke-jupiter-mobile.png src/assets/trade-previews/toke-jupiter-mobile.png --max=58 --spread=34",
     "preview": "vite preview",
     "verify:redis": "node scripts/verify-redis-snapshots.mjs",
-    "check:stats-api": "node scripts/check-stats-api.mjs"
+    "check:stats-api": "node scripts/check-stats-api.mjs",
+    "check": "npm run check:dead-code && npm run check:deps && npm run lint && npm run build",
+    "check:dead-code": "knip",
+    "check:deps": "depcheck --ignores=@vitejs/plugin-vue,sass,sharp,tailwindcss,vite",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@metaplex-foundation/js": "^0.19.4",
-    "@solana/wallet-adapter-base": "^0.9.23",
-    "@solana/wallet-adapter-vue": "^0.4.5",
-    "@solana/wallet-adapter-wallets": "^0.19.30",
-    "@solana/web3.js": "^1.77.3",
     "@upstash/redis": "^1.38.0",
-    "axios": "^1.6.7",
-    "gsap": "^3.12.5",
-    "sass": "^1.71.1",
-    "sass-loader": "^14.1.1",
-    "solana-wallets-vue": "^0.6.1",
-    "tailwind": "^4.0.0",
     "three": "^0.160.0",
     "vue": "^3.2.47",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
-    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@vitejs/plugin-vue": "^4.1.0",
-    "assert": "^2.0.0",
-    "crypto-browserify": "^3.12.0",
-    "daisyui": "^3.0.0",
-    "rollup-plugin-node-polyfills": "^0.2.1",
+    "depcheck": "^1.4.7",
+    "eslint": "^9.22.0",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "eslint-plugin-vue": "^9.33.0",
+    "knip": "^5.45.0",
+    "sass": "^1.71.1",
     "sharp": "^0.34.5",
     "tailwindcss": "^3.3.2",
-    "util": "^0.12.5",
     "vite": "^4.3.9"
   }
 }

@@ -3,19 +3,65 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/logo.png" class="invert" />
+  <link rel="icon" type="image/png" href="/logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>$TOKE | McToken</title>
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
-    integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+  <meta name="description"
+    content="$TOKE is the cannabis-inspired utility token at the center of a decentralized movement — built by engineers, artists, traders, and tokers worldwide." />
+  <link rel="canonical" href="https://mctoken.xyz/" />
+
+  <!-- Open Graph (Discord, iMessage, Slack, Facebook, etc.) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="McToken" />
+  <meta property="og:url" content="https://mctoken.xyz/" />
+  <meta property="og:title" content="$TOKE | McToken" />
+  <meta property="og:description"
+    content="$TOKE is the cannabis-inspired utility token at the center of a decentralized movement — built by engineers, artists, traders, and tokers worldwide." />
+  <meta property="og:image" content="https://mctoken.xyz/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="McToken $TOKE banner with Moonman astronauts in space" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- X (Twitter) -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="$TOKE | McToken" />
+  <meta name="twitter:description"
+    content="$TOKE is the cannabis-inspired utility token at the center of a decentralized movement — built by engineers, artists, traders, and tokers worldwide." />
+  <meta name="twitter:image" content="https://mctoken.xyz/og-image.png" />
+  <meta name="twitter:image:alt" content="McToken $TOKE banner with Moonman astronauts in space" />
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://mctoken.xyz/#website",
+          "url": "https://mctoken.xyz/",
+          "name": "McToken",
+          "description": "$TOKE is the cannabis-inspired utility token at the center of a decentralized movement — built by engineers, artists, traders, and tokers worldwide.",
+          "inLanguage": "en-US"
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://mctoken.xyz/#organization",
+          "name": "McToken",
+          "url": "https://mctoken.xyz/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://mctoken.xyz/logo.png"
+          },
+          "sameAs": []
+        }
+      ]
+    }
+  </script>
 </head>
 
 <body>
   <div id="app"></div>
-  <script>
-    // Global node polyfill.
-    window.global = window;
-  </script>
   <script type="module" src="/src/main.js"></script>
 </body>
 

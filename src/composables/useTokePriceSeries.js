@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, toValue } from 'vue';
 import { subscribeTokeChart } from '../utils/tokeChartPoll';
 import {
   prepareSparklineValues,
@@ -13,7 +13,9 @@ import {
  * const { linePath, changePct24h, tone } = useTokePriceSeries({ height: 32 });
  */
 export function useTokePriceSeries(options = {}) {
-  const { height = 40 } = options;
+  const height = computed(() => toValue(options.height) ?? 40);
+  const pathPadding = computed(() => toValue(options.pathPadding) ?? 3);
+  const yInset = computed(() => toValue(options.yInset) ?? 0.14);
 
   const rawPoints = ref([]);
   const changePct24h = ref(null);
@@ -27,16 +29,22 @@ export function useTokePriceSeries(options = {}) {
 
   const paths = computed(() => {
     const values = prepareSparklineValues(rawPoints.value);
-    return buildSmoothSvgPaths(values, 100, height, 3);
+    return buildSmoothSvgPaths(
+      values,
+      100,
+      height.value,
+      pathPadding.value,
+      yInset.value
+    );
   });
 
   const linePath = computed(() => paths.value.line);
   const areaPath = computed(() => paths.value.area);
   const hasSeries = computed(() => Boolean(linePath.value));
 
-  function applyPayload({ data, err }) {
-    if (err) {
-      error.value = err?.message ?? 'Unavailable';
+  function applyPayload({ data, error: pollErr }) {
+    if (pollErr) {
+      error.value = pollErr?.message ?? 'Unavailable';
       if (!rawPoints.value.length) loading.value = false;
       return;
     }
@@ -51,9 +59,7 @@ export function useTokePriceSeries(options = {}) {
   }
 
   onMounted(() => {
-    unsubscribe = subscribeTokeChart(({ data, error: pollErr }) => {
-      applyPayload({ data, err: pollErr });
-    });
+    unsubscribe = subscribeTokeChart(applyPayload);
   });
 
   onBeforeUnmount(() => {
@@ -67,6 +73,7 @@ export function useTokePriceSeries(options = {}) {
     error,
     isStale,
     tone,
+    paths,
     linePath,
     areaPath,
     hasSeries

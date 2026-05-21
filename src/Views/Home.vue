@@ -1,14 +1,20 @@
 <script setup>
 import { onMounted, ref, onBeforeUnmount, shallowRef, computed, defineAsyncComponent } from 'vue';
 import Navbar from '../Components/Navbar.vue';
-import Footer from '../Components/Footer.vue';
-import McVoteEraTimeline from '../Components/Home/McVoteEraTimeline.vue';
-import TradeSpotlight from '../Components/Home/TradeSpotlight.vue';
 import { statNum, formatMarketCapDisplay } from '../utils/statsApi';
 import { subscribeLiveStats } from '../utils/liveStatsPoll';
 
 const HeroMoonGlobe = defineAsyncComponent(() =>
   import('../Components/Home/HeroMoonGlobe.vue')
+);
+const TradeSpotlight = defineAsyncComponent(() =>
+  import('../Components/Home/TradeSpotlight.vue')
+);
+const McVoteEraTimeline = defineAsyncComponent(() =>
+  import('../Components/Home/McVoteEraTimeline.vue')
+);
+const Footer = defineAsyncComponent(() =>
+  import('../Components/Footer.vue')
 );
 
 let unsubscribeLiveStats = null;

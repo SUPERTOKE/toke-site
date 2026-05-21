@@ -8,7 +8,6 @@ import {
   tokenOfficialInfo,
 } from '../../data/tradeVenues';
 import coinbasePhone from '../../assets/trade-previews/toke-coinbase-mobile.png';
-import coinbaseWordmark from '../../assets/logos/trade/coinbase-wordmark.svg';
 
 const copyState = ref('idle');
 
@@ -97,7 +96,7 @@ async function copyMintAddress() {
                 class="relative mt-auto flex min-h-[3.25rem] items-center justify-center border-t border-white/[0.1] bg-black/35 px-11 py-3.5 backdrop-blur-sm sm:min-h-[3.5rem] sm:px-12 sm:py-5 sm:backdrop-blur-md"
               >
                 <img
-                  :src="coinbaseWordmark"
+                  :src="coinbaseVenue.logo"
                   alt=""
                   aria-hidden="true"
                   class="h-9 w-auto max-h-9 max-w-[min(100%,11rem)] origin-center scale-[0.78] object-contain object-center select-none transition-opacity duration-300 group-hover:opacity-100 sm:h-10 sm:max-h-10 md:scale-[0.82] opacity-95"

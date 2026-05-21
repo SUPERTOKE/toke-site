@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/main.js!",
+    "api/**/*.js!",
+    "scripts/**/*.{js,mjs}!"
+  ],
+  "project": [
+    "src/**/*.{js,vue}!",
+    "api/**/*.js!",
+    "scripts/**/*.{js,mjs}!"
+  ],
+  "ignoreBinaries": ["vercel"],
+  "ignoreDependencies": [
+    "@vitejs/plugin-vue",
+    "sass",
+    "sharp",
+    "tailwindcss",
+    "vite"
+  ],
+  "ignoreExportsUsedInFile": true
+}
