@@ -6,7 +6,7 @@ import {
   formatMarketCapDisplay,
   formatLiquidityDisplay,
   formatAvgTokeDisplay,
-  formatAvgTokeDelta
+  formatAvgWalletUsd
 } from '../utils/statsApi';
 import { subscribeLiveStats } from '../utils/liveStatsPoll';
 
@@ -155,9 +155,9 @@ const lastKnownAvgToke = ref(null);
 const marketCapChangePct = ref(null);
 /** Redis-backed `liquidityChangePct24h` from `/api/toke-stats` only. */
 const liquidityChangePct = ref(null);
-/** Redis-backed `avgTokeChange24h` from `/api/toke-stats` only. */
-const avgTokeChangeDelta = ref(null);
-const lastKnownAvgTokeDelta = ref(null);
+/** Avg wallet USD (avg TOKE × live price) for telemetry row. */
+const avgWalletUsd = ref(null);
+const lastKnownAvgWalletUsd = ref(null);
 /** Burned % string only (no emoji) — pairs with 🔥 in template for even emoji–value spacing. */
 const supplyBurnedPctStr = computed(() => {
   const cur = currentSupplyUi.value;
@@ -193,10 +193,6 @@ const mcapChangeFromRedis = computed(
 
 const liquidityChangeFromRedis = computed(
   () => statsMeta.value?.liquidityChange24hSource === 'redis'
-);
-
-const avgTokeChangeFromRedis = computed(
-  () => statsMeta.value?.avgTokeChange24hSource === 'redis'
 );
 
 const holdersChangeIsWarming = computed(
@@ -284,37 +280,31 @@ const liquidityChangeClass = computed(() => {
   return 'text-red-400/90';
 });
 
-const avgTokeChangeIsWarming = computed(
+const avgWalletUsdIsPending = computed(
   () =>
     hasLiveAvgTokeStat.value &&
-    !avgTokeChangeFromRedis.value &&
-    (avgTokeChangeDelta.value == null || !Number.isFinite(avgTokeChangeDelta.value))
+    (avgWalletUsd.value == null || !Number.isFinite(avgWalletUsd.value) || avgWalletUsd.value <= 0)
 );
 
-const avgTokeChangeFormatted = computed(() => {
-  const d = avgTokeChangeDelta.value;
-  if (avgTokeChangeFromRedis.value && d != null && Number.isFinite(d)) {
-    return formatAvgTokeDelta(d);
+const avgWalletUsdFormatted = computed(() => {
+  const usd = avgWalletUsd.value;
+  if (usd != null && Number.isFinite(usd) && usd > 0) {
+    return formatAvgWalletUsd(usd);
   }
-  if (avgTokeChangeIsWarming.value) return '—';
+  if (avgWalletUsdIsPending.value) return '—';
   return null;
 });
 
-const avgTokeChangeClass = computed(() => {
-  if (avgTokeChangeIsWarming.value) return 'text-neutral-400';
-  const d = avgTokeChangeDelta.value;
-  if (d == null || !Number.isFinite(d)) return 'text-neutral-400';
-  if (d > 0) return 'text-green-400/90';
-  if (d < 0) return 'text-red-400/90';
-  return 'text-neutral-500';
-});
+const avgWalletUsdMetricClass = computed(() =>
+  avgWalletUsdIsPending.value ? 'text-neutral-400' : 'text-neutral-200/95'
+);
 
 function warmingTooltip(kind) {
   const meta = statsMeta.value;
   if (!meta) {
     if (kind === 'holder') return '24h holder change unavailable.';
     if (kind === 'liquidity') return '24h liquidity change unavailable.';
-    if (kind === 'avgToke') return '24h avg TOKER change unavailable.';
+    if (kind === 'avgToke') return 'Avg wallet USD unavailable (needs live price).';
     return '24h market cap change unavailable.';
   }
   if (meta.redisConfigured === false) {
@@ -355,8 +345,8 @@ const liquidityChangeTitle = computed(() =>
   liquidityChangeIsWarming.value ? warmingTooltip('liquidity') : undefined
 );
 
-const avgTokeChangeTitle = computed(() =>
-  avgTokeChangeIsWarming.value ? warmingTooltip('avgToke') : undefined
+const avgWalletUsdTitle = computed(() =>
+  avgWalletUsdIsPending.value ? warmingTooltip('avgToke') : 'Avg wallet holdings in USD (avg TOKE × price)'
 );
 
 /** Telemetry clock row — always the 24h window label (not on-chain refresh time). */
@@ -464,7 +454,7 @@ function applyHeroStatsPayload(payload, path) {
       if (lastKnownLiquidity.value) liquidityStat.value = lastKnownLiquidity.value;
       liquidityChangePct.value = lastKnownLiquidityChangePct.value;
       if (lastKnownAvgToke.value) avgTokeStat.value = lastKnownAvgToke.value;
-      avgTokeChangeDelta.value = lastKnownAvgTokeDelta.value;
+      if (lastKnownAvgWalletUsd.value != null) avgWalletUsd.value = lastKnownAvgWalletUsd.value;
       if (lastKnownStatsMeta.value) statsMeta.value = lastKnownStatsMeta.value;
       if (lastKnownHolderCountFetchedAt.value) {
         holderCountFetchedAt.value = lastKnownHolderCountFetchedAt.value;
@@ -531,17 +521,21 @@ function applyHeroStatsPayload(payload, path) {
       avgTokeStat.value = '—';
     }
 
-    if (Object.prototype.hasOwnProperty.call(payload, 'avgTokeChange24h')) {
-      const v = payload.avgTokeChange24h;
-      if (v != null && v !== '') {
-        const n = Number(v);
-        avgTokeChangeDelta.value = Number.isFinite(n) ? Math.round(n * 1000) / 1000 : null;
-      } else {
-        avgTokeChangeDelta.value = null;
+    const avgTokeForUsd = statNum(payload?.avgTokeUi);
+    let walletUsd = statNum(payload?.avgWalletUsd);
+    if (!Number.isFinite(walletUsd) || walletUsd <= 0) {
+      const px = statNum(payload?.price);
+      if (Number.isFinite(avgTokeForUsd) && avgTokeForUsd > 0 && Number.isFinite(px) && px > 0) {
+        walletUsd = Math.round(avgTokeForUsd * px * 1000) / 1000;
       }
-      lastKnownAvgTokeDelta.value = avgTokeChangeDelta.value;
+    }
+    if (Number.isFinite(walletUsd) && walletUsd > 0) {
+      avgWalletUsd.value = walletUsd;
+      lastKnownAvgWalletUsd.value = walletUsd;
+    } else if (lastKnownAvgWalletUsd.value != null) {
+      avgWalletUsd.value = lastKnownAvgWalletUsd.value;
     } else {
-      avgTokeChangeDelta.value = lastKnownAvgTokeDelta.value;
+      avgWalletUsd.value = null;
     }
 }
 
@@ -557,7 +551,7 @@ function applyHeroStatsError() {
   marketCapChangePct.value = lastKnownMcapChangePct.value;
   liquidityChangePct.value = lastKnownLiquidityChangePct.value;
   if (lastKnownAvgToke.value) avgTokeStat.value = lastKnownAvgToke.value;
-  avgTokeChangeDelta.value = lastKnownAvgTokeDelta.value;
+  if (lastKnownAvgWalletUsd.value != null) avgWalletUsd.value = lastKnownAvgWalletUsd.value;
   if (lastKnownStatsMeta.value) statsMeta.value = lastKnownStatsMeta.value;
   if (lastKnownHolderCountFetchedAt.value) {
     holderCountFetchedAt.value = lastKnownHolderCountFetchedAt.value;
@@ -841,7 +835,7 @@ onBeforeUnmount(() => {
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
                   >
-                    AVG TOKER
+                    AVG WALLET
                   </p>
                   <div class="hero-stat-card__figure">
                     <p
@@ -858,22 +852,22 @@ onBeforeUnmount(() => {
                         class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
                       >
                         <span
-                          v-if="avgTokeChangeFormatted != null"
+                          v-if="avgWalletUsdFormatted != null"
                           class="hero-stat-card__metric shrink-0"
-                          :class="avgTokeChangeClass"
-                          :title="avgTokeChangeTitle"
+                          :class="avgWalletUsdMetricClass"
+                          :title="avgWalletUsdTitle"
                         >
                           <span class="hero-stat-card__metric-ico" aria-hidden="true">💰</span>
-                          <span>{{ avgTokeChangeFormatted }}</span>
+                          <span>{{ avgWalletUsdFormatted }}</span>
                         </span>
                         <span
-                          v-if="avgTokeChangeFormatted != null"
+                          v-if="avgWalletUsdFormatted != null"
                           class="hero-stat-card__sep"
                           aria-hidden="true"
                         />
                         <span
                           class="hero-stat-card__metric shrink-0 text-neutral-500"
-                          :title="avgTokeChangeTitle"
+                          :title="avgWalletUsdTitle"
                         >
                           <span class="hero-stat-card__metric-ico" aria-hidden="true">🕔</span>
                           <span>{{ avgTokeTimeLabel }}</span>

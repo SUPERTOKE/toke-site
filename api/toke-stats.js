@@ -177,9 +177,14 @@ export default async function handler(req, res) {
       avgTokeUi = Math.round((supplyUi / resolvedHolders) * 1000) / 1000;
     }
 
+    let avgWalletUsd = null;
+    if (avgTokeUi != null && Number.isFinite(price) && price > 0) {
+      avgWalletUsd = Math.round(avgTokeUi * price * 1000) / 1000;
+    }
+
     const avgTokePromise =
-      avgTokeUi != null
-        ? resolveAvgTokeSnapshotStats(avgTokeUi, now, { record: shouldRecordSnapshots })
+      avgWalletUsd != null
+        ? resolveAvgTokeSnapshotStats(avgWalletUsd, now, { record: shouldRecordSnapshots })
         : Promise.resolve({ change24h: null, meta: null });
 
     const [holderSnap, mcapSnap, liquiditySnap, avgTokeSnap] = await Promise.all([
@@ -221,6 +226,7 @@ export default async function handler(req, res) {
       liquiditySource: live.liquiditySource ?? null,
       liquidityChangePct24h,
       avgTokeUi,
+      avgWalletUsd,
       avgTokeChange24h,
       totalSupply:
         Number.isFinite(live.totalSupplyUi) && live.totalSupplyUi > 0 ? live.totalSupplyUi : null,

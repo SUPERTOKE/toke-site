@@ -61,14 +61,12 @@ export function formatAvgTokeDisplay(value) {
   }).format(value);
 }
 
-/** 24h absolute change in avg TOKE (signed, always 3 fractional digits). */
-export function formatAvgTokeDelta(delta) {
-  if (!Number.isFinite(delta)) return null;
-  const rounded = Math.round(delta * 1000) / 1000;
-  if (rounded === 0) return '+0.000';
-  const abs = new Intl.NumberFormat('en-US', {
+/** Avg wallet USD (avg TOKE × price), always 3 fractional cents. */
+export function formatAvgWalletUsd(value) {
+  if (!Number.isFinite(value) || value <= 0) return null;
+  const rounded = Math.round(value * 1000) / 1000;
+  return `$${new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 3,
     maximumFractionDigits: 3
-  }).format(Math.abs(rounded));
-  return rounded > 0 ? `+${abs}` : `-${abs}`;
+  }).format(rounded)}`;
 }

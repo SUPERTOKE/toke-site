@@ -35,6 +35,7 @@ const checks = {
   avgTokeUi: data.avgTokeUi != null,
   avgTokeSnapshotsCount: Number(meta.avgTokeSnapshotsCount) > 0,
   avgTokeChange24hSource: meta.avgTokeChange24hSource,
+  avgWalletUsd: data.avgWalletUsd != null,
   avgTokeChange24h: data.avgTokeChange24h
 };
 
