@@ -3,6 +3,7 @@ import { fetchTokeLiveMarket, TOKE_MINT, parseU64LE } from './tokeSnapshotShared
 import { resolveHolderSnapshotStats, latestRecordedHolderCount } from './holderSnapshotsKv.js';
 import { resolveMcapSnapshotStats } from './mcapSnapshotsKv.js';
 import { resolveLiquiditySnapshotStats } from './liquiditySnapshotsKv.js';
+import { resolveAvgTokeSnapshotStats } from './avgTokeSnapshotsKv.js';
 import { getRedis } from './redisClient.js';
 import { buildStatsMeta, EMPTY_SNAPSHOT_LIST_META } from './statsMeta.js';
 import { SNAPSHOT_RECORD_INTERVAL_MS } from './snapshotKvShared.js';
@@ -166,15 +167,32 @@ export default async function handler(req, res) {
         ? resolveLiquiditySnapshotStats(liquidityUsd, now, { record: shouldRecordSnapshots })
         : Promise.resolve({ changePct24h: null, meta: null });
 
-    const [holderSnap, mcapSnap, liquiditySnap] = await Promise.all([
+    let avgTokeUi = null;
+    if (
+      Number.isFinite(supplyUi) &&
+      supplyUi > 0 &&
+      Number.isFinite(resolvedHolders) &&
+      resolvedHolders > 0
+    ) {
+      avgTokeUi = Math.round((supplyUi / resolvedHolders) * 1000) / 1000;
+    }
+
+    const avgTokePromise =
+      avgTokeUi != null
+        ? resolveAvgTokeSnapshotStats(avgTokeUi, now, { record: shouldRecordSnapshots })
+        : Promise.resolve({ change24h: null, meta: null });
+
+    const [holderSnap, mcapSnap, liquiditySnap, avgTokeSnap] = await Promise.all([
       holderPromise,
       mcapPromise,
-      liquidityPromise
+      liquidityPromise,
+      avgTokePromise
     ]);
 
     const holderCountChange24h = holderSnap.change24h;
     const marketCapChangePct24h = mcapSnap.changePct24h;
     const liquidityChangePct24h = liquiditySnap.changePct24h;
+    const avgTokeChange24h = avgTokeSnap.change24h;
 
     const statsMeta = buildStatsMeta({
       fetchedAtMs: holderCache.fetchedAt,
@@ -183,9 +201,11 @@ export default async function handler(req, res) {
       holderMeta: holderSnap.meta ?? { ...EMPTY_SNAPSHOT_LIST_META },
       mcapMeta: mcapSnap.meta ?? { ...EMPTY_SNAPSHOT_LIST_META },
       liquidityMeta: liquiditySnap.meta ?? { ...EMPTY_SNAPSHOT_LIST_META },
+      avgTokeMeta: avgTokeSnap.meta ?? { ...EMPTY_SNAPSHOT_LIST_META },
       holderCountChange24h,
       marketCapChangePct24h,
       liquidityChangePct24h,
+      avgTokeChange24h,
       now
     });
 
@@ -200,6 +220,8 @@ export default async function handler(req, res) {
       liquidityUsd,
       liquiditySource: live.liquiditySource ?? null,
       liquidityChangePct24h,
+      avgTokeUi,
+      avgTokeChange24h,
       totalSupply:
         Number.isFinite(live.totalSupplyUi) && live.totalSupplyUi > 0 ? live.totalSupplyUi : null,
       holderCount:

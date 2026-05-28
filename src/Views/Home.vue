@@ -1,7 +1,13 @@
 <script setup>
 import { onMounted, ref, onBeforeUnmount, shallowRef, computed, defineAsyncComponent } from 'vue';
 import Navbar from '../Components/Navbar.vue';
-import { statNum, formatMarketCapDisplay, formatLiquidityDisplay } from '../utils/statsApi';
+import {
+  statNum,
+  formatMarketCapDisplay,
+  formatLiquidityDisplay,
+  formatAvgTokeDisplay,
+  formatAvgTokeDelta
+} from '../utils/statsApi';
 import { subscribeLiveStats } from '../utils/liveStatsPoll';
 
 const HeroMoonGlobe = defineAsyncComponent(() =>
@@ -130,6 +136,7 @@ const lastKnownMcapChangePct = ref(null);
 const lastKnownLiquidityChangePct = ref(null);
 const marketCapStat = ref('—');
 const liquidityStat = ref('—');
+const avgTokeStat = ref('—');
 /** `/api/toke-stats` diagnostics; preserved across `/api/toke-price` fallback. */
 const statsMeta = ref(null);
 const lastKnownStatsMeta = ref(null);
@@ -142,11 +149,15 @@ const lastKnownHolders = ref(null);
 const lastKnownMcap = ref(null);
 const lastKnownMcapNumeric = ref(readMcapNumericFromStorage());
 const lastKnownLiquidity = ref(null);
+const lastKnownAvgToke = ref(null);
 
 /** Redis-backed `marketCapChangePct24h` from `/api/toke-stats` only. */
 const marketCapChangePct = ref(null);
 /** Redis-backed `liquidityChangePct24h` from `/api/toke-stats` only. */
 const liquidityChangePct = ref(null);
+/** Redis-backed `avgTokeChange24h` from `/api/toke-stats` only. */
+const avgTokeChangeDelta = ref(null);
+const lastKnownAvgTokeDelta = ref(null);
 /** Burned % string only (no emoji) — pairs with 🔥 in template for even emoji–value spacing. */
 const supplyBurnedPctStr = computed(() => {
   const cur = currentSupplyUi.value;
@@ -170,6 +181,7 @@ const supplyBurnedMetricClass = computed(() => {
 const hasLiveHoldersCount = computed(() => holdersStat.value !== '—');
 const hasLiveMcapStat = computed(() => marketCapStat.value !== '—');
 const hasLiveLiquidityStat = computed(() => liquidityStat.value !== '—');
+const hasLiveAvgTokeStat = computed(() => avgTokeStat.value !== '—');
 
 const holderChangeFromRedis = computed(
   () => statsMeta.value?.holderChange24hSource === 'redis'
@@ -181,6 +193,10 @@ const mcapChangeFromRedis = computed(
 
 const liquidityChangeFromRedis = computed(
   () => statsMeta.value?.liquidityChange24hSource === 'redis'
+);
+
+const avgTokeChangeFromRedis = computed(
+  () => statsMeta.value?.avgTokeChange24hSource === 'redis'
 );
 
 const holdersChangeIsWarming = computed(
@@ -268,11 +284,37 @@ const liquidityChangeClass = computed(() => {
   return 'text-red-400/90';
 });
 
+const avgTokeChangeIsWarming = computed(
+  () =>
+    hasLiveAvgTokeStat.value &&
+    !avgTokeChangeFromRedis.value &&
+    (avgTokeChangeDelta.value == null || !Number.isFinite(avgTokeChangeDelta.value))
+);
+
+const avgTokeChangeFormatted = computed(() => {
+  const d = avgTokeChangeDelta.value;
+  if (avgTokeChangeFromRedis.value && d != null && Number.isFinite(d)) {
+    return formatAvgTokeDelta(d);
+  }
+  if (avgTokeChangeIsWarming.value) return '—';
+  return null;
+});
+
+const avgTokeChangeClass = computed(() => {
+  if (avgTokeChangeIsWarming.value) return 'text-neutral-400';
+  const d = avgTokeChangeDelta.value;
+  if (d == null || !Number.isFinite(d)) return 'text-neutral-400';
+  if (d > 0) return 'text-green-400/90';
+  if (d < 0) return 'text-red-400/90';
+  return 'text-neutral-500';
+});
+
 function warmingTooltip(kind) {
   const meta = statsMeta.value;
   if (!meta) {
     if (kind === 'holder') return '24h holder change unavailable.';
     if (kind === 'liquidity') return '24h liquidity change unavailable.';
+    if (kind === 'avgToke') return '24h avg TOKE change unavailable.';
     return '24h market cap change unavailable.';
   }
   if (meta.redisConfigured === false) {
@@ -283,7 +325,9 @@ function warmingTooltip(kind) {
       ? meta.holderOldestSnapshotAt
       : kind === 'liquidity'
         ? meta.liquidityOldestSnapshotAt
-        : meta.mcapOldestSnapshotAt;
+        : kind === 'avgToke'
+          ? meta.avgTokeOldestSnapshotAt
+          : meta.mcapOldestSnapshotAt;
   if (!oldest) {
     return 'Collecting history — first snapshot will appear after the next stats refresh.';
   }
@@ -311,12 +355,18 @@ const liquidityChangeTitle = computed(() =>
   liquidityChangeIsWarming.value ? warmingTooltip('liquidity') : undefined
 );
 
+const avgTokeChangeTitle = computed(() =>
+  avgTokeChangeIsWarming.value ? warmingTooltip('avgToke') : undefined
+);
+
 /** Telemetry clock row — always the 24h window label (not on-chain refresh time). */
 const holdersTimeLabel = computed(() => '24 hr');
 
 const marketCapTimeLabel = computed(() => '24 hr');
 
 const liquidityTimeLabel = computed(() => '24 hr');
+
+const avgTokeTimeLabel = computed(() => '24 hr');
 
 const holdersTimeTitle = computed(() => {
   if (holderCountFetchedAt.value) {
@@ -413,6 +463,8 @@ function applyHeroStatsPayload(payload, path) {
       marketCapChangePct.value = lastKnownMcapChangePct.value;
       if (lastKnownLiquidity.value) liquidityStat.value = lastKnownLiquidity.value;
       liquidityChangePct.value = lastKnownLiquidityChangePct.value;
+      if (lastKnownAvgToke.value) avgTokeStat.value = lastKnownAvgToke.value;
+      avgTokeChangeDelta.value = lastKnownAvgTokeDelta.value;
       if (lastKnownStatsMeta.value) statsMeta.value = lastKnownStatsMeta.value;
       if (lastKnownHolderCountFetchedAt.value) {
         holderCountFetchedAt.value = lastKnownHolderCountFetchedAt.value;
@@ -467,6 +519,30 @@ function applyHeroStatsPayload(payload, path) {
     } else {
       holdersStat.value = '—';
     }
+
+    const avgToke = statNum(payload?.avgTokeUi);
+    const avgFmt = formatAvgTokeDisplay(avgToke);
+    if (avgFmt !== '—') {
+      avgTokeStat.value = avgFmt;
+      lastKnownAvgToke.value = avgFmt;
+    } else if (lastKnownAvgToke.value) {
+      avgTokeStat.value = lastKnownAvgToke.value;
+    } else {
+      avgTokeStat.value = '—';
+    }
+
+    if (Object.prototype.hasOwnProperty.call(payload, 'avgTokeChange24h')) {
+      const v = payload.avgTokeChange24h;
+      if (v != null && v !== '') {
+        const n = Number(v);
+        avgTokeChangeDelta.value = Number.isFinite(n) ? Math.round(n * 1000) / 1000 : null;
+      } else {
+        avgTokeChangeDelta.value = null;
+      }
+      lastKnownAvgTokeDelta.value = avgTokeChangeDelta.value;
+    } else {
+      avgTokeChangeDelta.value = lastKnownAvgTokeDelta.value;
+    }
 }
 
 function applyHeroStatsError() {
@@ -480,6 +556,8 @@ function applyHeroStatsError() {
   holdersChangeDelta.value = lastKnownHolderDelta.value;
   marketCapChangePct.value = lastKnownMcapChangePct.value;
   liquidityChangePct.value = lastKnownLiquidityChangePct.value;
+  if (lastKnownAvgToke.value) avgTokeStat.value = lastKnownAvgToke.value;
+  avgTokeChangeDelta.value = lastKnownAvgTokeDelta.value;
   if (lastKnownStatsMeta.value) statsMeta.value = lastKnownStatsMeta.value;
   if (lastKnownHolderCountFetchedAt.value) {
     holderCountFetchedAt.value = lastKnownHolderCountFetchedAt.value;
@@ -578,8 +656,10 @@ onBeforeUnmount(() => {
 
             <div class="min-h-[clamp(1.25rem,5vmin,3.5rem)] w-full flex-1" aria-hidden="true" />
 
-            <div class="mx-auto mt-auto w-full max-w-6xl min-w-0 shrink-0 pt-2">
-              <div class="grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 md:gap-5">
+            <div class="mx-auto mt-auto w-full max-w-7xl min-w-0 shrink-0 pt-2">
+              <div
+                class="grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-2 sm:gap-4 md:gap-5 xl:grid-cols-5"
+              >
                 <div class="hero-stat-card">
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
@@ -614,52 +694,6 @@ onBeforeUnmount(() => {
                           <span>{{ supplyBurnedPctStr }}</span>
                         </span>
                         <span v-else class="hero-stat-card__metric shrink-0 text-neutral-400">—</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="hero-stat-card">
-                  <p
-                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
-                  >
-                    Holders
-                  </p>
-                  <div class="hero-stat-card__figure">
-                    <p
-                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white [overflow-wrap:anywhere] sm:text-lg md:text-xl"
-                    >
-                      {{ holdersStat }}
-                    </p>
-                  </div>
-                  <div class="hero-stat-card__telemetry">
-                    <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                    >
-                      <div
-                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
-                      >
-                        <span
-                          v-if="holdersChangeFormatted != null"
-                          class="hero-stat-card__metric shrink-0"
-                          :class="holdersChangeClass"
-                          :title="holdersChangeTitle"
-                        >
-                          <span class="hero-stat-card__metric-ico" aria-hidden="true">👤</span>
-                          <span>{{ holdersChangeFormatted }}</span>
-                        </span>
-                        <span
-                          v-if="holdersChangeFormatted != null"
-                          class="hero-stat-card__sep"
-                          aria-hidden="true"
-                        />
-                        <span
-                          class="hero-stat-card__metric shrink-0 text-neutral-500"
-                          :title="holdersTimeTitle"
-                        >
-                          <span class="hero-stat-card__metric-ico" aria-hidden="true">🕔</span>
-                          <span>{{ holdersTimeLabel }}</span>
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -751,6 +785,98 @@ onBeforeUnmount(() => {
                         >
                           <span class="hero-stat-card__metric-ico" aria-hidden="true">🕔</span>
                           <span>{{ liquidityTimeLabel }}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="hero-stat-card">
+                  <p
+                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
+                  >
+                    Holders
+                  </p>
+                  <div class="hero-stat-card__figure">
+                    <p
+                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white [overflow-wrap:anywhere] sm:text-lg md:text-xl"
+                    >
+                      {{ holdersStat }}
+                    </p>
+                  </div>
+                  <div class="hero-stat-card__telemetry">
+                    <div
+                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
+                      <div
+                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                      >
+                        <span
+                          v-if="holdersChangeFormatted != null"
+                          class="hero-stat-card__metric shrink-0"
+                          :class="holdersChangeClass"
+                          :title="holdersChangeTitle"
+                        >
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">👤</span>
+                          <span>{{ holdersChangeFormatted }}</span>
+                        </span>
+                        <span
+                          v-if="holdersChangeFormatted != null"
+                          class="hero-stat-card__sep"
+                          aria-hidden="true"
+                        />
+                        <span
+                          class="hero-stat-card__metric shrink-0 text-neutral-500"
+                          :title="holdersTimeTitle"
+                        >
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">🕔</span>
+                          <span>{{ holdersTimeLabel }}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="hero-stat-card">
+                  <p
+                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
+                  >
+                    AVG TOKE
+                  </p>
+                  <div class="hero-stat-card__figure">
+                    <p
+                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white [overflow-wrap:anywhere] sm:text-lg md:text-xl"
+                    >
+                      {{ avgTokeStat }}
+                    </p>
+                  </div>
+                  <div class="hero-stat-card__telemetry">
+                    <div
+                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
+                      <div
+                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                      >
+                        <span
+                          v-if="avgTokeChangeFormatted != null"
+                          class="hero-stat-card__metric shrink-0"
+                          :class="avgTokeChangeClass"
+                          :title="avgTokeChangeTitle"
+                        >
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">💰</span>
+                          <span>{{ avgTokeChangeFormatted }}</span>
+                        </span>
+                        <span
+                          v-if="avgTokeChangeFormatted != null"
+                          class="hero-stat-card__sep"
+                          aria-hidden="true"
+                        />
+                        <span
+                          class="hero-stat-card__metric shrink-0 text-neutral-500"
+                          :title="avgTokeChangeTitle"
+                        >
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">🕔</span>
+                          <span>{{ avgTokeTimeLabel }}</span>
                         </span>
                       </div>
                     </div>

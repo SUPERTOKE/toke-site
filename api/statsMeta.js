@@ -7,6 +7,7 @@ import { MS_DAY, parseSnapshotRow } from './snapshotKvShared.js';
 export const HOLDER_SNAPSHOT_KEY = 'mctoken:toke:holder_snapshots';
 export const MCAP_SNAPSHOT_KEY = 'mctoken:toke:mcap_snapshots';
 export const LIQUIDITY_SNAPSHOT_KEY = 'mctoken:toke:liquidity_snapshots';
+export const AVG_TOKE_SNAPSHOT_KEY = 'mctoken:toke:avg_toke_snapshots';
 
 export const EMPTY_SNAPSHOT_LIST_META = {
   count: 0,
@@ -81,9 +82,11 @@ export function buildStatsMeta({
   holderMeta,
   mcapMeta,
   liquidityMeta,
+  avgTokeMeta,
   holderCountChange24h,
   marketCapChangePct24h,
   liquidityChangePct24h,
+  avgTokeChange24h,
   now = Date.now()
 }) {
   const holderChange24hSource = change24hSource(
@@ -101,6 +104,11 @@ export function buildStatsMeta({
     liquidityMeta,
     liquidityChangePct24h
   );
+  const avgTokeChange24hSource = change24hSource(
+    redisConfigured,
+    avgTokeMeta,
+    avgTokeChange24h
+  );
 
   return {
     redisConfigured,
@@ -110,15 +118,19 @@ export function buildStatsMeta({
     holderSnapshotsCount: holderMeta.count,
     mcapSnapshotsCount: mcapMeta.count,
     liquiditySnapshotsCount: liquidityMeta.count,
+    avgTokeSnapshotsCount: avgTokeMeta.count,
     holderOldestSnapshotAt:
       holderMeta.oldestT != null ? new Date(holderMeta.oldestT).toISOString() : null,
     mcapOldestSnapshotAt:
       mcapMeta.oldestT != null ? new Date(mcapMeta.oldestT).toISOString() : null,
     liquidityOldestSnapshotAt:
       liquidityMeta.oldestT != null ? new Date(liquidityMeta.oldestT).toISOString() : null,
+    avgTokeOldestSnapshotAt:
+      avgTokeMeta.oldestT != null ? new Date(avgTokeMeta.oldestT).toISOString() : null,
     holderChange24hSource,
     mcapChange24hSource,
-    liquidityChange24hSource
+    liquidityChange24hSource,
+    avgTokeChange24hSource
   };
 }
 

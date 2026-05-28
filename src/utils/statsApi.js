@@ -51,3 +51,21 @@ export function formatMarketCapDisplay(value) {
 
 /** USD liquidity / TVL — same formatting as market cap. */
 export const formatLiquidityDisplay = formatMarketCapDisplay;
+
+/** Avg TOKE held (supply ÷ holders), always 3 fractional digits. */
+export function formatAvgTokeDisplay(value) {
+  if (!Number.isFinite(value) || value <= 0) return '—';
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3
+  }).format(value);
+}
+
+/** 24h absolute change in avg TOKE (signed, 3 dp) — mirrors holder delta formatting. */
+export function formatAvgTokeDelta(delta) {
+  if (!Number.isFinite(delta)) return null;
+  const rounded = Math.round(delta * 1000) / 1000;
+  if (rounded === 0) return '+0.000';
+  if (rounded > 0) return `+${rounded.toFixed(3)}`;
+  return rounded.toFixed(3);
+}
