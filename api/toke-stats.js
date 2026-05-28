@@ -2,6 +2,7 @@ import { Buffer } from 'node:buffer';
 import { fetchTokeLiveMarket, TOKE_MINT, parseU64LE } from './tokeSnapshotShared.js';
 import { resolveHolderSnapshotStats, latestRecordedHolderCount } from './holderSnapshotsKv.js';
 import { resolveMcapSnapshotStats } from './mcapSnapshotsKv.js';
+import { resolveLiquiditySnapshotStats } from './liquiditySnapshotsKv.js';
 import { getRedis } from './redisClient.js';
 import { buildStatsMeta, EMPTY_SNAPSHOT_LIST_META } from './statsMeta.js';
 import { SNAPSHOT_RECORD_INTERVAL_MS } from './snapshotKvShared.js';
@@ -155,10 +156,25 @@ export default async function handler(req, res) {
         ? resolveMcapSnapshotStats(mcapTrack, now, { record: shouldRecordSnapshots })
         : Promise.resolve({ changePct24h: null, meta: null });
 
-    const [holderSnap, mcapSnap] = await Promise.all([holderPromise, mcapPromise]);
+    const liquidityUsd =
+      live.liquidityUsd != null && Number.isFinite(Number(live.liquidityUsd)) && live.liquidityUsd > 0
+        ? Number(live.liquidityUsd)
+        : null;
+
+    const liquidityPromise =
+      liquidityUsd != null
+        ? resolveLiquiditySnapshotStats(liquidityUsd, now, { record: shouldRecordSnapshots })
+        : Promise.resolve({ changePct24h: null, meta: null });
+
+    const [holderSnap, mcapSnap, liquiditySnap] = await Promise.all([
+      holderPromise,
+      mcapPromise,
+      liquidityPromise
+    ]);
 
     const holderCountChange24h = holderSnap.change24h;
     const marketCapChangePct24h = mcapSnap.changePct24h;
+    const liquidityChangePct24h = liquiditySnap.changePct24h;
 
     const statsMeta = buildStatsMeta({
       fetchedAtMs: holderCache.fetchedAt,
@@ -166,8 +182,10 @@ export default async function handler(req, res) {
       redisConfigured: !!getRedis(),
       holderMeta: holderSnap.meta ?? { ...EMPTY_SNAPSHOT_LIST_META },
       mcapMeta: mcapSnap.meta ?? { ...EMPTY_SNAPSHOT_LIST_META },
+      liquidityMeta: liquiditySnap.meta ?? { ...EMPTY_SNAPSHOT_LIST_META },
       holderCountChange24h,
       marketCapChangePct24h,
+      liquidityChangePct24h,
       now
     });
 
@@ -179,6 +197,9 @@ export default async function handler(req, res) {
       pairAddress: live.pairAddress,
       priceChangeH24: live.priceChangeH24,
       marketCapChangePct24h,
+      liquidityUsd,
+      liquiditySource: live.liquiditySource ?? null,
+      liquidityChangePct24h,
       totalSupply:
         Number.isFinite(live.totalSupplyUi) && live.totalSupplyUi > 0 ? live.totalSupplyUi : null,
       holderCount:

@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref, onBeforeUnmount, shallowRef, computed, defineAsyncComponent } from 'vue';
 import Navbar from '../Components/Navbar.vue';
-import { statNum, formatMarketCapDisplay } from '../utils/statsApi';
+import { statNum, formatMarketCapDisplay, formatLiquidityDisplay } from '../utils/statsApi';
 import { subscribeLiveStats } from '../utils/liveStatsPoll';
 
 const HeroMoonGlobe = defineAsyncComponent(() =>
@@ -9,6 +9,9 @@ const HeroMoonGlobe = defineAsyncComponent(() =>
 );
 const TradeSpotlight = defineAsyncComponent(() =>
   import('../Components/Home/TradeSpotlight.vue')
+);
+const VrfdTweetFeed = defineAsyncComponent(() =>
+  import('../Components/Home/VrfdTweetFeed.vue')
 );
 const McVoteEraTimeline = defineAsyncComponent(() =>
   import('../Components/Home/McVoteEraTimeline.vue')
@@ -124,7 +127,9 @@ const holdersChangeDelta = ref(null);
 const lastKnownHolderDelta = ref(null);
 /** Redis-backed mcap % only; Dex price % is not substituted on the hero card. */
 const lastKnownMcapChangePct = ref(null);
+const lastKnownLiquidityChangePct = ref(null);
 const marketCapStat = ref('—');
+const liquidityStat = ref('—');
 /** `/api/toke-stats` diagnostics; preserved across `/api/toke-price` fallback. */
 const statsMeta = ref(null);
 const lastKnownStatsMeta = ref(null);
@@ -136,9 +141,12 @@ const lastKnownSupplyNumeric = ref(null);
 const lastKnownHolders = ref(null);
 const lastKnownMcap = ref(null);
 const lastKnownMcapNumeric = ref(readMcapNumericFromStorage());
+const lastKnownLiquidity = ref(null);
 
 /** Redis-backed `marketCapChangePct24h` from `/api/toke-stats` only. */
 const marketCapChangePct = ref(null);
+/** Redis-backed `liquidityChangePct24h` from `/api/toke-stats` only. */
+const liquidityChangePct = ref(null);
 /** Burned % string only (no emoji) — pairs with 🔥 in template for even emoji–value spacing. */
 const supplyBurnedPctStr = computed(() => {
   const cur = currentSupplyUi.value;
@@ -161,6 +169,7 @@ const supplyBurnedMetricClass = computed(() => {
 
 const hasLiveHoldersCount = computed(() => holdersStat.value !== '—');
 const hasLiveMcapStat = computed(() => marketCapStat.value !== '—');
+const hasLiveLiquidityStat = computed(() => liquidityStat.value !== '—');
 
 const holderChangeFromRedis = computed(
   () => statsMeta.value?.holderChange24hSource === 'redis'
@@ -168,6 +177,10 @@ const holderChangeFromRedis = computed(
 
 const mcapChangeFromRedis = computed(
   () => statsMeta.value?.mcapChange24hSource === 'redis'
+);
+
+const liquidityChangeFromRedis = computed(
+  () => statsMeta.value?.liquidityChange24hSource === 'redis'
 );
 
 const holdersChangeIsWarming = computed(
@@ -226,18 +239,51 @@ const marketCapChangeClass = computed(() => {
   return 'text-red-400/90';
 });
 
+const liquidityChangeIsWarming = computed(
+  () =>
+    hasLiveLiquidityStat.value &&
+    !liquidityChangeFromRedis.value &&
+    (liquidityChangePct.value == null || !Number.isFinite(liquidityChangePct.value))
+);
+
+const liquidityChangeFormatted = computed(() => {
+  const p = liquidityChangePct.value;
+  if (liquidityChangeFromRedis.value && p != null && Number.isFinite(p)) {
+    const rounded = Math.round(p * 100) / 100;
+    if (rounded === 0) return '+0.00%';
+    const prefix = rounded > 0 ? '+' : '';
+    return `${prefix}${rounded.toFixed(2)}%`;
+  }
+  if (liquidityChangeIsWarming.value) return '—';
+  return null;
+});
+
+const liquidityChangeClass = computed(() => {
+  if (liquidityChangeIsWarming.value) return 'text-neutral-400';
+  const p = liquidityChangePct.value;
+  if (p == null || !Number.isFinite(p)) return 'text-neutral-400';
+  const rounded = Math.round(p * 100) / 100;
+  if (rounded === 0) return 'text-neutral-500';
+  if (rounded > 0) return 'text-green-400/90';
+  return 'text-red-400/90';
+});
+
 function warmingTooltip(kind) {
   const meta = statsMeta.value;
   if (!meta) {
-    return kind === 'holder'
-      ? '24h holder change unavailable.'
-      : '24h market cap change unavailable.';
+    if (kind === 'holder') return '24h holder change unavailable.';
+    if (kind === 'liquidity') return '24h liquidity change unavailable.';
+    return '24h market cap change unavailable.';
   }
   if (meta.redisConfigured === false) {
     return 'Snapshot database is not configured on the server. Add Redis env vars on Vercel and redeploy.';
   }
   const oldest =
-    kind === 'holder' ? meta.holderOldestSnapshotAt : meta.mcapOldestSnapshotAt;
+    kind === 'holder'
+      ? meta.holderOldestSnapshotAt
+      : kind === 'liquidity'
+        ? meta.liquidityOldestSnapshotAt
+        : meta.mcapOldestSnapshotAt;
   if (!oldest) {
     return 'Collecting history — first snapshot will appear after the next stats refresh.';
   }
@@ -261,10 +307,16 @@ const marketCapChangeTitle = computed(() =>
   marketCapChangeIsWarming.value ? warmingTooltip('mcap') : undefined
 );
 
+const liquidityChangeTitle = computed(() =>
+  liquidityChangeIsWarming.value ? warmingTooltip('liquidity') : undefined
+);
+
 /** Telemetry clock row — always the 24h window label (not on-chain refresh time). */
 const holdersTimeLabel = computed(() => '24 hr');
 
 const marketCapTimeLabel = computed(() => '24 hr');
+
+const liquidityTimeLabel = computed(() => '24 hr');
 
 const holdersTimeTitle = computed(() => {
   if (holderCountFetchedAt.value) {
@@ -295,6 +347,7 @@ function applyStatsMetaFromPayload(payload) {
 
 function applyHeroStatsPayload(payload, path) {
     const marketCap = statNum(payload?.marketCap);
+    const liquidityUsd = statNum(payload?.liquidityUsd);
 
     function resolveMarketCapPctLine() {
       if (!Object.prototype.hasOwnProperty.call(payload, 'marketCapChangePct24h')) {
@@ -304,6 +357,19 @@ function applyHeroStatsPayload(payload, path) {
       if (srv != null && srv !== '' && Number.isFinite(Number(srv))) {
         const pct = Number(srv);
         lastKnownMcapChangePct.value = pct;
+        return pct;
+      }
+      return null;
+    }
+
+    function resolveLiquidityPctLine() {
+      if (!Object.prototype.hasOwnProperty.call(payload, 'liquidityChangePct24h')) {
+        return lastKnownLiquidityChangePct.value;
+      }
+      const srv = payload.liquidityChangePct24h;
+      if (srv != null && srv !== '' && Number.isFinite(Number(srv))) {
+        const pct = Number(srv);
+        lastKnownLiquidityChangePct.value = pct;
         return pct;
       }
       return null;
@@ -324,6 +390,19 @@ function applyHeroStatsPayload(payload, path) {
       marketCapChangePct.value = null;
     }
 
+    const freshLiquidity = formatLiquidityDisplay(liquidityUsd);
+    if (Number.isFinite(liquidityUsd) && liquidityUsd > 0) {
+      liquidityStat.value = freshLiquidity;
+      lastKnownLiquidity.value = freshLiquidity;
+      liquidityChangePct.value = resolveLiquidityPctLine();
+    } else if (lastKnownLiquidity.value) {
+      liquidityStat.value = lastKnownLiquidity.value;
+      liquidityChangePct.value = resolveLiquidityPctLine();
+    } else {
+      liquidityStat.value = '—';
+      liquidityChangePct.value = null;
+    }
+
     if (path === '/api/toke-price') {
       if (lastKnownSupply.value) totalSupplyStat.value = lastKnownSupply.value;
       if (lastKnownSupplyNumeric.value != null) {
@@ -332,6 +411,8 @@ function applyHeroStatsPayload(payload, path) {
       if (lastKnownHolders.value) holdersStat.value = lastKnownHolders.value;
       holdersChangeDelta.value = lastKnownHolderDelta.value;
       marketCapChangePct.value = lastKnownMcapChangePct.value;
+      if (lastKnownLiquidity.value) liquidityStat.value = lastKnownLiquidity.value;
+      liquidityChangePct.value = lastKnownLiquidityChangePct.value;
       if (lastKnownStatsMeta.value) statsMeta.value = lastKnownStatsMeta.value;
       if (lastKnownHolderCountFetchedAt.value) {
         holderCountFetchedAt.value = lastKnownHolderCountFetchedAt.value;
@@ -390,6 +471,7 @@ function applyHeroStatsPayload(payload, path) {
 
 function applyHeroStatsError() {
   if (lastKnownMcap.value) marketCapStat.value = lastKnownMcap.value;
+  if (lastKnownLiquidity.value) liquidityStat.value = lastKnownLiquidity.value;
   if (lastKnownSupply.value) totalSupplyStat.value = lastKnownSupply.value;
   if (lastKnownSupplyNumeric.value != null) {
     currentSupplyUi.value = lastKnownSupplyNumeric.value;
@@ -397,6 +479,7 @@ function applyHeroStatsError() {
   if (lastKnownHolders.value) holdersStat.value = lastKnownHolders.value;
   holdersChangeDelta.value = lastKnownHolderDelta.value;
   marketCapChangePct.value = lastKnownMcapChangePct.value;
+  liquidityChangePct.value = lastKnownLiquidityChangePct.value;
   if (lastKnownStatsMeta.value) statsMeta.value = lastKnownStatsMeta.value;
   if (lastKnownHolderCountFetchedAt.value) {
     holderCountFetchedAt.value = lastKnownHolderCountFetchedAt.value;
@@ -495,8 +578,8 @@ onBeforeUnmount(() => {
 
             <div class="min-h-[clamp(1.25rem,5vmin,3.5rem)] w-full flex-1" aria-hidden="true" />
 
-            <div class="mx-auto mt-auto w-full max-w-4xl min-w-0 shrink-0 pt-2">
-              <div class="grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:gap-5">
+            <div class="mx-auto mt-auto w-full max-w-6xl min-w-0 shrink-0 pt-2">
+              <div class="grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 md:gap-5">
                 <div class="hero-stat-card">
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
@@ -627,6 +710,52 @@ onBeforeUnmount(() => {
                     </div>
                   </div>
                 </div>
+
+                <div class="hero-stat-card">
+                  <p
+                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
+                  >
+                    Liquidity
+                  </p>
+                  <div class="hero-stat-card__figure">
+                    <p
+                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white [overflow-wrap:anywhere] sm:text-lg md:text-xl"
+                    >
+                      {{ liquidityStat }}
+                    </p>
+                  </div>
+                  <div class="hero-stat-card__telemetry">
+                    <div
+                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
+                      <div
+                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                      >
+                        <span
+                          v-if="liquidityChangeFormatted != null"
+                          class="hero-stat-card__metric shrink-0"
+                          :class="liquidityChangeClass"
+                          :title="liquidityChangeTitle"
+                        >
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">💧</span>
+                          <span>{{ liquidityChangeFormatted }}</span>
+                        </span>
+                        <span
+                          v-if="liquidityChangeFormatted != null"
+                          class="hero-stat-card__sep"
+                          aria-hidden="true"
+                        />
+                        <span
+                          class="hero-stat-card__metric shrink-0 text-neutral-500"
+                          :title="liquidityChangeTitle"
+                        >
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">🕔</span>
+                          <span>{{ liquidityTimeLabel }}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -634,6 +763,12 @@ onBeforeUnmount(() => {
       </div>
 
       <TradeSpotlight />
+
+      <div
+        class="relative container mx-auto max-w-7xl px-3.5 py-12 sm:px-6 sm:py-16 md:py-20"
+      >
+        <VrfdTweetFeed />
+      </div>
 
       <McVoteEraTimeline />
       </div>

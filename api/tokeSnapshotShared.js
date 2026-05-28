@@ -210,6 +210,9 @@ export async function fetchTokeLiveMarket(signal) {
   const h24Num = h24Raw != null && h24Raw !== '' ? Number(h24Raw) : Number.NaN;
   const priceChangeH24 = Number.isFinite(h24Num) ? h24Num : null;
 
+  const liqUsd = pairLiquidityUsd(pair);
+  const liquidityUsd = liqUsd > 0 ? liqUsd : null;
+
   return {
     price: priceUsd,
     marketCap,
@@ -217,6 +220,8 @@ export async function fetchTokeLiveMarket(signal) {
     pairAddress: pair.pairAddress ?? process.env.TOKE_DEX_PAIR_ADDRESS ?? DEFAULT_PAIR_ADDRESS,
     totalSupplyUi,
     dexHolderCount,
-    priceChangeH24
+    priceChangeH24,
+    liquidityUsd,
+    liquiditySource: liquidityUsd != null ? 'dexscreener_pair' : null
   };
 }

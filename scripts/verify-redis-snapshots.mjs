@@ -58,7 +58,11 @@ if (!url || !token) {
 }
 
 const redis = new Redis({ url, token });
-const keys = ['mctoken:toke:holder_snapshots', 'mctoken:toke:mcap_snapshots'];
+const keys = [
+  'mctoken:toke:holder_snapshots',
+  'mctoken:toke:mcap_snapshots',
+  'mctoken:toke:liquidity_snapshots'
+];
 const now = Date.now();
 const cutoff = now - 24 * 60 * 60 * 1000;
 

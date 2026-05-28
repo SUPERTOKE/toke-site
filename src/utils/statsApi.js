@@ -48,3 +48,6 @@ export function formatMarketCapDisplay(value) {
   const rounded = Math.round(value);
   return `$${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(rounded)}`;
 }
+
+/** USD liquidity / TVL — same formatting as market cap. */
+export const formatLiquidityDisplay = formatMarketCapDisplay;

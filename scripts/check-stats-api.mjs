@@ -23,11 +23,15 @@ const checks = {
   redisConfigured: meta.redisConfigured === true,
   holderSnapshotsCount: Number(meta.holderSnapshotsCount) > 0,
   mcapSnapshotsCount: Number(meta.mcapSnapshotsCount) > 0,
+  liquidityUsd: data.liquidityUsd != null,
+  liquiditySnapshotsCount: Number(meta.liquiditySnapshotsCount) > 0,
   holderChange24hSource: meta.holderChange24hSource,
   mcapChange24hSource: meta.mcapChange24hSource,
+  liquidityChange24hSource: meta.liquidityChange24hSource,
   holderCountFetchedAt: !!data.holderCountFetchedAt,
   holderCountChange24h: data.holderCountChange24h,
-  marketCapChangePct24h: data.marketCapChangePct24h
+  marketCapChangePct24h: data.marketCapChangePct24h,
+  liquidityChangePct24h: data.liquidityChangePct24h
 };
 
 console.log(JSON.stringify({ url, checks }, null, 2));
