@@ -1,5 +1,5 @@
 /**
- * Server-side USD liquidity snapshots for ~24h % change (canonical DexScreener pair).
+ * Server-side USD liquidity snapshots for ~24h % change (total DexScreener TOKE pool TVL).
  */
 import { getRedis } from './redisClient.js';
 import {

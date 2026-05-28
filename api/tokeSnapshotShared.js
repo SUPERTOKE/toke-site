@@ -9,6 +9,10 @@ const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.mainnet-beta.s
 const DEX_SCREENER_PAIR = 'https://api.dexscreener.com/latest/dex/pairs/solana';
 const DEX_SCREENER_TOKEN = 'https://api.dexscreener.com/latest/dex/tokens';
 
+/** Reuse token `pairs[]` for ecosystem liquidity sum (DexScreener rate limits). */
+const TOKEN_PAIRS_CACHE_MS = 60_000;
+let tokenPairsCache = { at: 0, pairs: null };
+
 export function parseU64LE(buf, offset = 0) {
   let n = BigInt(0);
   for (let i = 0; i < 8; i++) {
@@ -118,7 +122,12 @@ async function fetchDexPairByAddress(pairAddress, signal) {
   return pickPair(dexJson);
 }
 
-async function fetchDexBestPairByMint(signal) {
+async function fetchDexTokenPairsCached(signal) {
+  const now = Date.now();
+  if (tokenPairsCache.pairs && now - tokenPairsCache.at < TOKEN_PAIRS_CACHE_MS) {
+    return tokenPairsCache.pairs;
+  }
+
   const dexUrl = `${DEX_SCREENER_TOKEN}/${encodeURIComponent(TOKE_MINT)}`;
   const dexRes = await fetch(dexUrl, {
     signal,
@@ -128,11 +137,41 @@ async function fetchDexBestPairByMint(signal) {
     throw new Error(`DexScreener token HTTP ${dexRes.status}`);
   }
   const dexJson = await dexRes.json();
-  const best = pickBestPairFromTokenList(dexJson?.pairs);
+  const pairs = Array.isArray(dexJson?.pairs) ? dexJson.pairs : [];
+  tokenPairsCache = { at: now, pairs };
+  return pairs;
+}
+
+async function fetchDexBestPairByMint(signal) {
+  const pairs = await fetchDexTokenPairsCached(signal);
+  const best = pickBestPairFromTokenList(pairs);
   if (!best) {
     throw new Error('DexScreener token lookup returned no valid pair');
   }
   return best;
+}
+
+/** Sum `liquidity.usd` across all DexScreener TOKE pools (ecosystem TVL). */
+function sumEcosystemLiquidityUsd(pairs) {
+  if (!Array.isArray(pairs) || pairs.length === 0) return null;
+
+  const seen = new Set();
+  let total = 0;
+
+  for (const pair of pairs) {
+    if (!isValidDexPair(pair)) continue;
+    const key = pair.pairAddress ?? pair.pairId ?? pair.url;
+    if (key != null && key !== '') {
+      const id = String(key);
+      if (seen.has(id)) continue;
+      seen.add(id);
+    }
+    const liq = pairLiquidityUsd(pair);
+    if (liq > 0) total += liq;
+  }
+
+  if (total <= 0) return null;
+  return Math.round(total * 100) / 100;
 }
 
 async function resolveDexPair(signal) {
@@ -175,7 +214,10 @@ function extractDexHolderCount(pair) {
  * Live TOKE snapshot: DexScreener for price (+ dex mcap fallback), RPC for supply → price×supply mcap when possible.
  */
 export async function fetchTokeLiveMarket(signal) {
-  const pair = await resolveDexPair(signal);
+  const [pair, tokenPairs] = await Promise.all([
+    resolveDexPair(signal),
+    fetchDexTokenPairsCached(signal)
+  ]);
 
   const priceUsd = Number(pair.priceUsd);
   if (!Number.isFinite(priceUsd) || priceUsd <= 0) {
@@ -210,8 +252,15 @@ export async function fetchTokeLiveMarket(signal) {
   const h24Num = h24Raw != null && h24Raw !== '' ? Number(h24Raw) : Number.NaN;
   const priceChangeH24 = Number.isFinite(h24Num) ? h24Num : null;
 
-  const liqUsd = pairLiquidityUsd(pair);
-  const liquidityUsd = liqUsd > 0 ? liqUsd : null;
+  let liquidityUsd = sumEcosystemLiquidityUsd(tokenPairs);
+  let liquiditySource = liquidityUsd != null ? 'dexscreener_token_total' : null;
+  if (liquidityUsd == null) {
+    const liqUsd = pairLiquidityUsd(pair);
+    if (liqUsd > 0) {
+      liquidityUsd = liqUsd;
+      liquiditySource = 'dexscreener_pair';
+    }
+  }
 
   return {
     price: priceUsd,
@@ -222,6 +271,6 @@ export async function fetchTokeLiveMarket(signal) {
     dexHolderCount,
     priceChangeH24,
     liquidityUsd,
-    liquiditySource: liquidityUsd != null ? 'dexscreener_pair' : null
+    liquiditySource
   };
 }
