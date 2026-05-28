@@ -664,45 +664,6 @@ onBeforeUnmount(() => {
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
                   >
-                    Supply
-                  </p>
-                  <div class="hero-stat-card__figure">
-                    <p
-                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white sm:text-lg md:text-xl xl:text-[1.0625rem]"
-                    >
-                      {{ totalSupplyStat }}
-                    </p>
-                  </div>
-                  <div class="hero-stat-card__telemetry">
-                    <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.5rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                    >
-                      <div
-                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
-                      >
-                        <span class="hero-stat-card__metric shrink-0 text-neutral-400">
-                          <span class="hero-stat-card__metric-ico" aria-hidden="true">🪙</span>
-                          <span>{{ ORIGINAL_MINT_GROUPED }}</span>
-                        </span>
-                        <span class="hero-stat-card__sep" aria-hidden="true" />
-                        <span
-                          v-if="supplyBurnedPctStr"
-                          class="hero-stat-card__metric shrink-0"
-                          :class="supplyBurnedMetricClass"
-                        >
-                          <span class="hero-stat-card__metric-ico" aria-hidden="true">🔥</span>
-                          <span>{{ supplyBurnedPctStr }}</span>
-                        </span>
-                        <span v-else class="hero-stat-card__metric shrink-0 text-neutral-400">—</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="hero-stat-card">
-                  <p
-                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
-                  >
                     Market Cap
                   </p>
                   <div class="hero-stat-card__figure">
@@ -786,6 +747,45 @@ onBeforeUnmount(() => {
                           <span class="hero-stat-card__metric-ico" aria-hidden="true">🕔</span>
                           <span>{{ liquidityTimeLabel }}</span>
                         </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="hero-stat-card">
+                  <p
+                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
+                  >
+                    Supply
+                  </p>
+                  <div class="hero-stat-card__figure">
+                    <p
+                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white sm:text-lg md:text-xl xl:text-[1.0625rem]"
+                    >
+                      {{ totalSupplyStat }}
+                    </p>
+                  </div>
+                  <div class="hero-stat-card__telemetry">
+                    <div
+                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.5rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
+                      <div
+                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                      >
+                        <span class="hero-stat-card__metric shrink-0 text-neutral-400">
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">🪙</span>
+                          <span>{{ ORIGINAL_MINT_GROUPED }}</span>
+                        </span>
+                        <span class="hero-stat-card__sep" aria-hidden="true" />
+                        <span
+                          v-if="supplyBurnedPctStr"
+                          class="hero-stat-card__metric shrink-0"
+                          :class="supplyBurnedMetricClass"
+                        >
+                          <span class="hero-stat-card__metric-ico" aria-hidden="true">🔥</span>
+                          <span>{{ supplyBurnedPctStr }}</span>
+                        </span>
+                        <span v-else class="hero-stat-card__metric shrink-0 text-neutral-400">—</span>
                       </div>
                     </div>
                   </div>
