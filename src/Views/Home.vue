@@ -6,7 +6,8 @@ import {
   formatMarketCapDisplay,
   formatLiquidityDisplay,
   formatAvgTokeDisplay,
-  formatAvgWalletUsd
+  formatAvgWalletUsd,
+  formatTokenAmount3
 } from '../utils/statsApi';
 import { subscribeLiveStats } from '../utils/liveStatsPoll';
 
@@ -55,13 +56,10 @@ const ORIGINAL_MINT_GROUPED = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 0,
 }).format(ORIGINAL_TOKE_SUPPLY);
 
-/** Total supply in hero stat box: grouping + exactly 3 fractional digits. */
+/** Total supply in hero stat box: comma grouping + 3 fractional digits. */
 const formatSupplyStat = (value) => {
-  if (!Number.isFinite(value) || value <= 0) return null;
-  return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 3,
-    maximumFractionDigits: 3
-  }).format(value);
+  const formatted = formatTokenAmount3(value);
+  return formatted === '—' ? null : formatted;
 };
 
 /** Holder count: integers ≥ 0 (don’t treat API `null` as `Number(null)` → 0 incorrectly). */
@@ -746,7 +744,7 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
 
-                <div class="hero-stat-card">
+                <div class="hero-stat-card hero-stat-card--telemetry-busy">
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
                   >
@@ -831,7 +829,7 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
 
-                <div class="hero-stat-card">
+                <div class="hero-stat-card hero-stat-card--telemetry-busy">
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
                   >
@@ -1059,9 +1057,9 @@ $numComet: 5;
 
 @media (min-width: 1280px) {
   .hero-stat-card {
-    min-height: 192px;
-    gap: 0.375rem;
-    padding: 0.8rem 0.7rem 0.75rem;
+    min-height: 198px;
+    gap: 0.4rem;
+    padding: 0.82rem 0.78rem 0.78rem;
     border-radius: 1.5rem;
   }
 }
@@ -1143,15 +1141,51 @@ $numComet: 5;
   z-index: 1;
   margin-top: auto;
   border-radius: 9999px;
-  padding: 0.2rem 0.35rem;
+  padding: 0.28rem 0.45rem;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(148, 163, 184, 0.11);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
 }
 
+.hero-stat-card--telemetry-busy .hero-stat-card__telemetry {
+  padding: 0.3rem 0.55rem;
+}
+
 @media (min-width: 1280px) {
   .hero-stat-card__telemetry {
-    padding: 0.22rem 0.3rem;
+    padding: 0.3rem 0.5rem;
+  }
+
+  .hero-stat-card--telemetry-busy .hero-stat-card__telemetry {
+    padding: 0.34rem 0.72rem;
+  }
+}
+
+.hero-stat-card--telemetry-busy .hero-stat-card__telemetry-scroll {
+  min-height: 2.5rem;
+}
+
+@media (min-width: 1280px) {
+  .hero-stat-card--telemetry-busy .hero-stat-card__telemetry-scroll {
+    min-height: 2.75rem;
+  }
+}
+
+.hero-stat-card--telemetry-busy .hero-stat-card__telemetry-row {
+  gap: 0.125rem;
+}
+
+.hero-stat-card--telemetry-busy .hero-stat-card__metric {
+  gap: 0.28rem;
+}
+
+.hero-stat-card--telemetry-busy .hero-stat-card__sep {
+  margin: 0 0.45rem;
+}
+
+@media (min-width: 1280px) {
+  .hero-stat-card--telemetry-busy .hero-stat-card__sep {
+    margin: 0 0.5rem;
   }
 }
 
@@ -1162,6 +1196,18 @@ $numComet: 5;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
+  padding-inline: 0.125rem;
+}
+
+.hero-stat-card--telemetry-busy .hero-stat-card__figure {
+  padding-inline: 0.15rem;
+}
+
+@media (min-width: 1280px) {
+  .hero-stat-card--telemetry-busy .hero-stat-card__figure {
+    min-height: 3.35rem;
+    padding-inline: 0.1rem;
+  }
 }
 
 .hero-stat-card__metric {
