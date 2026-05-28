@@ -1034,7 +1034,8 @@ $numComet: 5;
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.75rem 0.8rem 0.7rem;
-  border-radius: 1rem;
+  border-radius: 1.5rem;
+  overflow: hidden;
   isolation: isolate;
   background: linear-gradient(
     160deg,
@@ -1058,7 +1059,7 @@ $numComet: 5;
     min-height: 184px;
     gap: 0.4rem;
     padding: 0.9rem 0.95rem 0.8rem;
-    border-radius: 1.05rem;
+    border-radius: 1.625rem;
   }
 }
 
@@ -1067,7 +1068,7 @@ $numComet: 5;
     min-height: 192px;
     gap: 0.375rem;
     padding: 0.8rem 0.7rem 0.75rem;
-    border-radius: 1rem;
+    border-radius: 1.5rem;
   }
 }
 
@@ -1147,8 +1148,8 @@ $numComet: 5;
   position: relative;
   z-index: 1;
   margin-top: auto;
-  border-radius: 0.5rem;
-  padding: 0.2rem 0.25rem;
+  border-radius: 9999px;
+  padding: 0.2rem 0.35rem;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(148, 163, 184, 0.11);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
