@@ -61,11 +61,14 @@ export function formatAvgTokeDisplay(value) {
   }).format(value);
 }
 
-/** 24h absolute change in avg TOKE (signed, 3 dp) — mirrors holder delta formatting. */
+/** 24h absolute change in avg TOKE (signed, always 3 fractional digits). */
 export function formatAvgTokeDelta(delta) {
   if (!Number.isFinite(delta)) return null;
   const rounded = Math.round(delta * 1000) / 1000;
   if (rounded === 0) return '+0.000';
-  if (rounded > 0) return `+${rounded.toFixed(3)}`;
-  return rounded.toFixed(3);
+  const abs = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3
+  }).format(Math.abs(rounded));
+  return rounded > 0 ? `+${abs}` : `-${abs}`;
 }

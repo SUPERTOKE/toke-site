@@ -662,23 +662,23 @@ onBeforeUnmount(() => {
               >
                 <div class="hero-stat-card">
                   <p
-                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
+                    class="hero-stat-card__eyebrow font-orbitron text-center font-semibold uppercase text-neutral-300"
                   >
                     Supply
                   </p>
                   <div class="hero-stat-card__figure">
                     <p
-                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white [overflow-wrap:anywhere] sm:text-lg md:text-xl"
+                      class="hero-stat-card__value font-orbitron tabular-nums text-center font-medium text-white"
                     >
                       {{ totalSupplyStat }}
                     </p>
                   </div>
                   <div class="hero-stat-card__telemetry">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
-                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                        class="hero-stat-card__telemetry-row font-exo tabular-nums text-neutral-200/95"
                       >
                         <span class="hero-stat-card__metric shrink-0 text-neutral-400">
                           <span class="hero-stat-card__metric-ico" aria-hidden="true">🪙</span>
@@ -701,23 +701,23 @@ onBeforeUnmount(() => {
 
                 <div class="hero-stat-card">
                   <p
-                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
+                    class="hero-stat-card__eyebrow font-orbitron text-center font-semibold uppercase text-neutral-300"
                   >
                     Market Cap
                   </p>
                   <div class="hero-stat-card__figure">
                     <p
-                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white [overflow-wrap:anywhere] sm:text-lg md:text-xl"
+                      class="hero-stat-card__value font-orbitron tabular-nums text-center font-medium text-white"
                     >
                       {{ marketCapStat }}
                     </p>
                   </div>
                   <div class="hero-stat-card__telemetry">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
-                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                        class="hero-stat-card__telemetry-row font-exo tabular-nums text-neutral-200/95"
                       >
                         <span
                           v-if="marketCapChangeFormatted != null"
@@ -747,23 +747,23 @@ onBeforeUnmount(() => {
 
                 <div class="hero-stat-card">
                   <p
-                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
+                    class="hero-stat-card__eyebrow font-orbitron text-center font-semibold uppercase text-neutral-300"
                   >
                     Liquidity
                   </p>
                   <div class="hero-stat-card__figure">
                     <p
-                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white [overflow-wrap:anywhere] sm:text-lg md:text-xl"
+                      class="hero-stat-card__value font-orbitron tabular-nums text-center font-medium text-white"
                     >
                       {{ liquidityStat }}
                     </p>
                   </div>
                   <div class="hero-stat-card__telemetry">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
-                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                        class="hero-stat-card__telemetry-row font-exo tabular-nums text-neutral-200/95"
                       >
                         <span
                           v-if="liquidityChangeFormatted != null"
@@ -793,23 +793,23 @@ onBeforeUnmount(() => {
 
                 <div class="hero-stat-card">
                   <p
-                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
+                    class="hero-stat-card__eyebrow font-orbitron text-center font-semibold uppercase text-neutral-300"
                   >
                     Holders
                   </p>
                   <div class="hero-stat-card__figure">
                     <p
-                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white [overflow-wrap:anywhere] sm:text-lg md:text-xl"
+                      class="hero-stat-card__value font-orbitron tabular-nums text-center font-medium text-white"
                     >
                       {{ holdersStat }}
                     </p>
                   </div>
                   <div class="hero-stat-card__telemetry">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
-                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                        class="hero-stat-card__telemetry-row font-exo tabular-nums text-neutral-200/95"
                       >
                         <span
                           v-if="holdersChangeFormatted != null"
@@ -839,23 +839,23 @@ onBeforeUnmount(() => {
 
                 <div class="hero-stat-card">
                   <p
-                    class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm"
+                    class="hero-stat-card__eyebrow font-orbitron text-center font-semibold uppercase text-neutral-300"
                   >
                     AVG TOKE
                   </p>
                   <div class="hero-stat-card__figure">
                     <p
-                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white [overflow-wrap:anywhere] sm:text-lg md:text-xl"
+                      class="hero-stat-card__value font-orbitron tabular-nums text-center font-medium text-white"
                     >
                       {{ avgTokeStat }}
                     </p>
                   </div>
                   <div class="hero-stat-card__telemetry">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
-                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                        class="hero-stat-card__telemetry-row font-exo tabular-nums text-neutral-200/95"
                       >
                         <span
                           v-if="avgTokeChangeFormatted != null"
@@ -1030,10 +1030,10 @@ $numComet: 5;
   position: relative;
   display: flex;
   min-width: 0;
-  min-height: 168px;
+  min-height: 156px;
   flex-direction: column;
-  padding: 0.7rem 0.75rem 0.65rem;
-  border-radius: 1rem;
+  padding: 0.6rem 0.55rem 0.5rem;
+  border-radius: 0.9rem;
   isolation: isolate;
   background: linear-gradient(
     160deg,
@@ -1054,9 +1054,17 @@ $numComet: 5;
 
 @media (min-width: 640px) {
   .hero-stat-card {
-    min-height: 178px;
-    padding: 0.85rem 0.9rem 0.75rem;
-    border-radius: 1.05rem;
+    min-height: 164px;
+    padding: 0.7rem 0.65rem 0.6rem;
+    border-radius: 1rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-stat-card {
+    min-height: 158px;
+    padding: 0.55rem 0.45rem 0.5rem;
+    border-radius: 0.9rem;
   }
 }
 
@@ -1097,13 +1105,24 @@ $numComet: 5;
   position: relative;
   z-index: 1;
   margin: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
   line-height: 1.2;
   text-shadow: 0 0 14px rgba(255, 255, 255, 0.06);
 }
 
 @media (min-width: 640px) {
   .hero-stat-card__eyebrow {
+    font-size: 0.6875rem;
+    letter-spacing: 0.18em;
     line-height: 1.15;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-stat-card__eyebrow {
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
   }
 }
 
@@ -1114,22 +1133,71 @@ $numComet: 5;
   flex: 1;
   align-items: center;
   justify-content: center;
-  min-height: 3.15rem;
-  padding: 0.3rem 0.2rem 0.4rem;
+  min-height: 2.5rem;
+  padding: 0.2rem 0.15rem 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .hero-stat-card__figure {
+    min-height: 2.75rem;
+    padding: 0.25rem 0.2rem 0.3rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-stat-card__figure {
+    min-height: 2.35rem;
+    padding: 0.15rem 0.1rem 0.2rem;
+  }
 }
 
 .hero-stat-card__value {
+  width: 100%;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: clamp(0.8125rem, 2.4vw, 1.0625rem);
+  line-height: 1.12;
   text-shadow: 0 0 24px rgba(255, 255, 255, 0.08);
+}
+
+@media (min-width: 640px) {
+  .hero-stat-card__value {
+    font-size: clamp(0.875rem, 2.1vw, 1.125rem);
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-stat-card__value {
+    font-size: clamp(0.6875rem, 0.72vw, 0.875rem);
+    line-height: 1.1;
+  }
 }
 
 .hero-stat-card__telemetry {
   position: relative;
   z-index: 1;
   margin-top: auto;
-  border-radius: 0.5rem;
+  border-radius: 0.45rem;
+  padding: 0.1rem 0.15rem;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(148, 163, 184, 0.11);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.hero-stat-card__telemetry-scroll {
+  min-height: 2rem;
+}
+
+@media (min-width: 640px) {
+  .hero-stat-card__telemetry-scroll {
+    min-height: 2.125rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-stat-card__telemetry-scroll {
+    min-height: 1.875rem;
+  }
 }
 
 .hero-stat-card__telemetry-row {
@@ -1139,17 +1207,44 @@ $numComet: 5;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+@media (min-width: 640px) {
+  .hero-stat-card__telemetry-row {
+    font-size: 0.8125rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-stat-card__telemetry-row {
+    font-size: 0.6875rem;
+    line-height: 1.2;
+  }
+
+  .hero-stat-card__sep {
+    margin: 0 0.35rem;
+    height: 0.65rem;
+  }
 }
 
 .hero-stat-card__metric {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.375rem;
+  gap: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .hero-stat-card__metric {
+    gap: 0.3rem;
+  }
 }
 
 .hero-stat-card__metric-ico {
   flex-shrink: 0;
   display: inline-block;
+  font-size: 0.85em;
   line-height: 1;
 }
 
@@ -1157,8 +1252,8 @@ $numComet: 5;
   display: inline-block;
   flex-shrink: 0;
   width: 1px;
-  height: 0.875rem;
-  margin: 0 0.75rem;
+  height: 0.75rem;
+  margin: 0 0.45rem;
   align-self: center;
   background: linear-gradient(
     to bottom,
