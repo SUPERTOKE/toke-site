@@ -482,6 +482,10 @@ function applyHeroStatsPayload(payload, path) {
       lastKnownSupply.value = supplyFmt;
       currentSupplyUi.value = totalSupply;
       lastKnownSupplyNumeric.value = totalSupply;
+    } else if (lastKnownSupplyNumeric.value != null) {
+      const fmt = formatSupplyStat(lastKnownSupplyNumeric.value);
+      totalSupplyStat.value = fmt ?? lastKnownSupply.value;
+      currentSupplyUi.value = lastKnownSupplyNumeric.value;
     } else if (lastKnownSupply.value) {
       totalSupplyStat.value = lastKnownSupply.value;
       currentSupplyUi.value = lastKnownSupplyNumeric.value;
@@ -514,7 +518,9 @@ function applyHeroStatsPayload(payload, path) {
       avgTokeStat.value = avgFmt;
       lastKnownAvgToke.value = avgFmt;
     } else if (lastKnownAvgToke.value) {
-      avgTokeStat.value = lastKnownAvgToke.value;
+      const parsed = statNum(lastKnownAvgToke.value);
+      const cachedFmt = formatAvgTokeDisplay(parsed);
+      avgTokeStat.value = cachedFmt !== '—' ? cachedFmt : lastKnownAvgToke.value;
     } else {
       avgTokeStat.value = '—';
     }
@@ -757,9 +763,9 @@ onBeforeUnmount(() => {
                       {{ totalSupplyStat }}
                     </p>
                   </div>
-                  <div class="hero-stat-card__telemetry">
+                  <div class="hero-stat-card__telemetry px-3 py-1 sm:px-4 xl:px-5">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.5rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex min-h-[2.5rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.875rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
                         class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
@@ -842,9 +848,9 @@ onBeforeUnmount(() => {
                       {{ avgTokeStat }}
                     </p>
                   </div>
-                  <div class="hero-stat-card__telemetry">
+                  <div class="hero-stat-card__telemetry px-3 py-1 sm:px-4 xl:px-5">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.5rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex min-h-[2.5rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.875rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
                         class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
@@ -1057,9 +1063,9 @@ $numComet: 5;
 
 @media (min-width: 1280px) {
   .hero-stat-card {
-    min-height: 198px;
+    min-height: 204px;
     gap: 0.4rem;
-    padding: 0.82rem 0.78rem 0.78rem;
+    padding: 0.85rem 0.82rem 0.8rem;
     border-radius: 1.5rem;
   }
 }
@@ -1141,23 +1147,15 @@ $numComet: 5;
   z-index: 1;
   margin-top: auto;
   border-radius: 9999px;
-  padding: 0.28rem 0.45rem;
+  padding: 0.32rem 0.55rem;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(148, 163, 184, 0.11);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
 }
 
-.hero-stat-card--telemetry-busy .hero-stat-card__telemetry {
-  padding: 0.3rem 0.55rem;
-}
-
 @media (min-width: 1280px) {
   .hero-stat-card__telemetry {
-    padding: 0.3rem 0.5rem;
-  }
-
-  .hero-stat-card--telemetry-busy .hero-stat-card__telemetry {
-    padding: 0.34rem 0.72rem;
+    padding: 0.34rem 0.62rem;
   }
 }
 

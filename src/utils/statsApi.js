@@ -52,17 +52,18 @@ export function formatMarketCapDisplay(value) {
 /** USD liquidity / TVL — same formatting as market cap. */
 export const formatLiquidityDisplay = formatMarketCapDisplay;
 
-const GROUPED_US_3 = {
-  locale: 'en-US',
-  useGrouping: true,
-  minimumFractionDigits: 3,
-  maximumFractionDigits: 3
-};
+/** Comma thousands + 3 decimals (e.g. 32,277.043) — not locale-dependent. */
+function commaThousands3(value) {
+  const n = Math.round(Math.abs(value) * 1000) / 1000;
+  const [intPart, dec] = n.toFixed(3).split('.');
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return value < 0 ? `-${grouped}.${dec}` : `${grouped}.${dec}`;
+}
 
 /** Token/supply amounts — comma thousands, period decimals, 3 dp (e.g. 32,290.238). */
 export function formatTokenAmount3(value) {
   if (!Number.isFinite(value) || value <= 0) return '—';
-  return new Intl.NumberFormat('en-US', GROUPED_US_3).format(value);
+  return commaThousands3(value);
 }
 
 /** Avg TOKE held (supply ÷ holders). */
@@ -71,6 +72,5 @@ export const formatAvgTokeDisplay = formatTokenAmount3;
 /** Avg wallet USD (avg TOKE × price), 3 dp (e.g. $5.842). */
 export function formatAvgWalletUsd(value) {
   if (!Number.isFinite(value) || value <= 0) return null;
-  const rounded = Math.round(value * 1000) / 1000;
-  return `$${new Intl.NumberFormat('en-US', GROUPED_US_3).format(rounded)}`;
+  return `$${commaThousands3(value)}`;
 }
