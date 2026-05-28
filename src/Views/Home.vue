@@ -314,7 +314,7 @@ function warmingTooltip(kind) {
   if (!meta) {
     if (kind === 'holder') return '24h holder change unavailable.';
     if (kind === 'liquidity') return '24h liquidity change unavailable.';
-    if (kind === 'avgToke') return '24h avg TOKE change unavailable.';
+    if (kind === 'avgToke') return '24h avg TOKER change unavailable.';
     return '24h market cap change unavailable.';
   }
   if (meta.redisConfigured === false) {
@@ -841,7 +841,7 @@ onBeforeUnmount(() => {
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
                   >
-                    AVG TOKE
+                    AVG TOKER
                   </p>
                   <div class="hero-stat-card__figure">
                     <p
