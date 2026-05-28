@@ -33,10 +33,7 @@ const checks = {
   marketCapChangePct24h: data.marketCapChangePct24h,
   liquidityChangePct24h: data.liquidityChangePct24h,
   avgTokeUi: data.avgTokeUi != null,
-  avgTokeSnapshotsCount: Number(meta.avgTokeSnapshotsCount) > 0,
-  avgTokeChange24hSource: meta.avgTokeChange24hSource,
-  avgWalletUsd: data.avgWalletUsd != null,
-  avgTokeChange24h: data.avgTokeChange24h
+  avgWalletUsd: data.avgWalletUsd != null
 };
 
 console.log(JSON.stringify({ url, checks }, null, 2));

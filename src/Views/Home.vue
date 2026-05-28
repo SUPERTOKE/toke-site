@@ -6,8 +6,7 @@ import {
   formatMarketCapDisplay,
   formatLiquidityDisplay,
   formatAvgTokeDisplay,
-  formatAvgWalletUsd,
-  formatTokenAmount3
+  formatAvgWalletUsd
 } from '../utils/statsApi';
 import { subscribeLiveStats } from '../utils/liveStatsPoll';
 
@@ -56,10 +55,13 @@ const ORIGINAL_MINT_GROUPED = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 0,
 }).format(ORIGINAL_TOKE_SUPPLY);
 
-/** Total supply in hero stat box: comma grouping + 3 fractional digits. */
+/** Total supply in hero stat box: grouping + exactly 3 fractional digits. */
 const formatSupplyStat = (value) => {
-  const formatted = formatTokenAmount3(value);
-  return formatted === '—' ? null : formatted;
+  if (!Number.isFinite(value) || value <= 0) return null;
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3
+  }).format(value);
 };
 
 /** Holder count: integers ≥ 0 (don’t treat API `null` as `Number(null)` → 0 incorrectly). */
@@ -153,7 +155,7 @@ const lastKnownAvgToke = ref(null);
 const marketCapChangePct = ref(null);
 /** Redis-backed `liquidityChangePct24h` from `/api/toke-stats` only. */
 const liquidityChangePct = ref(null);
-/** Avg wallet USD (avg TOKE × live price) for telemetry row. */
+/** USD value of avg wallet (supply ÷ holders × price) for 💰 telemetry row. */
 const avgWalletUsd = ref(null);
 const lastKnownAvgWalletUsd = ref(null);
 /** Burned % string only (no emoji) — pairs with 🔥 in template for even emoji–value spacing. */
@@ -278,23 +280,16 @@ const liquidityChangeClass = computed(() => {
   return 'text-red-400/90';
 });
 
-const avgWalletUsdIsPending = computed(
-  () =>
-    hasLiveAvgTokeStat.value &&
-    (avgWalletUsd.value == null || !Number.isFinite(avgWalletUsd.value) || avgWalletUsd.value <= 0)
-);
-
 const avgWalletUsdFormatted = computed(() => {
   const usd = avgWalletUsd.value;
-  if (usd != null && Number.isFinite(usd) && usd > 0) {
-    return formatAvgWalletUsd(usd);
-  }
-  if (avgWalletUsdIsPending.value) return '—';
+  const fmt = formatAvgWalletUsd(usd);
+  if (fmt) return fmt;
+  if (hasLiveAvgTokeStat.value) return '—';
   return null;
 });
 
-const avgWalletUsdMetricClass = computed(() =>
-  avgWalletUsdIsPending.value ? 'text-neutral-400' : 'text-neutral-200/95'
+const avgWalletUsdTitle = computed(
+  () => 'USD value per wallet (supply ÷ holders × live price)'
 );
 
 function warmingTooltip(kind) {
@@ -302,7 +297,7 @@ function warmingTooltip(kind) {
   if (!meta) {
     if (kind === 'holder') return '24h holder change unavailable.';
     if (kind === 'liquidity') return '24h liquidity change unavailable.';
-    if (kind === 'avgToke') return 'Avg wallet USD unavailable (needs live price).';
+    if (kind === 'avgToke') return '24h avg wallet change unavailable.';
     return '24h market cap change unavailable.';
   }
   if (meta.redisConfigured === false) {
@@ -341,10 +336,6 @@ const marketCapChangeTitle = computed(() =>
 
 const liquidityChangeTitle = computed(() =>
   liquidityChangeIsWarming.value ? warmingTooltip('liquidity') : undefined
-);
-
-const avgWalletUsdTitle = computed(() =>
-  avgWalletUsdIsPending.value ? warmingTooltip('avgToke') : 'Avg wallet holdings in USD (avg TOKE × price)'
 );
 
 /** Telemetry clock row — always the 24h window label (not on-chain refresh time). */
@@ -482,10 +473,6 @@ function applyHeroStatsPayload(payload, path) {
       lastKnownSupply.value = supplyFmt;
       currentSupplyUi.value = totalSupply;
       lastKnownSupplyNumeric.value = totalSupply;
-    } else if (lastKnownSupplyNumeric.value != null) {
-      const fmt = formatSupplyStat(lastKnownSupplyNumeric.value);
-      totalSupplyStat.value = fmt ?? lastKnownSupply.value;
-      currentSupplyUi.value = lastKnownSupplyNumeric.value;
     } else if (lastKnownSupply.value) {
       totalSupplyStat.value = lastKnownSupply.value;
       currentSupplyUi.value = lastKnownSupplyNumeric.value;
@@ -518,24 +505,22 @@ function applyHeroStatsPayload(payload, path) {
       avgTokeStat.value = avgFmt;
       lastKnownAvgToke.value = avgFmt;
     } else if (lastKnownAvgToke.value) {
-      const parsed = statNum(lastKnownAvgToke.value);
-      const cachedFmt = formatAvgTokeDisplay(parsed);
-      avgTokeStat.value = cachedFmt !== '—' ? cachedFmt : lastKnownAvgToke.value;
+      avgTokeStat.value = lastKnownAvgToke.value;
     } else {
       avgTokeStat.value = '—';
     }
 
-    const avgTokeForUsd = statNum(payload?.avgTokeUi);
-    let walletUsd = statNum(payload?.avgWalletUsd);
-    if (!Number.isFinite(walletUsd) || walletUsd <= 0) {
-      const px = statNum(payload?.price);
-      if (Number.isFinite(avgTokeForUsd) && avgTokeForUsd > 0 && Number.isFinite(px) && px > 0) {
-        walletUsd = Math.round(avgTokeForUsd * px * 1000) / 1000;
+    const walletUsd = statNum(payload?.avgWalletUsd);
+    const price = statNum(payload?.price);
+    let resolvedWalletUsd = walletUsd;
+    if (!Number.isFinite(resolvedWalletUsd) || resolvedWalletUsd <= 0) {
+      if (Number.isFinite(avgToke) && avgToke > 0 && Number.isFinite(price) && price > 0) {
+        resolvedWalletUsd = Math.round(avgToke * price * 1000) / 1000;
       }
     }
-    if (Number.isFinite(walletUsd) && walletUsd > 0) {
-      avgWalletUsd.value = walletUsd;
-      lastKnownAvgWalletUsd.value = walletUsd;
+    if (Number.isFinite(resolvedWalletUsd) && resolvedWalletUsd > 0) {
+      avgWalletUsd.value = resolvedWalletUsd;
+      lastKnownAvgWalletUsd.value = resolvedWalletUsd;
     } else if (lastKnownAvgWalletUsd.value != null) {
       avgWalletUsd.value = lastKnownAvgWalletUsd.value;
     } else {
@@ -750,7 +735,7 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
 
-                <div class="hero-stat-card hero-stat-card--telemetry-busy">
+                <div class="hero-stat-card">
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
                   >
@@ -763,9 +748,9 @@ onBeforeUnmount(() => {
                       {{ totalSupplyStat }}
                     </p>
                   </div>
-                  <div class="hero-stat-card__telemetry px-3 py-1 sm:px-4 xl:px-5">
+                  <div class="hero-stat-card__telemetry">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.5rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.875rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.5rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
                         class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
@@ -835,7 +820,7 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
 
-                <div class="hero-stat-card hero-stat-card--telemetry-busy">
+                <div class="hero-stat-card">
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
                   >
@@ -848,17 +833,16 @@ onBeforeUnmount(() => {
                       {{ avgTokeStat }}
                     </p>
                   </div>
-                  <div class="hero-stat-card__telemetry px-3 py-1 sm:px-4 xl:px-5">
+                  <div class="hero-stat-card__telemetry">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.5rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.875rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.5rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
                         class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
                       >
                         <span
                           v-if="avgWalletUsdFormatted != null"
-                          class="hero-stat-card__metric shrink-0"
-                          :class="avgWalletUsdMetricClass"
+                          class="hero-stat-card__metric shrink-0 text-neutral-200/95"
                           :title="avgWalletUsdTitle"
                         >
                           <span class="hero-stat-card__metric-ico" aria-hidden="true">💰</span>
@@ -1063,9 +1047,9 @@ $numComet: 5;
 
 @media (min-width: 1280px) {
   .hero-stat-card {
-    min-height: 204px;
-    gap: 0.4rem;
-    padding: 0.85rem 0.82rem 0.8rem;
+    min-height: 192px;
+    gap: 0.375rem;
+    padding: 0.8rem 0.7rem 0.75rem;
     border-radius: 1.5rem;
   }
 }
@@ -1147,7 +1131,7 @@ $numComet: 5;
   z-index: 1;
   margin-top: auto;
   border-radius: 9999px;
-  padding: 0.32rem 0.55rem;
+  padding: 0.2rem 0.35rem;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(148, 163, 184, 0.11);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
@@ -1155,35 +1139,7 @@ $numComet: 5;
 
 @media (min-width: 1280px) {
   .hero-stat-card__telemetry {
-    padding: 0.34rem 0.62rem;
-  }
-}
-
-.hero-stat-card--telemetry-busy .hero-stat-card__telemetry-scroll {
-  min-height: 2.5rem;
-}
-
-@media (min-width: 1280px) {
-  .hero-stat-card--telemetry-busy .hero-stat-card__telemetry-scroll {
-    min-height: 2.75rem;
-  }
-}
-
-.hero-stat-card--telemetry-busy .hero-stat-card__telemetry-row {
-  gap: 0.125rem;
-}
-
-.hero-stat-card--telemetry-busy .hero-stat-card__metric {
-  gap: 0.28rem;
-}
-
-.hero-stat-card--telemetry-busy .hero-stat-card__sep {
-  margin: 0 0.45rem;
-}
-
-@media (min-width: 1280px) {
-  .hero-stat-card--telemetry-busy .hero-stat-card__sep {
-    margin: 0 0.5rem;
+    padding: 0.22rem 0.3rem;
   }
 }
 
@@ -1194,18 +1150,6 @@ $numComet: 5;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  padding-inline: 0.125rem;
-}
-
-.hero-stat-card--telemetry-busy .hero-stat-card__figure {
-  padding-inline: 0.15rem;
-}
-
-@media (min-width: 1280px) {
-  .hero-stat-card--telemetry-busy .hero-stat-card__figure {
-    min-height: 3.35rem;
-    padding-inline: 0.1rem;
-  }
 }
 
 .hero-stat-card__metric {
