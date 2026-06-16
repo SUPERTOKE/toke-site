@@ -5,7 +5,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/toke-stats.js": {
-      "maxDuration": 90
+      "maxDuration": 60
     }
   },
   "redirects": [
