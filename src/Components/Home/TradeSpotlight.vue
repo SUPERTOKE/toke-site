@@ -1,34 +1,15 @@
 <script setup>
-import { ref } from 'vue';
 import {
   coinbaseVenue,
   swapVenues,
   swapTileGridClass,
   swapTileClass,
-  tokenOfficialInfo,
 } from '../../data/tradeVenues';
 import coinbasePhone from '../../assets/trade-previews/toke-coinbase-mobile.png';
-
-const copyState = ref('idle');
-
-async function copyMintAddress() {
-  try {
-    await navigator.clipboard.writeText(tokenOfficialInfo.mint);
-    copyState.value = 'copied';
-    window.setTimeout(() => {
-      copyState.value = 'idle';
-    }, 2000);
-  } catch {
-    copyState.value = 'error';
-    window.setTimeout(() => {
-      copyState.value = 'idle';
-    }, 2000);
-  }
-}
 </script>
 
 <template>
-  <div class="relative py-10 md:py-16 lg:py-20">
+  <div class="relative py-12 sm:py-16 md:py-20">
     <div
       class="pointer-events-none absolute inset-x-0 top-1/2 h-[min(70vw,28rem)] -translate-y-1/2 bg-[radial-gradient(ellipse_80%_60%_at_20%_50%,rgba(139,92,246,0.22),transparent_55%)] md:h-[min(55vw,32rem)]"
       aria-hidden="true"
@@ -49,7 +30,7 @@ async function copyMintAddress() {
           class="pointer-events-none absolute -left-1/4 top-0 h-px w-[150%] bg-gradient-to-r from-transparent via-white/25 to-transparent trade-spotlight-shimmer"
           aria-hidden="true"
         />
-        <div class="relative z-[1] flex flex-col items-center text-center space-y-5 sm:space-y-6 md:space-y-8">
+        <div class="relative z-[1] flex flex-col items-center text-center space-y-8 sm:space-y-10 md:space-y-12">
           <p class="font-orbitron text-[1.65rem] min-[400px]:text-3xl sm:text-5xl md:text-6xl font-semibold text-center pb-1 relative leading-tight tracking-wide [text-shadow:0_0_40px_rgba(255,255,255,0.12)]">
             <span class="text-transparent bg-clip-text bg-gradient-to-r from-neutral-100 via-white to-neutral-100">TRADE</span>
           </p>
@@ -167,53 +148,6 @@ async function copyMintAddress() {
             </div>
 
             </div>
-
-            <section
-              class="rounded-2xl md:rounded-3xl border border-white/[0.1] bg-neutral-950/70 px-3.5 py-3 sm:px-4 sm:py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-              aria-label="Token details"
-            >
-              <dl class="font-exo space-y-1.5 text-sm">
-                <div class="flex items-baseline justify-between gap-4">
-                  <dt class="shrink-0 text-neutral-500">Token</dt>
-                  <dd class="font-medium text-white">{{ tokenOfficialInfo.name }}</dd>
-                </div>
-                <div class="flex items-baseline justify-between gap-4">
-                  <dt class="shrink-0 text-neutral-500">Ticker</dt>
-                  <dd class="font-medium text-white">{{ tokenOfficialInfo.ticker }}</dd>
-                </div>
-                <div class="flex min-w-0 items-center gap-2">
-                  <dt class="shrink-0 text-neutral-500">Address</dt>
-                  <code
-                    :title="tokenOfficialInfo.mint"
-                    class="min-w-0 flex-1 truncate rounded-md border border-white/[0.08] bg-black/35 px-2 py-1 font-mono text-[0.625rem] leading-none text-neutral-300 sm:text-[0.6875rem]"
-                  >{{ tokenOfficialInfo.mint }}</code>
-                  <button
-                    type="button"
-                    @click="copyMintAddress"
-                    class="inline-flex shrink-0 items-center justify-center gap-1 rounded-md border border-white/[0.12] bg-white/[0.06] px-2.5 py-1 font-exo text-[0.6875rem] font-medium leading-none text-neutral-200 transition-colors hover:border-white/25 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
-                    :aria-label="copyState === 'copied' ? 'Address copied' : 'Copy address'"
-                  >
-                    <svg
-                      v-if="copyState !== 'copied'"
-                      class="h-3.5 w-3.5 shrink-0 text-neutral-400"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      aria-hidden="true"
-                    >
-                      <rect x="9" y="9" width="13" height="13" rx="2" />
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                    </svg>
-                    <span>{{ copyState === 'copied' ? 'Copied' : copyState === 'error' ? 'Failed' : 'Copy' }}</span>
-                  </button>
-                </div>
-              </dl>
-
-              <p class="mt-2.5 border-t border-white/[0.08] pt-2.5 font-exo text-xs leading-relaxed text-neutral-500">
-                {{ tokenOfficialInfo.disclaimer }}
-              </p>
-            </section>
           </div>
         </div>
       </div>

@@ -1,6 +1,5 @@
 <script setup>
 import McVoteSupplyBar from './McVoteSupplyBar.vue';
-import VrfdTweetFeed from './VrfdTweetFeed.vue';
 import { ERA_TIMELINE } from '../../data/mcVoteEraTimeline.js';
 
 const yesLabel = (n) => `${n}%`;
@@ -13,22 +12,22 @@ const yearGlowClass =
   'bg-gradient-to-br from-sky-400/45 from-0% via-sky-500/35 to-indigo-500/40';
 
 const MCVAULT_INTRO_LEAD =
-  "Early in TOKE's history, a critical mistake left 7% of the token supply locked behind a smart-contract.";
+  'A critical mistake once left 7% of tokens locked onchain.';
 const MCVAULT_INTRO_BODY =
-  'Unlocking it required that 60% of the entire TOKE supply vote Yes on-chain, leading to the annual 4/20 Great McVote.';
+  'Unlocking it required a full 60% of the $TOKE supply to vote Yes during the annual 4/20 Great McVote.';
 const MCVAULT_INTRO_PAYOFF =
-  'In the 3rd year, the McVault was finally cracked by TOKE holders.';
+  'In the 3rd year, the McVault was finally cracked.';
 </script>
 
 <template>
   <section
     id="TheMcVaultEra"
-    class="relative scroll-mt-[calc(5.25rem+env(safe-area-inset-top,0px))] pt-12 pb-0 sm:pt-16 md:pt-24"
+    class="relative scroll-mt-[calc(5.25rem+env(safe-area-inset-top,0px))] py-12 sm:py-16 md:py-20"
     aria-labelledby="the-mcvault-era-title"
   >
     <div class="relative container mx-auto px-3.5 sm:px-6 max-w-7xl">
       <div
-        class="flex flex-col items-center text-center space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full mb-8 sm:mb-10 md:mb-12 px-0.5 sm:px-1"
+        class="flex flex-col items-center text-center space-y-8 sm:space-y-10 md:space-y-12 max-w-7xl mx-auto w-full mb-8 sm:mb-10 md:mb-12 px-0.5 sm:px-1"
       >
         <p
           id="the-mcvault-era-title"
@@ -43,7 +42,7 @@ const MCVAULT_INTRO_PAYOFF =
             <span class="text-neutral-300">{{ MCVAULT_INTRO_LEAD }}</span><span class="text-neutral-400">{{ ' ' + MCVAULT_INTRO_BODY }}</span>
           </p>
           <p
-            class="font-exo m-0 text-[0.9375rem] leading-relaxed text-neutral-300 sm:text-base [text-wrap:balance]"
+            class="font-exo m-0 text-[0.9375rem] font-medium leading-relaxed text-neutral-200 sm:text-base [text-wrap:balance]"
           >
             {{ MCVAULT_INTRO_PAYOFF }}
           </p>
@@ -121,9 +120,9 @@ const MCVAULT_INTRO_PAYOFF =
               </p>
 
               <div
-                class="mx-auto w-full max-w-[11.5rem] overflow-hidden rounded-xl border border-white/[0.08] bg-neutral-950/80 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]"
+                class="mx-auto w-[11rem] overflow-hidden rounded-xl border border-white/[0.08] bg-neutral-950/80 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]"
               >
-                <div class="relative aspect-[662/1024] w-full bg-black/40">
+                <div class="relative h-[14.5rem] w-full bg-black/40">
                   <img
                     :src="row.commemorativeArt"
                     :alt="`Commemorative art for ${row.mcVoteLabel}`"
@@ -189,7 +188,7 @@ const MCVAULT_INTRO_PAYOFF =
 
                 <span
                   :class="[
-                    'absolute left-[60%] top-7 z-[1] min-w-0 -translate-y-1/2 truncate text-left font-orbitron text-lg font-bold uppercase tracking-normal md:text-xl right-[max(7rem,env(safe-area-inset-right,0px))] sm:right-[max(7.75rem,env(safe-area-inset-right,0px))] [text-shadow:0_1px_2px_rgba(0,0,0,0.85)]',
+                    'absolute left-[60%] top-7 z-[1] min-w-0 -translate-y-1/2 truncate text-left font-orbitron text-lg font-bold uppercase tracking-normal md:text-xl right-[max(7.875rem,env(safe-area-inset-right,0px))] sm:right-[max(8.625rem,env(safe-area-inset-right,0px))] [text-shadow:0_1px_2px_rgba(0,0,0,0.85)]',
                     row.yesPercent >= 60
                       ? 'text-emerald-50'
                       : 'text-neutral-50',
@@ -203,7 +202,7 @@ const MCVAULT_INTRO_PAYOFF =
 
                 <div class="relative z-[2] flex shrink-0 items-start">
                   <div
-                    class="relative block aspect-[662/1024] w-[5rem] shrink-0 overflow-hidden rounded-lg border border-white/15 bg-black/40 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] sm:w-[5.25rem]"
+                    class="relative block h-[7.75rem] w-[5.875rem] shrink-0 overflow-hidden rounded-lg border border-white/15 bg-black/40 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] sm:h-[8.125rem] sm:w-[6.125rem]"
                   >
                     <img
                       :src="row.commemorativeArt"
@@ -219,12 +218,6 @@ const MCVAULT_INTRO_PAYOFF =
           </div>
         </li>
       </ul>
-
-      <div
-        class="mt-10 border-t border-white/[0.08] pt-10 pb-12 antialiased sm:mt-14 sm:pt-14 sm:pb-16 md:mt-16 md:pt-16 md:pb-20"
-      >
-        <VrfdTweetFeed />
-      </div>
     </div>
   </section>
 </template>

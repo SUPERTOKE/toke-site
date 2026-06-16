@@ -57,35 +57,39 @@ function movingAverage(values, windowSize) {
 /**
  * Smooth cubic SVG path through normalized Y values (viewBox 0 0 width height).
  * @param {number} yInset — fraction of inner height reserved top/bottom (keeps curve + overshoot visible)
+ * @param {number} yPlotFill — fraction of plot height used for min–max range, centered (1 = full)
  */
 export function buildSmoothSvgPaths(
   values,
   width = 100,
   height = 32,
   padding = 2,
-  yInset = 0.14
+  yInset = 0.14,
+  yPlotFill = 1
 ) {
-  if (!values.length) return { line: '', area: '' };
+  if (!values.length) return { line: '', area: '', baseline: null };
 
   const innerW = width - padding * 2;
   const innerH = height - padding * 2;
   const inset = Math.min(Math.max(yInset, 0), 0.4);
   const plotH = innerH * (1 - 2 * inset);
   const plotTop = padding + innerH * inset;
+  const fill = Math.min(Math.max(yPlotFill, 0.2), 1);
+  const bandH = plotH * fill;
+  const bandTop = plotTop + (plotH - bandH) / 2;
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || max * 0.0001 || 1;
 
   const pts = values.map((v, i) => ({
     x: padding + (i / Math.max(values.length - 1, 1)) * innerW,
-    y: plotTop + (1 - (v - min) / range) * plotH
+    y: bandTop + (1 - (v - min) / range) * bandH
   }));
 
   const line = catmullRomPath(pts, false);
   const baseline = padding + innerH;
   const area = `${line} L ${pts[pts.length - 1].x} ${baseline} L ${pts[0].x} ${baseline} Z`;
-
-  return { line, area };
+  return { line, area, baseline };
 }
 
 function catmullRomPath(points, closed) {

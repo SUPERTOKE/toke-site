@@ -1,32 +1,28 @@
 <script setup>
 import BrandLogoName from './BrandLogoName.vue'
+import { footerTradeLinks } from '../data/tradeVenues.js'
+import { footerPlatformLinks } from '../data/footerPlatforms.js'
+import { footerExplorerLinks } from '../data/footerExplorers.js'
+import { footerSocialLinks } from '../data/footerSocials.js'
 
 const linkColumns = [
     {
         title: 'Trade',
-        links: [
-            { label: 'Coinbase', href: 'https://www.coinbase.com/price/mctoken-solana-amgumqeqw8h74trc8ukkjzzwtxbdps496wh4gly2mcpo-token' },
-            { label: 'Jupiter', href: 'https://jup.ag/tokens/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo' },
-        ],
+        links: footerTradeLinks,
     },
     {
         title: 'Platforms',
-        links: [
-            { label: 'CoinMarketCap', href: 'https://coinmarketcap.com/currencies/mctoken' },
-            { label: 'Dexscreener', href: 'https://dexscreener.com/solana/ad6negrxhsbagwfsttbshmkqgedhotcjzyfwcgrraxc9' },
-            { label: 'Birdeye', href: 'https://birdeye.so/token/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo?chain=solana' },
-        ],
+        links: footerPlatformLinks,
     },
     {
         title: 'Explorers',
-        links: [
-            { label: 'Solscan', href: 'https://solscan.io/token/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo' },
-            { label: 'Orb', href: 'https://orbmarkets.io/token/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo' },
-        ],
+        links: footerExplorerLinks,
+    },
+    {
+        title: 'Socials',
+        links: footerSocialLinks,
     },
 ]
-
-const linkRowCount = Math.max(...linkColumns.map((c) => c.links.length))
 </script>
 
 <template>
@@ -45,26 +41,41 @@ const linkRowCount = Math.max(...linkColumns.map((c) => c.links.length))
                 </div>
 
                 <!-- Middle: mobile stack; sm+ = grid (even column-gap + row-gap, flush edges) -->
-                <div class="lg:col-span-6 min-w-0">
+                <div class="lg:col-span-9 min-w-0">
                     <!-- Mobile -->
                     <div class="flex flex-col gap-8 sm:hidden">
-                        <div v-for="col in linkColumns" :key="col.title" class="flex flex-col gap-1">
+                        <div
+                            v-for="col in linkColumns"
+                            :key="col.title"
+                            class="flex flex-col gap-1 items-start"
+                        >
                             <h4 class="font-orbitron text-[0.8rem] font-semibold uppercase tracking-[0.22em] text-neutral-200">
                                 {{ col.title }}
                             </h4>
-                            <a
-                                v-for="(link, i) in col.links"
-                                :key="i"
-                                :href="link.href"
-                                target="_blank"
-                                class="flex min-h-[44px] items-center text-sm text-neutral-400 hover:text-white transition-colors duration-300 py-1 touch-manipulation"
-                            >
-                                {{ link.label }}
-                            </a>
+                            <div class="footer-link-icons w-max">
+                                <a
+                                    v-for="(link, i) in col.links"
+                                    :key="i"
+                                    v-show="link.logo"
+                                    :href="link.href"
+                                    target="_blank"
+                                    :aria-label="link.label"
+                                    class="footer-link-logo touch-manipulation"
+                                >
+                                    <span
+                                        v-if="link.logoTile"
+                                        class="footer-link-logo-tile"
+                                        :style="{ '--footer-logo-tile-scale': link.logoTileScale ?? 0.68 }"
+                                    >
+                                        <img :src="link.logo" :alt="link.label" />
+                                    </span>
+                                    <img v-else :src="link.logo" :alt="link.label" />
+                                </a>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- sm+: 3×N grid — gutters only between tracks (flush to content box, straight verticals) -->
+                    <!-- sm+: headers + logo grids per column -->
                     <div
                         class="footer-links-matrix hidden w-full min-w-0 sm:grid"
                         role="navigation"
@@ -77,45 +88,33 @@ const linkRowCount = Math.max(...linkColumns.map((c) => c.links.length))
                         >
                             {{ col.title }}
                         </div>
-                        <template v-for="row in linkRowCount" :key="'r-' + row">
-                            <div
-                                v-for="col in linkColumns"
-                                :key="col.title + '-' + row"
-                                class="footer-links-cell min-w-0"
-                            >
+                        <div
+                            v-for="col in linkColumns"
+                            :key="'c-' + col.title"
+                            class="footer-links-cell min-w-0"
+                        >
+                            <div class="footer-link-icons">
                                 <a
-                                    v-if="col.links[row - 1]"
-                                    :href="col.links[row - 1].href"
+                                    v-for="(link, i) in col.links"
+                                    :key="col.title + '-' + i"
+                                    v-show="link.logo"
+                                    :href="link.href"
+                                    :aria-label="link.label"
                                     target="_blank"
-                                    class="footer-links-a block text-sm text-neutral-400 hover:text-white transition-colors duration-300"
+                                    class="footer-link-logo touch-manipulation"
                                 >
-                                    {{ col.links[row - 1].label }}
+                                    <span
+                                        v-if="link.logoTile"
+                                        class="footer-link-logo-tile"
+                                        :style="{ '--footer-logo-tile-scale': link.logoTileScale ?? 0.68 }"
+                                    >
+                                        <img :src="link.logo" :alt="link.label" />
+                                    </span>
+                                    <img v-else :src="link.logo" :alt="link.label" />
                                 </a>
                             </div>
-                        </template>
+                        </div>
                     </div>
-                </div>
-
-                <!-- Right side - Social and Copyright -->
-                <div class="lg:col-span-3 flex h-full flex-col items-start gap-6 lg:items-end lg:justify-end">
-                    <div class="flex items-center space-x-4 sm:space-x-6">
-                        <a href="https://verified.jup.ag/dashboard/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo" 
-                           target="_blank"
-                           class="group relative flex min-h-[44px] min-w-[44px] items-center justify-center p-3 bg-neutral-900/50 hover:bg-neutral-800/50 rounded-xl transition-all duration-300 touch-manipulation">
-                            <div class="absolute inset-0 bg-blue-500/10 rounded-xl blur-md group-hover:bg-blue-500/20 transition-all duration-300"></div>
-                            <img src="../assets/x.png" class="relative h-5 invert" />
-                        </a>
-                        <a href="https://discord.com/invite/gTYuUCthvC" 
-                           target="_blank"
-                           class="group relative flex min-h-[44px] min-w-[44px] items-center justify-center p-3 bg-neutral-900/50 hover:bg-neutral-800/50 rounded-xl transition-all duration-300 touch-manipulation">
-                            <div class="absolute inset-0 bg-indigo-500/10 rounded-xl blur-md group-hover:bg-indigo-500/20 transition-all duration-300"></div>
-                            <img src="../assets/discord.webp" class="relative h-5" />
-                        </a>
-                    </div>
-
-                    <p class="text-neutral-500 font-exo text-sm text-left lg:text-right">
-                        Copyright © 2026 - All Rights Reserved
-                    </p>
                 </div>
             </div>
         </footer>
@@ -127,19 +126,82 @@ const linkRowCount = Math.max(...linkColumns.map((c) => c.links.length))
     --footer-link-lh: 1.25rem;
 }
 
+/* Logo grid — same layout for Trade, Platforms, and Explorers */
+.footer-link-icons {
+    --footer-link-icon-scale: 0.8;
+    --footer-link-logo-size: calc(2.25rem * var(--footer-link-icon-scale));
+    --footer-link-icon-gap: calc(0.5rem * var(--footer-link-icon-scale));
+    --footer-link-hit: calc(44px * var(--footer-link-icon-scale));
+    display: grid;
+    grid-template-columns: repeat(3, max-content);
+    column-gap: var(--footer-link-icon-gap);
+    row-gap: var(--footer-link-icon-gap);
+    justify-content: start;
+    justify-items: start;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+.footer-link-logo {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: var(--footer-link-hit);
+    min-width: var(--footer-link-logo-size);
+    padding: 0;
+    margin: 0;
+    border-radius: calc(0.5rem * var(--footer-link-icon-scale));
+    background: transparent;
+    opacity: 0.92;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.footer-link-logo:hover {
+    opacity: 1;
+}
+
+.footer-link-logo > img {
+    display: block;
+    height: var(--footer-link-logo-size);
+    width: var(--footer-link-logo-size);
+    object-fit: contain;
+}
+
+/* White square tile — same footprint as App Store icons in the grid */
+.footer-link-logo-tile {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    height: var(--footer-link-logo-size);
+    width: var(--footer-link-logo-size);
+    background: #fff;
+    border-radius: 0;
+    overflow: hidden;
+}
+
+.footer-link-logo-tile img {
+    display: block;
+    height: calc(var(--footer-link-logo-size) * var(--footer-logo-tile-scale, 0.68));
+    width: calc(var(--footer-link-logo-size) * var(--footer-logo-tile-scale, 0.68));
+    object-fit: contain;
+}
+
 @media (min-width: 640px) {
     .footer-links-matrix {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        column-gap: 2.5rem;
+        width: 100%;
+        grid-template-columns: repeat(4, max-content);
+        justify-content: space-between;
+        column-gap: 0;
         row-gap: calc(var(--footer-link-lh) / 2);
         align-items: start;
     }
 
-    .footer-links-a {
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+    .footer-link-icons {
+        --footer-link-logo-size: calc(2.375rem * var(--footer-link-icon-scale));
+        --footer-link-icon-gap: calc(0.625rem * var(--footer-link-icon-scale));
     }
 }
 
@@ -147,6 +209,7 @@ const linkRowCount = Math.max(...linkColumns.map((c) => c.links.length))
     font-weight: 600;
     padding: 0;
     margin: 0;
+    justify-self: start;
 }
 
 .footer-links-h,
@@ -155,6 +218,9 @@ const linkRowCount = Math.max(...linkColumns.map((c) => c.links.length))
 }
 
 .footer-links-cell {
+    justify-self: start;
+    width: max-content;
+    max-width: 100%;
     padding: 0;
     margin: 0;
 }

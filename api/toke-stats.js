@@ -192,7 +192,7 @@ export default async function handler(req, res) {
       Number.isFinite(price) &&
       price > 0
     ) {
-      avgWalletUsd = Math.round(avgTokeUi * price * 1000) / 1000;
+      avgWalletUsd = Math.round(avgTokeUi * price * 100) / 100;
     }
 
     const statsMeta = buildStatsMeta({
@@ -217,6 +217,7 @@ export default async function handler(req, res) {
       marketCapSource: live.marketCapSource,
       pairAddress: live.pairAddress,
       priceChangeH24: live.priceChangeH24,
+      priceChangeH24Source: live.priceChangeH24Source,
       marketCapChangePct24h,
       liquidityUsd,
       liquiditySource: live.liquiditySource ?? null,

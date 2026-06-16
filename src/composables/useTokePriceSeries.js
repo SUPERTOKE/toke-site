@@ -16,6 +16,8 @@ export function useTokePriceSeries(options = {}) {
   const height = computed(() => toValue(options.height) ?? 40);
   const pathPadding = computed(() => toValue(options.pathPadding) ?? 3);
   const yInset = computed(() => toValue(options.yInset) ?? 0.14);
+  const yPlotFill = computed(() => toValue(options.yPlotFill) ?? 1);
+  const smoothPasses = computed(() => toValue(options.smoothPasses) ?? 2);
 
   const rawPoints = ref([]);
   const changePct24h = ref(null);
@@ -28,13 +30,16 @@ export function useTokePriceSeries(options = {}) {
   const tone = computed(() => toneFromChangePct(changePct24h.value));
 
   const paths = computed(() => {
-    const values = prepareSparklineValues(rawPoints.value);
+    const values = prepareSparklineValues(rawPoints.value, {
+      smoothPasses: smoothPasses.value
+    });
     return buildSmoothSvgPaths(
       values,
       100,
       height.value,
       pathPadding.value,
-      yInset.value
+      yInset.value,
+      yPlotFill.value
     );
   });
 

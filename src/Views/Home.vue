@@ -1,6 +1,8 @@
 <script setup>
 import { onMounted, ref, onBeforeUnmount, shallowRef, computed, defineAsyncComponent } from 'vue';
 import Navbar from '../Components/Navbar.vue';
+import TokePriceSparkline from '../Components/Home/TokePriceSparkline.vue';
+import TokenInfoBar from '../Components/Home/TokenInfoBar.vue';
 import {
   statNum,
   formatMarketCapDisplay,
@@ -9,7 +11,11 @@ import {
   formatAvgWalletUsd
 } from '../utils/statsApi';
 import { subscribeLiveStats } from '../utils/liveStatsPoll';
-
+import {
+  applyTokePriceFromPayload,
+  applyTokePriceOnError,
+  tokePriceDisplay
+} from '../utils/tokePriceDisplay';
 const HeroMoonGlobe = defineAsyncComponent(() =>
   import('../Components/Home/HeroMoonGlobe.vue')
 );
@@ -345,7 +351,7 @@ const marketCapTimeLabel = computed(() => '24 hr');
 
 const liquidityTimeLabel = computed(() => '24 hr');
 
-const avgTokeTimeLabel = computed(() => '24 hr');
+const priceTimeLabel = computed(() => '24 hr');
 
 const holdersTimeTitle = computed(() => {
   if (holderCountFetchedAt.value) {
@@ -375,6 +381,12 @@ function applyStatsMetaFromPayload(payload) {
 }
 
 function applyHeroStatsPayload(payload, path) {
+    try {
+      applyTokePriceFromPayload(payload);
+    } catch {
+      applyTokePriceOnError();
+    }
+
     const marketCap = statNum(payload?.marketCap);
     const liquidityUsd = statNum(payload?.liquidityUsd);
 
@@ -515,7 +527,7 @@ function applyHeroStatsPayload(payload, path) {
     let resolvedWalletUsd = walletUsd;
     if (!Number.isFinite(resolvedWalletUsd) || resolvedWalletUsd <= 0) {
       if (Number.isFinite(avgToke) && avgToke > 0 && Number.isFinite(price) && price > 0) {
-        resolvedWalletUsd = Math.round(avgToke * price * 1000) / 1000;
+        resolvedWalletUsd = Math.round(avgToke * price * 100) / 100;
       }
     }
     if (Number.isFinite(resolvedWalletUsd) && resolvedWalletUsd > 0) {
@@ -529,6 +541,7 @@ function applyHeroStatsPayload(payload, path) {
 }
 
 function applyHeroStatsError() {
+  applyTokePriceOnError();
   if (lastKnownMcap.value) marketCapStat.value = lastKnownMcap.value;
   if (lastKnownLiquidity.value) liquidityStat.value = lastKnownLiquidity.value;
   if (lastKnownSupply.value) totalSupplyStat.value = lastKnownSupply.value;
@@ -614,36 +627,86 @@ onBeforeUnmount(() => {
 
     <div class="home-scroll-surface relative overflow-x-hidden">
       <div class="relative z-10">
-      <!-- Hero: headline under navbar, stats pinned to lower hero (moon layout) -->
+      <!-- Hero: stat grid centered in landing (moon layout) -->
       <div class="relative flex min-h-screen min-h-[100dvh] flex-col md:min-h-[110vh]">
         <div
-          class="hero-headline hero-headline--tight relative flex min-h-0 w-full flex-1 flex-col isolate"
+          class="hero-headline hero-headline--tight hero-headline--stats-only relative flex min-h-0 w-full flex-1 flex-col isolate"
         >
           <div
-            class="container mx-auto flex min-h-0 flex-1 flex-col px-4 sm:px-6 pb-16 md:pb-20 hero-stats-pad"
+            class="container relative mx-auto flex min-h-0 flex-1 flex-col items-center justify-center px-4 sm:px-6 hero-stats-pad"
           >
-            <div class="flex shrink-0 flex-col items-center space-y-5 text-center md:space-y-6">
-              <h1
-                class="font-orbitron text-4xl font-semibold tracking-widest text-transparent bg-clip-text sm:text-6xl md:text-8xl
-                       bg-gradient-to-r from-neutral-100 via-neutral-300 to-neutral-100
-                       [text-shadow:0_0_30px_rgba(255,255,255,0.2)]"
-              >
-                TOKE
-              </h1>
-
-              <div class="hero-tagline" aria-label="The Vault has been unlocked. A new Era begins.">
-                <p class="hero-tagline__lead font-orbitron">The Vault has been unlocked.</p>
-                <p class="hero-tagline__era font-exo">A new Era begins.</p>
-              </div>
-            </div>
-
-            <div class="min-h-[clamp(1.25rem,5vmin,3.5rem)] w-full flex-1" aria-hidden="true" />
-
-            <div class="mx-auto mt-auto w-full max-w-7xl min-w-0 shrink-0 pt-2">
+            <div class="mx-auto w-full max-w-7xl min-w-0 shrink-0">
               <div
-                class="grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-2 sm:gap-4 md:gap-5 xl:grid-cols-5"
+                class="hero-stats-grid grid min-w-0 grid-cols-1 items-stretch gap-3 sm:grid-cols-2 sm:gap-4 md:gap-5"
               >
-                <div class="hero-stat-card">
+                <div class="hero-token-bar-anchor">
+                  <TokenInfoBar />
+                </div>
+                <div class="hero-feature-stat-anchor">
+                  <div class="hero-feature-stat hero-stat-card">
+                    <p
+                      class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
+                    >
+                      Price
+                    </p>
+                    <div class="hero-stat-card__figure hero-feature-stat__figure">
+                      <p
+                        class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white sm:text-lg md:text-xl xl:text-[1.0625rem]"
+                      >
+                        {{ tokePriceDisplay }}
+                      </p>
+                    </div>
+                    <div class="hero-feature-stat__chart-area" aria-hidden="true">
+                      <div class="hero-feature-stat__chart-layer">
+                        <div class="hero-feature-stat-chart-grid" />
+                        <div class="hero-feature-stat-chart-glow" />
+                        <TokePriceSparkline
+                          :height="42"
+                          variant="area"
+                          presentation="hero"
+                          aspect-fit="none"
+                          :path-padding="3"
+                          :y-inset="0.14"
+                          :y-plot-fill="0.55"
+                          root-class="hero-feature-stat-sparkline"
+                        />
+                      </div>
+                    </div>
+                    <div class="hero-stat-card__telemetry">
+                      <div
+                        class="hero-stat-card__telemetry-scroll flex w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      >
+                        <div
+                          class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                        >
+                          <span
+                            v-if="marketCapChangeFormatted != null"
+                            class="hero-stat-card__metric shrink-0"
+                            :class="marketCapChangeClass"
+                            :title="marketCapChangeTitle"
+                          >
+                            <span class="hero-stat-card__metric-ico" aria-hidden="true">💵</span>
+                            <span>{{ marketCapChangeFormatted }}</span>
+                          </span>
+                          <span
+                            v-if="marketCapChangeFormatted != null"
+                            class="hero-stat-card__sep"
+                            aria-hidden="true"
+                          />
+                          <span
+                            class="hero-stat-card__metric shrink-0 text-neutral-500"
+                            :title="marketCapChangeTitle"
+                          >
+                            <span class="hero-stat-card__metric-ico" aria-hidden="true">🕔</span>
+                            <span>{{ priceTimeLabel }}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="hero-stat-card hero-stat-card--grid-tr">
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
                   >
@@ -658,7 +721,7 @@ onBeforeUnmount(() => {
                   </div>
                   <div class="hero-stat-card__telemetry">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.5rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
                         class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
@@ -689,7 +752,7 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
 
-                <div class="hero-stat-card">
+                <div class="hero-stat-card hero-stat-card--grid-br">
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
                   >
@@ -704,7 +767,7 @@ onBeforeUnmount(() => {
                   </div>
                   <div class="hero-stat-card__telemetry">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.5rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
                         class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
@@ -735,7 +798,7 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
 
-                <div class="hero-stat-card">
+                <div class="hero-stat-card hero-stat-card--telemetry-busy hero-stat-card--grid-b1">
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
                   >
@@ -750,7 +813,7 @@ onBeforeUnmount(() => {
                   </div>
                   <div class="hero-stat-card__telemetry">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.5rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
                         class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
@@ -774,7 +837,7 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
 
-                <div class="hero-stat-card">
+                <div class="hero-stat-card hero-stat-card--grid-b2">
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
                   >
@@ -789,7 +852,7 @@ onBeforeUnmount(() => {
                   </div>
                   <div class="hero-stat-card__telemetry">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.5rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
                         class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
@@ -820,7 +883,7 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
 
-                <div class="hero-stat-card">
+                <div class="hero-stat-card hero-stat-card--grid-b3 hero-stat-card--avg-wallet">
                   <p
                     class="hero-stat-card__eyebrow font-orbitron text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-300 sm:text-sm xl:text-xs"
                   >
@@ -835,10 +898,10 @@ onBeforeUnmount(() => {
                   </div>
                   <div class="hero-stat-card__telemetry">
                     <div
-                      class="hero-stat-card__telemetry-scroll flex min-h-[2.375rem] w-full min-w-0 items-center justify-center overflow-x-auto xl:min-h-[2.5rem] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      class="hero-stat-card__telemetry-scroll flex w-full min-w-0 items-center justify-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                       <div
-                        class="hero-stat-card__telemetry-row font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
+                        class="hero-stat-card__telemetry-row hero-stat-card__telemetry-row--centered font-exo text-sm leading-snug tabular-nums text-neutral-200/95"
                       >
                         <span
                           v-if="avgWalletUsdFormatted != null"
@@ -847,18 +910,6 @@ onBeforeUnmount(() => {
                         >
                           <span class="hero-stat-card__metric-ico" aria-hidden="true">💰</span>
                           <span>{{ avgWalletUsdFormatted }}</span>
-                        </span>
-                        <span
-                          v-if="avgWalletUsdFormatted != null"
-                          class="hero-stat-card__sep"
-                          aria-hidden="true"
-                        />
-                        <span
-                          class="hero-stat-card__metric shrink-0 text-neutral-500"
-                          :title="avgWalletUsdTitle"
-                        >
-                          <span class="hero-stat-card__metric-ico" aria-hidden="true">🕔</span>
-                          <span>{{ avgTokeTimeLabel }}</span>
                         </span>
                       </div>
                     </div>
@@ -914,62 +965,6 @@ $numComet: 5;
   isolation: isolate;
 }
 
-/* Hero tagline — orbitron lead, glow, hairline, italic coda */
-.hero-tagline {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 28rem;
-  text-align: center;
-}
-
-.hero-tagline__lead {
-  margin: 0;
-  font-size: clamp(0.9375rem, 2.1vw, 1.125rem);
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  line-height: 1.55;
-  color: rgb(229 229 229 / 0.92);
-  text-shadow:
-    0 0 20px rgb(255 255 255 / 0.14),
-    0 0 40px rgb(147 197 253 / 0.06);
-}
-
-.hero-tagline__lead::after {
-  content: '';
-  display: block;
-  width: 2.75rem;
-  height: 1px;
-  margin: 0.85rem auto 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgb(255 255 255 / 0.22) 50%,
-    transparent
-  );
-}
-
-.hero-tagline__era {
-  margin: 0.65rem 0 0;
-  font-size: clamp(1.0625rem, 2.35vw, 1.3125rem);
-  font-weight: 300;
-  font-style: italic;
-  letter-spacing: 0.05em;
-  line-height: 1.45;
-  color: rgb(163 163 163 / 0.88);
-  text-shadow: 0 0 18px rgb(255 255 255 / 0.08);
-}
-
-@media (min-width: 768px) {
-  .hero-tagline {
-    max-width: 32rem;
-  }
-
-  .hero-tagline__lead {
-    letter-spacing: 0.14em;
-  }
-}
-
 /* Hero headline: clear fixed navbar (~5.25rem + notch inset) + symmetric rail */
 .hero-headline {
   --hero-copy-rail: clamp(0.75rem, 2.8vmin, 2rem);
@@ -983,6 +978,36 @@ $numComet: 5;
 .hero-headline--tight {
   --hero-copy-rail: clamp(0.35rem, 1.2vmin, 1rem);
   --hero-headline-extra-copy-inset: clamp(0.65rem, 2.4vmin, 1.75rem);
+  --hero-stat-gap: 0.75rem;
+  --hero-stat-min-h: 172px;
+  --hero-stat-cols: 2;
+}
+
+/* Stats-only landing: no title block; grid centered in viewport */
+.hero-headline--stats-only {
+  --hero-headline-extra-copy-inset: 0px;
+  padding-top: var(--hero-nav-offset);
+  padding-bottom: var(--hero-nav-offset);
+}
+
+@media (min-width: 640px) {
+  .hero-headline--tight {
+    --hero-stat-gap: 1rem;
+    --hero-stat-min-h: 184px;
+  }
+}
+
+@media (min-width: 768px) {
+  .hero-headline--tight {
+    --hero-stat-gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-headline--tight {
+    --hero-stat-min-h: 196px;
+    --hero-stat-cols: 3;
+  }
 }
 
 @media (min-width: 768px) {
@@ -990,7 +1015,7 @@ $numComet: 5;
     --hero-copy-rail: clamp(0.875rem, 3.2vmin, 2rem);
   }
 
-  .hero-headline--tight {
+  .hero-headline--tight:not(.hero-headline--stats-only) {
     --hero-copy-rail: clamp(0.4rem, 1.6vmin, 1rem);
     --hero-headline-extra-copy-inset: clamp(0.85rem, 2.8vmin, 2rem);
   }
@@ -1001,9 +1026,273 @@ $numComet: 5;
   padding-bottom: max(clamp(5rem, 20vmin, 11rem), env(safe-area-inset-bottom, 0px));
 }
 
+.hero-headline--stats-only .hero-stats-pad {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), clamp(1.5rem, 4vmin, 3rem));
+}
+
 @media (min-width: 768px) {
   .hero-stats-pad {
     padding-bottom: max(clamp(6rem, 24vmin, 12rem), env(safe-area-inset-bottom, 0px));
+  }
+
+  .hero-headline--stats-only .hero-stats-pad {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), clamp(2rem, 5vmin, 3.5rem));
+  }
+}
+
+/* Featured Price tile — visible all breakpoints; flag layout on xl+ */
+.hero-feature-stat-anchor {
+  display: block;
+  grid-column: 1 / -1;
+  min-width: 0;
+  z-index: 1;
+}
+
+.hero-feature-stat.hero-stat-card {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: max(220px, calc(var(--hero-stat-min-h) + 2.5rem));
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr auto;
+  gap: 0;
+  margin: 0;
+  --hero-feature-pad-b: 0.78rem;
+  padding: 0.82rem 0.8rem var(--hero-feature-pad-b);
+  overflow: hidden;
+  --hero-feature-chart-inset-x: 0.45rem;
+  --hero-feature-sparkline-pad-x: 0.2rem;
+  --hero-feature-eyebrow-lh: calc(0.75rem * 1.15);
+  --hero-feature-header-h: var(--hero-feature-eyebrow-lh);
+  --hero-feature-stat-flex-gap: 0.4rem;
+  --hero-feature-value-font: 1.0625rem;
+  --hero-feature-value-lh: 1.25;
+  --hero-feature-value-mt: calc(
+    (
+      var(--hero-stat-min-h) - 1.6rem - 1.15em - var(--hero-feature-stat-flex-gap) - 2.625rem - 0.68rem -
+        var(--hero-feature-value-font)
+    ) / 2
+  );
+}
+
+.hero-feature-stat.hero-stat-card::after {
+  opacity: 0.32;
+  mask-image: radial-gradient(ellipse 95% 85% at 50% 62%, #000 25%, transparent 82%);
+}
+
+.hero-feature-stat .hero-stat-card__eyebrow,
+.hero-feature-stat .hero-stat-card__figure,
+.hero-feature-stat__chart-area,
+.hero-feature-stat .hero-stat-card__telemetry {
+  grid-column: 1;
+  justify-self: stretch;
+  width: 100%;
+  max-width: 100%;
+}
+
+.hero-feature-stat .hero-stat-card__eyebrow {
+  grid-row: 1;
+  position: relative;
+  z-index: 3;
+  margin: 0;
+  line-height: var(--hero-feature-eyebrow-lh);
+  pointer-events: none;
+}
+
+.hero-feature-stat .hero-stat-card__figure {
+  grid-row: 2;
+  flex: 0 0 auto;
+  min-height: 0;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-feature-stat .hero-stat-card__value {
+  width: 100%;
+  text-align: center;
+}
+
+.hero-feature-stat__chart-area {
+  grid-row: 2 / 4;
+  position: relative;
+  z-index: 0;
+  min-height: 0;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.hero-feature-stat__chart-layer {
+  position: absolute;
+  top: 0;
+  right: var(--hero-feature-chart-inset-x);
+  bottom: 0;
+  left: var(--hero-feature-chart-inset-x);
+  z-index: 0;
+  display: flex;
+  overflow: hidden;
+  border-radius: 0 0 1.25rem 1.25rem;
+  pointer-events: none;
+}
+
+.hero-feature-stat .hero-stat-card__eyebrow,
+.hero-feature-stat__figure,
+.hero-feature-stat .hero-stat-card__telemetry {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.hero-feature-stat .hero-stat-card__telemetry {
+  grid-row: 4;
+}
+
+.hero-feature-stat .hero-stat-card__value {
+  text-shadow:
+    0 0 18px rgba(3, 7, 18, 0.96),
+    0 1px 3px rgba(0, 0, 0, 0.92),
+    0 0 24px rgba(255, 255, 255, 0.1);
+}
+
+.hero-feature-stat-chart-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.38;
+  background-image: linear-gradient(rgba(56, 189, 248, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.08) 1px, transparent 1px);
+  background-size: 16px 16px;
+  mask-image: radial-gradient(ellipse 100% 92% at 50% 58%, #000 12%, transparent 88%);
+}
+
+.hero-feature-stat-chart-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 95% 75% at 50% 92%,
+    rgba(167, 139, 250, 0.26) 0%,
+    rgba(52, 211, 153, 0.1) 42%,
+    transparent 68%
+  );
+}
+
+.hero-feature-stat-sparkline {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0.05rem 0.2rem 0.3rem;
+}
+
+.hero-feature-stat__chart-layer :deep(.toke-sparkline) {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+}
+
+.hero-feature-stat__chart-layer :deep(.toke-sparkline svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.hero-feature-stat__chart-layer :deep(.toke-sparkline__placeholder) {
+  min-height: 5rem;
+  font-size: 0.875rem;
+}
+
+/* Token identity bar — full-width header above stat grid */
+.hero-token-bar-anchor {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.hero-token-bar-anchor :deep(.hero-token-bar.hero-stat-card) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  min-height: calc(var(--hero-stat-min-h) / 2);
+  max-height: calc(var(--hero-stat-min-h) / 2);
+  padding-block: 0;
+  padding-inline: 0.8rem;
+}
+
+@media (min-width: 640px) {
+  .hero-token-bar-anchor :deep(.hero-token-bar.hero-stat-card) {
+    padding-inline: 0.95rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-token-bar-anchor :deep(.hero-token-bar.hero-stat-card) {
+    padding-inline: 0.8rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .hero-token-bar-anchor :deep(.hero-token-bar.hero-stat-card) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-height: none;
+    min-height: auto;
+    padding-block: 0.7rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: auto repeat(3, minmax(var(--hero-stat-min-h), auto));
+  }
+
+  .hero-token-bar-anchor {
+    grid-row: 1;
+  }
+
+  .hero-feature-stat-anchor {
+    grid-column: 1 / 3;
+    grid-row: 2 / 4;
+  }
+
+  .hero-stat-card--grid-tr {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .hero-stat-card--grid-br {
+    grid-column: 3;
+    grid-row: 3;
+  }
+
+  .hero-stat-card--grid-b1 {
+    grid-column: 1;
+    grid-row: 4;
+  }
+
+  .hero-stat-card--grid-b2 {
+    grid-column: 2;
+    grid-row: 4;
+  }
+
+  .hero-stat-card--grid-b3 {
+    grid-column: 3;
+    grid-row: 4;
+  }
+
+  .hero-feature-stat.hero-stat-card {
+    min-height: calc(2 * var(--hero-stat-min-h) + var(--hero-stat-gap));
+    height: calc(2 * var(--hero-stat-min-h) + var(--hero-stat-gap));
   }
 }
 
@@ -1045,11 +1334,17 @@ $numComet: 5;
   }
 }
 
+@media (min-width: 1024px) {
+  .hero-stat-card {
+    min-height: 188px;
+  }
+}
+
 @media (min-width: 1280px) {
   .hero-stat-card {
-    min-height: 192px;
-    gap: 0.375rem;
-    padding: 0.8rem 0.7rem 0.75rem;
+    min-height: 196px;
+    gap: 0.4rem;
+    padding: 0.82rem 0.8rem 0.78rem;
     border-radius: 1.5rem;
   }
 }
@@ -1117,6 +1412,34 @@ $numComet: 5;
     min-height: 3.1rem;
     padding: 0.3rem 0.2rem 0.35rem;
   }
+
+  /* Match eyebrow→value spacing of single-row stat tiles; title stays put, value shifts up. */
+  .hero-feature-stat .hero-stat-card__figure {
+    flex: 0 0 auto;
+    min-height: 0;
+    padding: 0;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  /*
+   * Eyebrow→value gap matches Market Cap tile; only this margin moves the price up.
+   */
+  .hero-feature-stat .hero-stat-card__value {
+    --hero-stat-eyebrow-lh: calc(0.75rem * 1.15);
+    --hero-stat-value-lh: calc(1.0625rem * 1.25);
+    --hero-stat-eyebrow-to-value-gap: calc(
+      0.4rem + 0.3rem +
+        (
+          var(--hero-stat-min-h) - 1.6rem - var(--hero-stat-eyebrow-lh) - 0.8rem - 0.68rem - 2.625rem -
+            0.65rem - var(--hero-stat-value-lh)
+        ) / 2
+    );
+    margin-top: calc(
+      var(--hero-stat-eyebrow-to-value-gap) - (var(--hero-feature-header-h) - var(--hero-feature-eyebrow-lh)) -
+        var(--hero-feature-stat-flex-gap)
+    );
+  }
 }
 
 .hero-stat-card__value {
@@ -1131,15 +1454,41 @@ $numComet: 5;
   z-index: 1;
   margin-top: auto;
   border-radius: 9999px;
-  padding: 0.2rem 0.35rem;
+  padding: 0.28rem 0.5rem;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(148, 163, 184, 0.11);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
 }
 
+.hero-feature-stat.hero-stat-card .hero-stat-card__telemetry {
+  margin-top: var(--hero-feature-pad-b);
+}
+
+@media (min-width: 640px) {
+  .hero-stat-card__telemetry {
+    padding: 0.3rem 0.55rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-stat-card__telemetry {
+    padding: 0.32rem 0.5rem;
+  }
+}
+
 @media (min-width: 1280px) {
   .hero-stat-card__telemetry {
-    padding: 0.22rem 0.3rem;
+    padding: 0.34rem 0.58rem;
+  }
+}
+
+.hero-stat-card__telemetry-scroll {
+  min-height: 2.5rem;
+}
+
+@media (min-width: 1280px) {
+  .hero-stat-card__telemetry-scroll {
+    min-height: 2.625rem;
   }
 }
 
@@ -1150,12 +1499,25 @@ $numComet: 5;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
+  padding-inline: 0.125rem;
+}
+
+@media (min-width: 1024px) {
+  .hero-stat-card__telemetry-row {
+    font-size: 0.8125rem;
+    line-height: 1.35;
+  }
 }
 
 .hero-stat-card__metric {
   display: inline-flex;
-  align-items: baseline;
-  gap: 0.375rem;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hero-stat-card--avg-wallet .hero-stat-card__telemetry-row--centered {
+  width: 100%;
+  justify-content: center;
 }
 
 .hero-stat-card__metric-ico {
@@ -1169,7 +1531,7 @@ $numComet: 5;
   flex-shrink: 0;
   width: 1px;
   height: 0.875rem;
-  margin: 0 0.65rem;
+  margin: 0 0.5rem;
   align-self: center;
   background: linear-gradient(
     to bottom,
@@ -1179,6 +1541,45 @@ $numComet: 5;
     rgba(148, 163, 184, 0.28) 80%,
     transparent
   );
+}
+
+/* Supply (and similar wide telemetry rows) — extra pill room at 5-across widths */
+.hero-stat-card--telemetry-busy .hero-stat-card__telemetry {
+  padding: 0.3rem 0.6rem;
+}
+
+@media (min-width: 1024px) {
+  .hero-stat-card--telemetry-busy .hero-stat-card__telemetry {
+    padding: 0.34rem 0.72rem;
+  }
+
+  .hero-stat-card--telemetry-busy .hero-stat-card__telemetry-scroll {
+    min-height: 2.75rem;
+  }
+
+  .hero-stat-card--telemetry-busy .hero-stat-card__sep {
+    margin: 0 0.625rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-stat-card--telemetry-busy .hero-stat-card__telemetry {
+    padding: 0.36rem 0.85rem;
+  }
+
+  .hero-stat-card--telemetry-busy .hero-stat-card__telemetry-row {
+    font-size: 0.75rem;
+    letter-spacing: 0.01em;
+  }
+
+  .hero-stat-card--telemetry-busy .hero-stat-card__metric {
+    gap: 0.35rem;
+  }
+
+  .hero-stat-card--telemetry-busy .hero-stat-card__sep {
+    margin: 0 0.7rem;
+    height: 0.8125rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,5 +1,5 @@
 /**
- * Server-side avg-wallet USD snapshots (supply ÷ holders × price) for ~24h change metadata.
+ * Server-side avg TOKE (supply ÷ holders) snapshots for ~24h absolute change.
  */
 import { getRedis } from './redisClient.js';
 import {
@@ -17,26 +17,26 @@ import {
 const SNAPSHOT_KEY = AVG_TOKE_SNAPSHOT_KEY;
 const WRITE_LOCK_KEY = 'mctoken:toke:avg_toke_snapshots:write_lock';
 
-/** Meaningful move: ≥$0.01 or ≥0.5% vs last snapshot. */
-function avgWalletUsdMeaningfullyChanged(lastM, m) {
+/** Meaningful move: ≥0.001 TOKE or ≥0.25% vs last snapshot. */
+function avgTokeMeaningfullyChanged(lastM, m) {
   if (!Number.isFinite(lastM) || lastM <= 0) return true;
   const diff = Math.abs(m - lastM);
-  return diff >= Math.max(0.01, lastM * 0.005);
+  return diff >= Math.max(0.001, lastM * 0.0025);
 }
 
 function avgTokeShouldAppend(last, stored, now) {
-  const changed = last && avgWalletUsdMeaningfullyChanged(Number(last.m), stored);
+  const changed = last && avgTokeMeaningfullyChanged(Number(last.m), stored);
   const periodic = shouldAppendPeriodic(last, now);
   return !last || changed || periodic;
 }
 
 /**
- * @param {number} avgWalletUsd — (supply ÷ holders) × price USD
+ * @param {number} avgTokeUi — supply ÷ holders (3 dp)
  * @param {number} [now]
  * @param {{ record?: boolean }} [options]
  */
-export async function resolveAvgTokeSnapshotStats(avgWalletUsd, now = Date.now(), { record = false } = {}) {
-  const m = Number(avgWalletUsd);
+export async function resolveAvgTokeSnapshotStats(avgTokeUi, now = Date.now(), { record = false } = {}) {
+  const m = Number(avgTokeUi);
   if (!Number.isFinite(m) || m <= 0) {
     return { change24h: null, meta: { ...EMPTY_SNAPSHOT_LIST_META } };
   }

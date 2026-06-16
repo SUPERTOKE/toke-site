@@ -1,8 +1,10 @@
 import coinbaseWordmark from '../assets/logos/trade/coinbase-wordmark.svg';
+import coinbaseIcon from '../assets/logos/trade/app-icons/coinbase.png';
 import jupiterIcon from '../assets/logos/trade/app-icons/jupiter.png';
 import phantomIcon from '../assets/logos/trade/app-icons/phantom.png';
 import backpackIcon from '../assets/logos/trade/app-icons/backpack.png';
 import solflareIcon from '../assets/logos/trade/app-icons/solflare.png';
+import okxIcon from '../assets/logos/trade/app-icons/okx.png';
 
 export const TOKE_MINT = 'AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo';
 
@@ -49,7 +51,22 @@ export const swapVenues = [
 ];
 
 export const swapTileGridClass =
-  'grid w-full max-w-[17.25rem] sm:max-w-[19.5rem] mx-auto grid-cols-2 gap-3.5 sm:gap-4';
+  'grid mx-auto w-full max-w-[13.8rem] sm:max-w-[15.6rem] grid-cols-2 gap-[0.7rem] sm:gap-[0.8rem]';
 
 export const swapTileClass =
-  'aspect-square w-full min-h-0 p-3 sm:p-3.5';
+  'aspect-square w-full min-h-0 p-[0.6rem] sm:p-[0.7rem]';
+
+/** Footer Trade column — logo links, same URLs as Trade section. */
+export const footerTradeLinks = [
+  { label: 'Coinbase', href: coinbaseVenue.href, logo: coinbaseIcon },
+  ...swapVenues.map((venue) => ({
+    label: venue.name,
+    href: venue.href,
+    logo: venue.logo,
+  })),
+  {
+    label: 'OKX',
+    href: 'https://www.okx.com/en-us/trade-cedefi/solana/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo#workspaceId=1779995474896',
+    logo: okxIcon,
+  },
+];

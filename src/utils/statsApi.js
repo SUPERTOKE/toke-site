@@ -42,6 +42,18 @@ export function statNum(value) {
   return Number.isFinite(n) ? n : NaN;
 }
 
+/** Live $TOKE USD price — same formatting as navbar pill. */
+export function formatTokePriceDisplay(priceNumber) {
+  if (!Number.isFinite(priceNumber) || priceNumber <= 0) return '$0';
+
+  if (priceNumber >= 1) return `$${priceNumber.toFixed(2)}`;
+  if (priceNumber >= 0.01) return `$${priceNumber.toFixed(4)}`;
+  if (priceNumber >= 0.0001) return `$${priceNumber.toFixed(6)}`;
+  if (priceNumber >= 0.000001) return `$${priceNumber.toFixed(8)}`;
+
+  return `$${priceNumber.toExponential(2)}`;
+}
+
 /** USD market cap with thousands separators, whole dollars only (Dex mcap is integer-scale). */
 export function formatMarketCapDisplay(value) {
   if (!Number.isFinite(value) || value <= 0) return '—';
@@ -61,13 +73,13 @@ export function formatAvgTokeDisplay(value) {
   }).format(value);
 }
 
-/** USD value of avg wallet (supply ÷ holders × price), e.g. $4,661.000 */
+/** USD value of avg wallet (supply ÷ holders × price), e.g. $4,661.00 */
 export function formatAvgWalletUsd(value) {
   if (!Number.isFinite(value) || value <= 0) return null;
-  const rounded = Math.round(value * 1000) / 1000;
+  const rounded = Math.round(value * 100) / 100;
   const n = new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 3,
-    maximumFractionDigits: 3
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   }).format(rounded);
   return `$${n}`;
 }

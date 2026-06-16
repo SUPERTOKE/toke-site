@@ -3,3 +3,7 @@ node_modules
 dist
 .vercel
 .eslintcache
+
+.env
+.env.*
+.DS_Store

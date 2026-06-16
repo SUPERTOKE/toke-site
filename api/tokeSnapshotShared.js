@@ -1,3 +1,5 @@
+import { fetchGeckoTokeChangePct24h } from './geckoTokeOhlcv.js';
+
 /** Primary Meteora pair linked from the site (Dexscreener). Override via env if the canonical pair moves. */
 const DEFAULT_PAIR_ADDRESS = 'Ad6NEGrxHSBAGwfSTtBSHmKQgedHotCJZyFwCgRRAXc9';
 
@@ -250,7 +252,20 @@ export async function fetchTokeLiveMarket(signal) {
 
   const h24Raw = pair.priceChange?.h24;
   const h24Num = h24Raw != null && h24Raw !== '' ? Number(h24Raw) : Number.NaN;
-  const priceChangeH24 = Number.isFinite(h24Num) ? h24Num : null;
+  let priceChangeH24 = Number.isFinite(h24Num) ? h24Num : null;
+  let priceChangeH24Source = priceChangeH24 != null ? 'dexscreener' : null;
+
+  if (priceChangeH24 == null) {
+    try {
+      const geckoPct = await fetchGeckoTokeChangePct24h(signal);
+      if (geckoPct != null && Number.isFinite(geckoPct)) {
+        priceChangeH24 = geckoPct;
+        priceChangeH24Source = 'geckoterminal';
+      }
+    } catch (e) {
+      console.warn('[tokeSnapshotShared] Gecko 24h change fallback:', e?.message ?? e);
+    }
+  }
 
   let liquidityUsd = sumEcosystemLiquidityUsd(tokenPairs);
   let liquiditySource = liquidityUsd != null ? 'dexscreener_token_total' : null;
@@ -270,6 +285,7 @@ export async function fetchTokeLiveMarket(signal) {
     totalSupplyUi,
     dexHolderCount,
     priceChangeH24,
+    priceChangeH24Source,
     liquidityUsd,
     liquiditySource
   };
