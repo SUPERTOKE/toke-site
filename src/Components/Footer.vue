@@ -117,6 +117,10 @@ const linkColumns = [
                     </div>
                 </div>
             </div>
+
+            <p class="footer-disclaimer mt-10 sm:mt-12 text-center font-exo text-xs leading-relaxed text-neutral-500">
+                Informational only — not financial advice. $TOKE is a community token; always verify on-chain and do your own research.
+            </p>
         </footer>
     </div>
 </template>
