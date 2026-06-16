@@ -9,6 +9,8 @@ import { SNAPSHOT_RECORD_INTERVAL_MS } from '../lib/snapshotKvShared.js';
 
 const TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com';
+/** Canonical TOKE API base (explorer pipeline). Repoint to api.mctoken.xyz/v1 later via env. */
+const TOKE_API_BASE = (process.env.TOKE_API_BASE ?? 'https://explorer.mctoken.xyz/api/v1').replace(/\/+$/, '');
 
 const REQUEST_TIMEOUT_MS = 90000;
 /** CDN cache for public stats JSON (pairs with ~30s client poll). */
@@ -47,42 +49,30 @@ async function rpcRequest(method, params, signal) {
 }
 
 async function getHolderCount(signal) {
-  const result = await rpcRequest(
-    'getProgramAccounts',
-    [
-      TOKEN_PROGRAM_ID,
-      {
-        encoding: 'base64',
-        dataSlice: { offset: 32, length: 40 },
-        filters: [{ dataSize: 165 }, { memcmp: { offset: 0, bytes: TOKE_MINT } }]
+  // Source the canonical, reconciled holder count from the TOKE API (the explorer
+  // pipeline's Gate-A-verified number) instead of a heavy per-request
+  // getProgramAccounts scan. Fast + reliable on serverless, and keeps the site and
+  // explorer showing one identical holder number.
+  const endpoints = [
+    { url: `${TOKE_API_BASE}/token.json`, pick: (j) => j?.data?.holders_count },
+    { url: `${TOKE_API_BASE}/_lean_stats.json`, pick: (j) => j?.holders }
+  ];
+  let lastErr = null;
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(ep.url, { signal, headers: { Accept: 'application/json' } });
+      if (!r.ok) {
+        lastErr = new Error(`${ep.url} HTTP ${r.status}`);
+        continue;
       }
-    ],
-    signal
-  );
-
-  const ownerSet = new Set();
-
-  for (const account of result ?? []) {
-    const encodedData = account?.account?.data?.[0];
-    if (!encodedData) {
-      continue;
+      const j = await r.json();
+      const n = Number(ep.pick(j));
+      if (Number.isFinite(n) && n > 0) return Math.round(n);
+    } catch (e) {
+      lastErr = e;
     }
-
-    const raw = Buffer.from(encodedData, 'base64');
-    if (raw.length < 40) {
-      continue;
-    }
-
-    const amount = parseU64LE(raw, 32);
-    if (amount <= BigInt(0)) {
-      continue;
-    }
-
-    const ownerHex = raw.subarray(0, 32).toString('hex');
-    ownerSet.add(ownerHex);
   }
-
-  return ownerSet.size;
+  throw lastErr ?? new Error('TOKE API holder count unavailable');
 }
 
 function onHolderCountResolved(count) {
@@ -112,17 +102,18 @@ export default async function handler(req, res) {
     if (cacheStale && !holderCache.inFlight) {
       holderCache.inFlight = true;
       const holderAbort = new AbortController();
-      const holderTimer = setTimeout(() => holderAbort.abort(), 48000);
-
-      getHolderCount(holderAbort.signal)
-        .then(onHolderCountResolved)
-        .catch((err) => {
-          console.error('[toke-stats] on-chain holderCount:', err?.message ?? err);
-        })
-        .finally(() => {
-          clearTimeout(holderTimer);
-          holderCache.inFlight = false;
-        });
+      const holderTimer = setTimeout(() => holderAbort.abort(), 8000);
+      // TOKE API is a fast static fetch, so resolve inline (the old fire-and-forget
+      // getProgramAccounts never completed on frozen serverless → holders showed "—").
+      try {
+        const count = await getHolderCount(holderAbort.signal);
+        onHolderCountResolved(count);
+      } catch (err) {
+        console.error('[toke-stats] TOKE API holderCount:', err?.message ?? err);
+      } finally {
+        clearTimeout(holderTimer);
+        holderCache.inFlight = false;
+      }
     }
 
     let resolvedHolders = holderCache.count;
