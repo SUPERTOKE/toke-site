@@ -159,6 +159,8 @@ const lastKnownAvgToke = ref(null);
 
 /** Redis-backed `marketCapChangePct24h` from `/api/toke-stats` only. */
 const marketCapChangePct = ref(null);
+/** Live 24h price change % from DexScreener (`priceChangeH24`) — always available, no Redis needed. */
+const priceChangePct = ref(null);
 /** Redis-backed `liquidityChangePct24h` from `/api/toke-stats` only. */
 const liquidityChangePct = ref(null);
 /** USD value of avg wallet (supply ÷ holders × price) for 💰 telemetry row. */
@@ -235,21 +237,29 @@ const marketCapChangeIsWarming = computed(
     (marketCapChangePct.value == null || !Number.isFinite(marketCapChangePct.value))
 );
 
-const marketCapChangeFormatted = computed(() => {
-  const p = marketCapChangePct.value;
-  if (mcapChangeFromRedis.value && p != null && Number.isFinite(p)) {
-    const rounded = Math.round(p * 100) / 100;
-    if (rounded === 0) return '+0.00%';
-    const prefix = rounded > 0 ? '+' : '';
-    return `${prefix}${rounded.toFixed(2)}%`;
+const fmtPct = (p) => {
+  const rounded = Math.round(p * 100) / 100;
+  if (rounded === 0) return '+0.00%';
+  return `${rounded > 0 ? '+' : ''}${rounded.toFixed(2)}%`;
+};
+
+/** Prefer the Redis 24h mcap delta; else fall back to live DexScreener 24h price change (mcap% ≈ price% at ~constant supply). */
+const mcapPillPct = computed(() => {
+  if (mcapChangeFromRedis.value && Number.isFinite(marketCapChangePct.value)) {
+    return marketCapChangePct.value;
   }
+  return Number.isFinite(priceChangePct.value) ? priceChangePct.value : null;
+});
+
+const marketCapChangeFormatted = computed(() => {
+  const p = mcapPillPct.value;
+  if (p != null && Number.isFinite(p)) return fmtPct(p);
   if (marketCapChangeIsWarming.value) return '—';
   return null;
 });
 
 const marketCapChangeClass = computed(() => {
-  if (marketCapChangeIsWarming.value) return 'text-neutral-400';
-  const p = marketCapChangePct.value;
+  const p = mcapPillPct.value;
   if (p == null || !Number.isFinite(p)) return 'text-neutral-400';
   const rounded = Math.round(p * 100) / 100;
   if (rounded === 0) return 'text-neutral-500';
@@ -389,6 +399,9 @@ function applyHeroStatsPayload(payload, path) {
 
     const marketCap = statNum(payload?.marketCap);
     const liquidityUsd = statNum(payload?.liquidityUsd);
+
+    const pchRaw = Number(payload?.priceChangeH24);
+    priceChangePct.value = Number.isFinite(pchRaw) ? pchRaw : null;
 
     function resolveMarketCapPctLine() {
       if (!Object.prototype.hasOwnProperty.call(payload, 'marketCapChangePct24h')) {
