@@ -53,9 +53,11 @@ async function getHolderCount(signal) {
   // pipeline's Gate-A-verified number) instead of a heavy per-request
   // getProgramAccounts scan. Fast + reliable on serverless, and keeps the site and
   // explorer showing one identical holder number.
+  // Prefer _lean_stats.json (rebuilt every ~6h by the explorer pipeline = freshest,
+  // matches the explorer's live holder number); token.json is a curated fallback.
   const endpoints = [
-    { url: `${TOKE_API_BASE}/token.json`, pick: (j) => j?.data?.holders_count },
-    { url: `${TOKE_API_BASE}/_lean_stats.json`, pick: (j) => j?.holders }
+    { url: `${TOKE_API_BASE}/_lean_stats.json`, pick: (j) => j?.holders },
+    { url: `${TOKE_API_BASE}/token.json`, pick: (j) => j?.data?.holders_count }
   ];
   let lastErr = null;
   for (const ep of endpoints) {
