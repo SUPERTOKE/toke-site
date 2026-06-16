@@ -1,4 +1,4 @@
-import { TOKE_MINT } from './tokeSnapshotShared.js';
+import { TOKE_MINT } from '../lib/tokeSnapshotShared.js';
 
 const JUPITER_CONTENT_FEED = 'https://api.jup.ag/tokens/v2/content/feed';
 const OEMBED_ENDPOINT = 'https://publish.twitter.com/oembed';

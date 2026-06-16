@@ -2,7 +2,7 @@
  * 24h $TOKE USD price series from GeckoTerminal OHLCV (Meteora pool).
  * Cached ~60s to respect GeckoTerminal free-tier rate limits.
  */
-import { fetchGeckoTokeOhlcv, peekGeckoTokeOhlcvCache } from './geckoTokeOhlcv.js';
+import { fetchGeckoTokeOhlcv, peekGeckoTokeOhlcvCache } from '../lib/geckoTokeOhlcv.js';
 
 const REQUEST_TIMEOUT_MS = 12_000;
 

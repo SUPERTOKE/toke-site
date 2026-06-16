@@ -12,7 +12,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Redis } from '@upstash/redis';
-import { parseSnapshotRow } from '../api/snapshotKvShared.js';
+import { parseSnapshotRow } from '../lib/snapshotKvShared.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 

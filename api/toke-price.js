@@ -1,4 +1,4 @@
-import { fetchTokeLiveMarket } from './tokeSnapshotShared.js';
+import { fetchTokeLiveMarket } from '../lib/tokeSnapshotShared.js';
 
 const REQUEST_TIMEOUT_MS = 8000;
 
