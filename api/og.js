@@ -1,12 +1,10 @@
 // api/og.js — dynamic Open Graph image for mctoken.xyz with live $TOKE stats.
-// Renders a 1200x630 branded card (price / market cap / holders) from the canonical
-// TOKE oracle. Uses React.createElement (no JSX) so the function is built by Vercel's
-// zero-config detection on a plain .js file. Fail-safe: any error (oracle down OR render
-// failure) redirects to the static /og-image.png, so social unfurls can never break.
+// Node serverless function (this project builds api/* as Node, not Edge): we render
+// the @vercel/og image to a PNG buffer and write it with res.end(). Awaiting
+// .arrayBuffer() means any render error is caught here → we 302 to the static
+// /og-image.png, so social unfurls can never break.
 import { ImageResponse } from '@vercel/og';
 import React from 'react';
-
-export const config = { runtime: 'edge' };
 
 const h = React.createElement;
 const ORACLE = process.env.TOKE_ORACLE_URL || 'https://api.mctoken.xyz/v1/oracle';
@@ -26,7 +24,7 @@ function fmtInt(n) {
   return new Intl.NumberFormat('en-US').format(Math.round(n));
 }
 
-export default async function handler() {
+export default async function handler(req, res) {
   try {
     let price = NaN;
     let mcap = NaN;
@@ -105,13 +103,17 @@ export default async function handler() {
       )
     );
 
-    return new ImageResponse(tree, {
-      width: 1200,
-      height: 630,
-      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' }
-    });
+    const image = new ImageResponse(tree, { width: 1200, height: 630 });
+    const arrayBuffer = await image.arrayBuffer();
+
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    res.end(Buffer.from(arrayBuffer));
   } catch {
-    // Total fallback (e.g. render error) — never break unfurls.
-    return Response.redirect(STATIC_OG, 302);
+    // Total fallback (oracle/render failure) — never break unfurls.
+    res.statusCode = 302;
+    res.setHeader('Location', STATIC_OG);
+    res.end();
   }
 }
