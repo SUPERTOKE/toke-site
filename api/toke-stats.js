@@ -1,5 +1,4 @@
-import { Buffer } from 'node:buffer';
-import { fetchTokeLiveMarket, TOKE_MINT, parseU64LE } from '../lib/tokeSnapshotShared.js';
+import { fetchTokeLiveMarket } from '../lib/tokeSnapshotShared.js';
 import { resolveHolderSnapshotStats, latestRecordedHolderCount } from '../lib/holderSnapshotsKv.js';
 import { resolveMcapSnapshotStats } from '../lib/mcapSnapshotsKv.js';
 import { resolveLiquiditySnapshotStats } from '../lib/liquiditySnapshotsKv.js';
@@ -7,12 +6,13 @@ import { getRedis } from '../lib/redisClient.js';
 import { buildStatsMeta, EMPTY_SNAPSHOT_LIST_META } from '../lib/statsMeta.js';
 import { SNAPSHOT_RECORD_INTERVAL_MS } from '../lib/snapshotKvShared.js';
 
-const TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
-const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com';
 /** Canonical TOKE API base (explorer pipeline). Repoint to api.mctoken.xyz/v1 later via env. */
 const TOKE_API_BASE = (process.env.TOKE_API_BASE ?? 'https://explorer.mctoken.xyz/api/v1').replace(/\/+$/, '');
 
-const REQUEST_TIMEOUT_MS = 90000;
+// Keep under the Vercel function maxDuration (60s) so the abort fires a clean 502
+// before the platform hard-kills the invocation. Holder count comes from a fast TOKE
+// API fetch (own 8s abort) + DexScreener, so 30s is ample headroom.
+const REQUEST_TIMEOUT_MS = 30000;
 /** CDN cache for public stats JSON (pairs with ~30s client poll). */
 const STATS_CACHE_CONTROL = 'public, s-maxage=45, stale-while-revalidate=90';
 
@@ -20,33 +20,6 @@ const STATS_CACHE_CONTROL = 'public, s-maxage=45, stale-while-revalidate=90';
 const HOLDER_CACHE_TTL_MS = 5 * 60 * 1000;
 let holderCache = { count: null, fetchedAt: 0, inFlight: false };
 let lastSnapshotRecordAt = 0;
-
-async function rpcRequest(method, params, signal) {
-  const response = await fetch(SOLANA_RPC_URL, {
-    method: 'POST',
-    signal,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      id: 1,
-      method,
-      params
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`RPC request failed with status ${response.status}`);
-  }
-
-  const payload = await response.json();
-  if (payload?.error) {
-    throw new Error(`RPC error: ${payload.error.message ?? 'Unknown error'}`);
-  }
-
-  return payload?.result;
-}
 
 async function getHolderCount(signal) {
   // Source the canonical, reconciled holder count from the TOKE API (the explorer

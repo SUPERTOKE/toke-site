@@ -13,6 +13,7 @@ export default async function handler(req, res) {
   try {
     const live = await fetchTokeLiveMarket(controller.signal);
 
+    res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=30');
     return res.status(200).json({
       price: live.price,
       marketCap: live.marketCap,
