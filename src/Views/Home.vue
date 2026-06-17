@@ -819,7 +819,8 @@ onBeforeUnmount(() => {
                   </p>
                   <div class="hero-stat-card__figure">
                     <p
-                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white sm:text-lg md:text-xl xl:text-[1.0625rem]"
+                      class="hero-stat-card__value font-orbitron tabular-nums text-center text-base font-medium leading-tight text-white sm:text-lg md:text-xl xl:text-[1.0625rem] cursor-help"
+                      title="Live on-chain supply, updated in real time. The TOKE Explorer shows the pipeline's reconciled supply as of its last refresh — small differences are timing only."
                     >
                       {{ totalSupplyStat }}
                     </p>
