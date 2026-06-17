@@ -1,0 +1,31 @@
+# $TOKE / McToken — mctoken.xyz
+
+> The official front door for $TOKE (McToken), a community + utility token on Solana. This site is the
+> project hub: live market stats, the Great McVote governance history, and the gateway to the ecosystem's
+> machine-readable surfaces. For holder-level on-chain data and the versioned data API, use the TOKE
+> Explorer and the TOKE API linked below.
+
+- Token: **$TOKE** (McToken) · chain: **solana-mainnet**
+- Mint: `AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo` · decimals: 3 · max supply: 420,000,069
+- Canonical site: https://mctoken.xyz
+- This page is a client-rendered SPA. Live numbers and structured data are served by the TOKE API below —
+  agents should prefer those JSON endpoints over scraping the rendered page.
+
+## Machine-readable data (TOKE API v1)
+- [Oracle](https://api.mctoken.xyz/v1/oracle): live liquidity-weighted price, implied market cap, total liquidity, 24h change. JSON, CORS-open, no auth.
+- [Token facts](https://api.mctoken.xyz/v1/token.json): canonical supply, holders count, mint/freeze authorities, pools.
+- [Dataset catalog](https://api.mctoken.xyz/v1/index.json): every dataset the API serves.
+- `https://api.mctoken.xyz/v1/<dataset>` proxies the explorer's published `/api/v1/<dataset>` — one canonical API for the whole ecosystem.
+
+## The ecosystem
+- [TOKE Explorer](https://explorer.mctoken.xyz): every wallet that ever touched $TOKE — anonymous, on-chain-verifiable, reconciled every ~6h. Its own agent guide: https://explorer.mctoken.xyz/llms.txt
+- [Toke Story](https://story.mctoken.xyz): the origin story and lore of $TOKE.
+
+## Social
+- X: https://x.com/TokeCommunity
+- Discord: https://discord.com/invite/gTYuUCthvC
+- Jupiter (verified token): https://verified.jup.ag/dashboard/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo
+
+## Notes
+- Informational only — not financial advice. $TOKE is a community token; always verify on-chain.
+- Public, read-only data. No API key, no published rate limit — please cache.
