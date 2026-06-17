@@ -1,4 +1,10 @@
+# $TOKE / McToken — crawlers + AI agents welcome.
 User-agent: *
 Allow: /
+
+# Machine-readable entry points for agents:
+#   Agent guide:  https://mctoken.xyz/llms.txt
+#   Token facts:  https://mctoken.xyz/.well-known/token.json
+#   Live data:    https://api.mctoken.xyz/v1/oracle
 
 Sitemap: https://mctoken.xyz/sitemap.xml
