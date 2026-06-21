@@ -15,14 +15,14 @@ const isFooter = computed(() => props.variant === 'footer')
 
 <template>
     <div
-        class="flex items-center font-orbitron"
+        class="flex items-center font-display"
         :class="isFooter ? 'space-x-4' : 'space-x-2 md:space-x-4'"
     >
         <img
             v-if="isFooter"
-            src="../assets/logo.png"
+            src="../assets/moonman-head.png"
             alt=""
-            class="h-12 shrink-0 rounded-full transition-transform duration-300 hover:scale-105"
+            class="h-11 w-11 shrink-0 object-contain transition-transform duration-300 hover:scale-105"
         />
         <div
             v-else
@@ -47,10 +47,10 @@ const isFooter = computed(() => props.variant === 'footer')
             "
         ></div>
         <p
-            class="font-orbitron tracking-wider text-white tabular-nums leading-none"
+            class="font-display tracking-tight text-white leading-none"
             :class="isFooter ? 'text-xl' : 'text-base md:text-xl'"
         >
-            TOKE
+            McToken
         </p>
     </div>
 </template>

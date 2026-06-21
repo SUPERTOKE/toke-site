@@ -29,19 +29,19 @@ const MCVAULT_INTRO_PAYOFF =
       >
         <p
           id="the-mcvault-era-title"
-          class="font-orbitron text-[1.65rem] min-[400px]:text-3xl sm:text-5xl md:text-6xl font-semibold text-center pb-1 relative leading-tight tracking-wide"
+          class="font-display text-[1.65rem] min-[400px]:text-3xl sm:text-5xl md:text-6xl font-semibold text-center pb-1 relative leading-tight tracking-wide"
         >
           <span class="text-white">MCVAULT ERA</span>
         </p>
 
         <div class="mx-auto w-full max-w-2xl space-y-4 px-1 text-center sm:space-y-5">
           <p
-            class="font-exo m-0 text-[0.9375rem] leading-relaxed sm:text-base [text-wrap:balance]"
+            class="font-body m-0 text-[0.9375rem] leading-relaxed sm:text-base [text-wrap:balance]"
           >
             <span class="text-neutral-300">{{ MCVAULT_INTRO_LEAD }}</span><span class="text-neutral-400">{{ ' ' + MCVAULT_INTRO_BODY }}</span>
           </p>
           <p
-            class="font-exo m-0 text-[0.9375rem] font-medium leading-relaxed text-emerald-50 sm:text-base [text-wrap:balance] drop-shadow-[0_0_12px_rgba(52,211,153,0.4)]"
+            class="font-body m-0 text-[0.9375rem] font-medium leading-relaxed text-blue-50 sm:text-base [text-wrap:balance] drop-shadow-[0_0_12px_rgba(90,162,255,0.4)]"
           >
             {{ MCVAULT_INTRO_PAYOFF }}
           </p>
@@ -68,7 +68,7 @@ const MCVAULT_INTRO_PAYOFF =
               />
             </div>
             <span
-              class="font-orbitron text-xs uppercase tracking-[0.1em] text-sky-300/90"
+              class="font-display text-xs uppercase tracking-[0.1em] text-sky-300/90"
             >{{ row.year }} · {{ row.eraName }}</span>
           </li>
         </ul>
@@ -77,12 +77,12 @@ const MCVAULT_INTRO_PAYOFF =
           :href="EXPLORER_MCVAULT_URL"
           target="_blank"
           rel="noopener"
-          class="group inline-flex items-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-5 py-3 font-orbitron text-sm font-semibold uppercase tracking-wide text-emerald-50 transition hover:border-emerald-300/70 hover:bg-emerald-400/20 sm:text-base"
+          class="group inline-flex items-center gap-2 rounded-xl border border-blue-400/40 bg-blue-400/10 px-5 py-3 font-display text-sm font-semibold uppercase tracking-wide text-blue-50 transition hover:border-blue-300/70 hover:bg-blue-400/20 sm:text-base"
         >
           Explore the Great McVote
           <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
         </a>
-        <p class="font-exo m-0 text-xs text-neutral-500 [text-wrap:balance]">
+        <p class="font-body m-0 text-xs text-neutral-500 [text-wrap:balance]">
           Quorum tracking, exact on-chain results, and every voter &amp; medal — live on the explorer.
         </p>
       </div>

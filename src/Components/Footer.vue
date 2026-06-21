@@ -26,12 +26,7 @@ const linkColumns = [
 </script>
 
 <template>
-    <div class="relative bg-neutral-950 z-50 overflow-hidden">
-        <!-- Decorative elements -->
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(120,119,198,0.1),rgba(255,255,255,0))]"></div>
-        <div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-neutral-800 to-transparent"></div>
-        <div class="absolute -top-24 -right-24 w-96 h-96 bg-purple-500/5 rounded-full filter blur-3xl"></div>
-        <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500/5 rounded-full filter blur-3xl"></div>
+    <div class="relative z-50 overflow-hidden" style="background: var(--mc-bg); border-top: 1px solid var(--mc-line);">
 
         <footer class="relative container mx-auto px-3.5 sm:px-6 pt-12 pb-[max(3rem,env(safe-area-inset-bottom,0px))] sm:pt-16 sm:pb-16">
             <div class="footer-shell grid grid-cols-1 items-start gap-10 sm:gap-12 lg:grid-cols-12 lg:items-stretch lg:gap-x-10 lg:gap-y-0">
@@ -49,7 +44,7 @@ const linkColumns = [
                             :key="col.title"
                             class="flex flex-col gap-1 items-start"
                         >
-                            <h4 class="font-orbitron text-[0.8rem] font-semibold uppercase tracking-[0.22em] text-neutral-200">
+                            <h4 class="font-display text-[0.8rem] font-semibold uppercase tracking-[0.22em] text-neutral-200">
                                 {{ col.title }}
                             </h4>
                             <div class="footer-link-icons w-max">
@@ -84,7 +79,7 @@ const linkColumns = [
                         <div
                             v-for="col in linkColumns"
                             :key="'h-' + col.title"
-                            class="footer-links-h text-left font-orbitron text-[0.8rem] font-semibold uppercase tracking-[0.22em] text-neutral-200"
+                            class="footer-links-h text-left font-display text-[0.8rem] font-semibold uppercase tracking-[0.22em] text-neutral-200"
                         >
                             {{ col.title }}
                         </div>
@@ -118,7 +113,7 @@ const linkColumns = [
                 </div>
             </div>
 
-            <p class="footer-disclaimer mt-10 sm:mt-12 text-center font-exo text-xs leading-relaxed text-neutral-500">
+            <p class="footer-disclaimer mt-10 sm:mt-12 text-center font-body text-xs leading-relaxed text-neutral-500">
                 Informational only — not financial advice. $TOKE is a community token; always verify on-chain and do your own research.
             </p>
         </footer>

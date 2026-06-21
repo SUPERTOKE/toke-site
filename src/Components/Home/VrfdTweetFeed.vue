@@ -82,7 +82,7 @@ onMounted(async () => {
           >
             <img :src="xIcon" alt="" class="h-3 w-3 invert opacity-85" />
           </span>
-          <span class="truncate font-orbitron text-[0.65rem] uppercase tracking-[0.12em] text-sky-300/90 sm:text-[0.7rem]">
+          <span class="truncate font-display text-[0.65rem] uppercase tracking-[0.12em] text-sky-300/90 sm:text-[0.7rem]">
             VRFD
           </span>
         </a>
@@ -108,7 +108,7 @@ onMounted(async () => {
             </svg>
           </button>
           <span
-            class="min-w-[2.25rem] text-center font-orbitron text-[0.6rem] tabular-nums uppercase tracking-wide text-neutral-500"
+            class="min-w-[2.25rem] text-center font-display text-[0.6rem] tabular-nums uppercase tracking-wide text-neutral-500"
             aria-live="polite"
           >
             {{ index + 1 }}/{{ tweets.length }}
@@ -139,26 +139,26 @@ onMounted(async () => {
       </div>
 
       <div v-else-if="error" class="py-1 text-center">
-        <p class="m-0 font-exo text-xs leading-relaxed text-neutral-400">
+        <p class="m-0 font-body text-xs leading-relaxed text-neutral-400">
           {{ error }}
         </p>
         <a
           :href="VRFD_DASHBOARD_URL"
           target="_blank"
           rel="noopener noreferrer"
-          class="mt-2 inline-flex items-center font-orbitron text-[0.65rem] uppercase tracking-wide text-sky-400/90 hover:text-sky-300"
+          class="mt-2 inline-flex items-center font-display text-[0.65rem] uppercase tracking-wide text-sky-400/90 hover:text-sky-300"
         >
           Open VRFD
         </a>
       </div>
 
       <div v-else-if="!current" class="py-1 text-center">
-        <p class="m-0 font-exo text-xs text-neutral-400">No verified tweets yet.</p>
+        <p class="m-0 font-body text-xs text-neutral-400">No verified tweets yet.</p>
         <a
           :href="VRFD_DASHBOARD_URL"
           target="_blank"
           rel="noopener noreferrer"
-          class="mt-2 inline-flex items-center font-orbitron text-[0.65rem] uppercase tracking-wide text-sky-400/90 hover:text-sky-300"
+          class="mt-2 inline-flex items-center font-display text-[0.65rem] uppercase tracking-wide text-sky-400/90 hover:text-sky-300"
         >
           View on VRFD
         </a>
@@ -167,7 +167,7 @@ onMounted(async () => {
       <template v-else>
         <p
           v-if="current.author || current.postedAt"
-          class="m-0 mb-1.5 font-orbitron text-[0.6rem] uppercase tracking-[0.1em] text-sky-400/75 sm:text-[0.65rem]"
+          class="m-0 mb-1.5 font-display text-[0.6rem] uppercase tracking-[0.1em] text-sky-400/75 sm:text-[0.65rem]"
         >
           <span v-if="current.author">{{ current.author }}</span>
           <span v-if="current.author && current.postedAt" class="text-neutral-600"> · </span>
@@ -177,7 +177,7 @@ onMounted(async () => {
         </p>
 
         <p
-          class="vrfd-feed__body m-0 font-exo text-[0.8125rem] leading-snug text-neutral-200/95 [text-wrap:pretty] sm:text-sm"
+          class="vrfd-feed__body m-0 font-body text-[0.8125rem] leading-snug text-neutral-200/95 [text-wrap:pretty] sm:text-sm"
           aria-live="polite"
         >
           {{ displayText(current.text) }}
@@ -189,7 +189,7 @@ onMounted(async () => {
             :href="current.url"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-1 font-orbitron text-[0.6rem] uppercase tracking-[0.08em] text-sky-400/85 transition-colors hover:text-sky-300"
+            class="inline-flex items-center gap-1 font-display text-[0.6rem] uppercase tracking-[0.08em] text-sky-400/85 transition-colors hover:text-sky-300"
           >
             View on X
             <svg class="h-3 w-3 opacity-70" viewBox="0 0 24 24" fill="none" aria-hidden="true">
