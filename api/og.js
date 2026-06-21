@@ -75,12 +75,12 @@ export default async function handler(req, res) {
           'div',
           { style: { display: 'flex', alignItems: 'baseline' } },
           h('span', { style: { fontSize: 100, fontWeight: 800, color: '#ffffff', letterSpacing: '-2px' } }, '$TOKE'),
-          h('span', { style: { fontSize: 40, fontWeight: 600, color: '#9b8cff', marginLeft: 26 } }, 'McToken')
+          h('span', { style: { fontSize: 40, fontWeight: 600, color: '#5aa2ff', marginLeft: 26 } }, 'McToken')
         ),
         h(
           'span',
           { style: { fontSize: 28, color: '#8b94a3', marginTop: 10 } },
-          'Cannabis-inspired community token on Solana'
+          'The honest memecoin on Solana — real receipts'
         )
       ),
       h(
