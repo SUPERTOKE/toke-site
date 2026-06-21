@@ -1,5 +1,5 @@
 <script setup>
-import moonman from '../../assets/moonman-head.png';
+import moonmanDank from '../../assets/moonman-dank.jpg';
 </script>
 
 <template>
@@ -7,7 +7,7 @@ import moonman from '../../assets/moonman-head.png';
     <div class="mw-in">
       <div class="mw-grid">
         <div class="mw-art">
-          <img class="mw-ill" :src="moonman" alt="Moon Man — McToken" width="150" height="150" />
+          <img class="mw-scene" :src="moonmanDank" alt="Moon Man and his cyborg moon-dog $DANK on the moon" loading="lazy" />
         </div>
         <div class="mw-copy">
           <p class="mw-eyebrow"><span class="mw-dot" />The world</p>
@@ -41,8 +41,8 @@ import moonman from '../../assets/moonman-head.png';
 .mw-h2, .mw-nm { color: var(--mc-text); }
 .mw-in { max-width: 1180px; margin: 0 auto; padding: 72px 22px; }
 .mw-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 34px; align-items: center; }
-.mw-art { position: relative; display: flex; align-items: center; justify-content: center; min-height: 280px; border: 1px solid var(--mc-line); border-radius: 18px; background: radial-gradient(70% 70% at 50% 40%, rgba(90, 162, 255, 0.12), transparent 70%); }
-.mw-ill { display: block; filter: drop-shadow(0 16px 36px rgba(90, 162, 255, 0.28)); }
+.mw-art { position: relative; overflow: hidden; min-height: 340px; border: 1px solid var(--mc-line-2); border-radius: 18px; background: var(--mc-panel); }
+.mw-scene { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .mw-eyebrow { font-family: var(--mc-mono); font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--mc-blue); margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
 .mw-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mc-teal); }
 .mw-h2 { font-family: var(--mc-display); font-weight: 700; font-size: clamp(28px, 4.5vw, 46px); letter-spacing: -1px; margin: 0 0 14px; line-height: 1.05; }
