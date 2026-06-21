@@ -50,7 +50,8 @@ const cards = [
 </template>
 
 <style scoped>
-.wit { position: relative; background: var(--mc-bg); border-top: 1px solid var(--mc-line); font-family: var(--mc-sans); }
+.wit { position: relative; background: var(--mc-bg); border-top: 1px solid var(--mc-line); font-family: var(--mc-sans); color: var(--mc-text); }
+.wit-h2, .wit-card-h { color: var(--mc-text); }
 .wit-in { max-width: 1180px; margin: 0 auto; padding: 72px 22px; }
 .wit-eyebrow { font-family: var(--mc-mono); font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--mc-blue); margin: 0 0 14px; display: flex; align-items: center; gap: 8px; justify-content: center; }
 .wit-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mc-teal); }

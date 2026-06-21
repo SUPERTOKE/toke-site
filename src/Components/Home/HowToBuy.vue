@@ -74,7 +74,8 @@ function copyMint() {
 </template>
 
 <style scoped>
-.htb { position: relative; background: var(--mc-bg); border-top: 1px solid var(--mc-line); font-family: var(--mc-sans); }
+.htb { position: relative; background: var(--mc-bg); border-top: 1px solid var(--mc-line); font-family: var(--mc-sans); color: var(--mc-text); }
+.htb-h2, .htb-step h4 { color: var(--mc-text); }
 .htb-in { max-width: 1180px; margin: 0 auto; padding: 72px 22px; }
 .htb-eyebrow { font-family: var(--mc-mono); font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--mc-blue); margin: 0 0 14px; display: flex; align-items: center; gap: 8px; justify-content: center; }
 .htb-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mc-teal); }

@@ -37,7 +37,8 @@ import moonman from '../../assets/moonman-head.png';
 </template>
 
 <style scoped>
-.mw { position: relative; background: var(--mc-bg); border-top: 1px solid var(--mc-line); font-family: var(--mc-sans); }
+.mw { position: relative; background: var(--mc-bg); border-top: 1px solid var(--mc-line); font-family: var(--mc-sans); color: var(--mc-text); }
+.mw-h2, .mw-nm { color: var(--mc-text); }
 .mw-in { max-width: 1180px; margin: 0 auto; padding: 72px 22px; }
 .mw-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 34px; align-items: center; }
 .mw-art { position: relative; display: flex; align-items: center; justify-content: center; min-height: 280px; border: 1px solid var(--mc-line); border-radius: 18px; background: radial-gradient(70% 70% at 50% 40%, rgba(90, 162, 255, 0.12), transparent 70%); }
