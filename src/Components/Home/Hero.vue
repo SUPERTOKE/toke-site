@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import moonman from '../../assets/moonman-head.png';
+import moonmanHero from '../../assets/moonman-hero.jpg';
 import { subscribeLiveStats } from '../../utils/liveStatsPoll';
 import { statNum, formatTokePriceDisplay, formatMarketCapDisplay } from '../../utils/statsApi';
 
@@ -104,7 +105,7 @@ onBeforeUnmount(() => {
       <p class="mc-eyebrow"><span class="mc-eyebrow-dot" />$TOKE · McToken · Solana</p>
 
       <div class="mc-moonwrap">
-        <img class="mc-moon" :src="moonman" alt="Moon Man — McToken" width="96" height="96" />
+        <img class="mc-moon" :src="moonmanHero" alt="Moon Man — McToken" width="150" height="150" />
       </div>
 
       <h1 class="mc-h1">The vault is open.<br /><span class="mc-h1-b">A new era begins.</span></h1>
@@ -208,8 +209,8 @@ onBeforeUnmount(() => {
   color: var(--mc-blue); margin: 0 0 22px; display: flex; align-items: center; gap: 9px;
 }
 .mc-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mc-teal); box-shadow: 0 0 0 3px rgba(90, 209, 179, 0.18); }
-.mc-moonwrap { margin: 0 0 20px; }
-.mc-moon { display: block; filter: drop-shadow(0 16px 36px rgba(90, 162, 255, 0.28)); }
+.mc-moonwrap { margin: 0 0 22px; }
+.mc-moon { display: block; width: 150px; height: 150px; border-radius: 50%; object-fit: cover; object-position: 50% 22%; box-shadow: 0 0 0 1px rgba(90, 162, 255, 0.45), 0 0 0 6px rgba(90, 162, 255, 0.08), 0 18px 44px rgba(90, 162, 255, 0.28); }
 .mc-h1 {
   font-family: var(--mc-display); font-weight: 700;
   font-size: clamp(38px, 7vw, 76px); line-height: 1.02; letter-spacing: -1.8px; margin: 0;
