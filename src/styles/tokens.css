@@ -37,6 +37,15 @@
   --mc-r: 12px;
   --mc-r-lg: 16px;
   --mc-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* Jupiter Plugin theme (RGB triplets) — dresses the in-page swap modal in
+     the McToken palette so it reads as ours, not a bolted-on widget. */
+  --jupiter-plugin-primary: 90, 162, 255;     /* #5aa2ff  Moon Man blue   */
+  --jupiter-plugin-background: 10, 12, 16;     /* #0a0c10  --mc-bg         */
+  --jupiter-plugin-primaryText: 231, 234, 239; /* #e7eaef  --mc-text       */
+  --jupiter-plugin-warning: 231, 184, 74;      /* #e7b84a  --mc-gold       */
+  --jupiter-plugin-interactive: 24, 28, 36;    /* #181c24  --mc-panel-2    */
+  --jupiter-plugin-module: 19, 22, 29;         /* #13161d  --mc-panel      */
 }
 
 /* opt-in film grain — the single "designed object" texture move.

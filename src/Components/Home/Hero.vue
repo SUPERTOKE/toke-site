@@ -4,6 +4,7 @@ import moonman from '../../assets/moonman-head.png';
 import moonmanHero from '../../assets/moonman-hero.jpg';
 import { subscribeLiveStats } from '../../utils/liveStatsPoll';
 import { statNum, formatTokePriceDisplay, formatMarketCapDisplay } from '../../utils/statsApi';
+import { openBuyToke, preloadBuyToke } from '../../lib/buyToke';
 
 const MINT = 'AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo';
 const MAX_SUPPLY = 420000069;
@@ -67,6 +68,7 @@ onMounted(() => {
     opacity: (Math.random() * 0.5 + 0.15).toFixed(2),
     scale: (Math.random() * 1.3 + 0.5).toFixed(2),
   }));
+  preloadBuyToke();
   unsub = subscribeLiveStats(({ data, error }) => {
     if (error) return;
     apply(data);
@@ -93,12 +95,12 @@ onBeforeUnmount(() => {
       <div class="mc-navlinks">
         <a href="/">Home</a>
         <a :href="EXPLORER_URL" target="_blank" rel="noopener">Explorer</a>
-        <a :href="BUY_URL" target="_blank" rel="noopener">Buy</a>
+        <a :href="BUY_URL" @click.prevent="openBuyToke" target="_blank" rel="noopener">Buy</a>
         <a :href="X_URL" target="_blank" rel="noopener">X</a>
       </div>
       <div class="mc-navspace" />
       <a class="mc-btn" :href="EXPLORER_URL" target="_blank" rel="noopener">Open Explorer</a>
-      <a class="mc-btn mc-btn--primary" :href="BUY_URL" target="_blank" rel="noopener">Buy $TOKE</a>
+      <a class="mc-btn mc-btn--primary" :href="BUY_URL" @click.prevent="openBuyToke" target="_blank" rel="noopener">Buy $TOKE</a>
     </nav>
 
     <div class="mc-hero-body">
@@ -116,7 +118,7 @@ onBeforeUnmount(() => {
       </p>
 
       <div class="mc-cta">
-        <a class="mc-btn mc-btn--primary mc-btn--lg" :href="BUY_URL" target="_blank" rel="noopener">Buy $TOKE</a>
+        <a class="mc-btn mc-btn--primary mc-btn--lg" :href="BUY_URL" @click.prevent="openBuyToke" target="_blank" rel="noopener">Buy $TOKE</a>
         <a class="mc-btn mc-btn--lg" :href="EXPLORER_URL" target="_blank" rel="noopener">Explore every wallet →</a>
       </div>
 

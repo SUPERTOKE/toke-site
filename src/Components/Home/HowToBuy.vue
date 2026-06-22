@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import { openBuyToke } from '../../lib/buyToke';
 import phantom from '../../assets/logos/trade/app-icons/phantom.png';
 import solflare from '../../assets/logos/trade/app-icons/solflare.png';
 import backpack from '../../assets/logos/trade/app-icons/backpack.png';
@@ -49,7 +50,7 @@ function copyMint() {
         <div class="htb-step">
           <div class="htb-n">02</div>
           <h4>Swap for $TOKE</h4>
-          <p>Open Jupiter, paste the mint, swap SOL → $TOKE. Prefer fiat? Start on Coinbase.</p>
+          <p>Hit <b>Buy $TOKE</b> and swap SOL → $TOKE right here — no leaving the page. Prefer fiat? Start on Coinbase.</p>
           <div class="htb-logos">
             <span v-for="v in venues" :key="v.name" class="htb-logo" :title="v.name"><img :src="v.logo" :alt="v.name" /></span>
           </div>
@@ -63,12 +64,13 @@ function copyMint() {
       </div>
 
       <div class="htb-cta">
-        <a class="htb-btn htb-btn--primary" :href="BUY_URL" target="_blank" rel="noopener">Buy on Jupiter →</a>
+        <a class="htb-btn htb-btn--primary" :href="BUY_URL" @click.prevent="openBuyToke" target="_blank" rel="noopener">Buy $TOKE →</a>
         <span class="htb-mint">
           <span class="htb-mono">{{ MINT.slice(0, 6) }}…{{ MINT.slice(-6) }}</span>
           <button class="htb-copy" type="button" @click="copyMint">{{ copied ? 'copied ✓' : 'copy ⧉' }}</button>
         </span>
       </div>
+      <p class="htb-powered">Swap opens in-page · powered by <a href="https://jup.ag" target="_blank" rel="noopener">Jupiter</a> · self-custody, your wallet</p>
     </div>
   </section>
 </template>
@@ -96,6 +98,9 @@ function copyMint() {
 .htb-btn { font-family: var(--mc-display); font-size: 15px; font-weight: 500; border-radius: 10px; padding: 12px 20px; border: 1px solid var(--mc-line-2); background: var(--mc-panel-2); color: var(--mc-text); text-decoration: none; }
 .htb-btn--primary { background: var(--mc-blue); border-color: var(--mc-blue); color: var(--mc-blue-ink); font-weight: 600; }
 .htb-btn--primary:hover { background: #74b1ff; }
+.htb-powered { text-align: center; margin: 14px 0 0; font-family: var(--mc-mono); font-size: 11px; color: var(--mc-mut-2); letter-spacing: 0.3px; }
+.htb-powered a { color: var(--mc-mut); text-decoration: none; }
+.htb-powered a:hover { color: var(--mc-blue); }
 .htb-mint { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mc-mono); font-size: 12px; color: var(--mc-mut-2); }
 .htb-mono { font-family: var(--mc-mono); }
 .htb-copy { border: 1px solid var(--mc-line-2); border-radius: 6px; padding: 3px 8px; color: var(--mc-mut); cursor: pointer; background: transparent; font-family: var(--mc-mono); font-size: 11px; }
