@@ -10,7 +10,7 @@
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const TOKE_MINT = 'AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo';
 const PLUGIN_SRC = 'https://plugin.jup.ag/plugin-v1.js';
-const DEFAULT_AMOUNT = '10'; // pre-fill ~$10 worth (USDC ≈ $1)
+const DEFAULT_AMOUNT = '10000000'; // pre-fill ~$10: Jupiter initialAmount is in base units; USDC = 6 decimals → 10 * 1e6
 
 /* ── Integrator fee ──────────────────────────────────────────────────────────
    To collect the ~1% fee on swaps routed through the embed, create a Jupiter
