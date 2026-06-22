@@ -30,13 +30,21 @@ const FALLBACK = [
 ]
 
 const columns = ref(FALLBACK)
+const statusUrl = ref('https://status.mctoken.xyz')
+const statusState = ref('idle')
 
 onMounted(async () => {
   try {
     const r = await fetch(LINKS_URL, { cache: 'no-cache' })
     const j = await r.json()
     if (j?.footer?.columns?.length) columns.value = j.footer.columns
+    if (j?.status?.href) statusUrl.value = j.status.href
   } catch { /* keep fallback */ }
+  try {
+    const sr = await fetch('https://status.mctoken.xyz/api/history', { cache: 'no-store' })
+    const sj = await sr.json()
+    if (sj?.current?.overall) statusState.value = sj.current.overall
+  } catch { /* dot stays idle */ }
 })
 </script>
 
@@ -69,6 +77,9 @@ onMounted(async () => {
       </div>
 
       <div class="mcfoot-base">
+        <a class="mcfoot-status" :href="statusUrl" target="_blank" rel="noopener" :title="'Systems: ' + statusState">
+          <span class="sdot" :class="statusState"></span>Status
+        </a>
         <span class="mcfoot-disc">Informational only — not financial advice. $TOKE is a community token; always verify on-chain and do your own research.</span>
       </div>
     </div>
@@ -88,8 +99,12 @@ onMounted(async () => {
 .mcfoot-col a:hover { color: var(--mc-blue); }
 .mcfoot-col a svg { color: var(--mc-mut); flex: 0 0 auto; }
 .mcfoot-col a:hover svg { color: var(--mc-blue); }
-.mcfoot-base { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--mc-line); font-size: 11.5px; color: var(--mc-mut-2); }
-.mcfoot-disc { max-width: 640px; }
+.mcfoot-base { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--mc-line); font-size: 11.5px; color: var(--mc-mut-2); }
+.mcfoot-disc { max-width: 560px; }
+.mcfoot-status { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mc-mono); font-size: 11.5px; color: var(--mc-mut); text-decoration: none; white-space: nowrap; }
+.mcfoot-status:hover { color: var(--mc-text); }
+.sdot { width: 8px; height: 8px; border-radius: 50%; background: var(--mc-mut-2); }
+.sdot.ok { background: #34d399; } .sdot.warn { background: #e7b84a; } .sdot.down { background: #ff6b6b; }
 @media (max-width: 760px) {
   .mcfoot-grid { grid-template-columns: 1fr; gap: 28px; }
   .mcfoot-cols { grid-template-columns: repeat(2, 1fr); }
