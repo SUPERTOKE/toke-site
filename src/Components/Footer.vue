@@ -1,231 +1,102 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import BrandLogoName from './BrandLogoName.vue'
-import { footerTradeLinks } from '../data/tradeVenues.js'
-import { footerPlatformLinks } from '../data/footerPlatforms.js'
-import { footerExplorerLinks } from '../data/footerExplorers.js'
-import { footerSocialLinks } from '../data/footerSocials.js'
 
-const linkColumns = [
-    {
-        title: 'Trade',
-        links: footerTradeLinks,
-    },
-    {
-        title: 'Platforms',
-        links: footerPlatformLinks,
-    },
-    {
-        title: 'Explorers',
-        links: footerExplorerLinks,
-    },
-    {
-        title: 'Socials',
-        links: footerSocialLinks,
-    },
+const EXPLORER_URL = 'https://explorer.mctoken.xyz'
+const LINKS_URL = `${EXPLORER_URL}/api/v1/links.json`
+
+/* Built-in fallback = canonical footer directory (mirrors links.json). Renders instantly; the
+   fetch below just keeps it fresh from the shared source so the two sites never drift. */
+const FALLBACK = [
+  { title: 'Trade', links: [
+    { label: 'Jupiter', href: 'https://jup.ag/tokens/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo' },
+    { label: 'Coinbase', href: 'https://www.coinbase.com/price/mctoken-solana-amgumqeqw8h74trc8ukkjzzwtxbdps496wh4gly2mcpo-token' },
+    { label: 'OKX', href: 'https://www.okx.com/en-us/trade-cedefi/solana/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo' },
+  ]},
+  { title: 'Markets', links: [
+    { label: 'CoinMarketCap', href: 'https://coinmarketcap.com/currencies/mctoken' },
+    { label: 'Dexscreener', href: 'https://dexscreener.com/solana/ad6negrxhsbagwfsttbshmkqgedhotcjzyfwcgrraxc9' },
+    { label: 'Birdeye', href: 'https://birdeye.so/token/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo?chain=solana' },
+  ]},
+  { title: 'Chain', links: [
+    { label: 'Solscan', href: 'https://solscan.io/token/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo' },
+    { label: 'Orb', href: 'https://orbmarkets.io/token/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo' },
+    { label: 'Solana Explorer', href: 'https://explorer.solana.com/address/AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo' },
+  ]},
+  { title: 'Connect', links: [
+    { label: 'X', href: 'https://x.com/TokeCommunity', icon: 'x' },
+    { label: 'Discord', href: 'https://discord.com/invite/gTYuUCthvC', icon: 'discord' },
+  ]},
 ]
+
+const columns = ref(FALLBACK)
+
+onMounted(async () => {
+  try {
+    const r = await fetch(LINKS_URL, { cache: 'no-cache' })
+    const j = await r.json()
+    if (j?.footer?.columns?.length) columns.value = j.footer.columns
+  } catch { /* keep fallback */ }
+})
 </script>
 
 <template>
-    <div class="relative z-50 overflow-hidden" style="background: var(--mc-bg); border-top: 1px solid var(--mc-line);">
+  <footer class="mcfoot">
+    <div class="mcfoot-in">
+      <div class="mcfoot-grid">
+        <div class="mcfoot-brand">
+          <BrandLogoName variant="footer" />
+          <p class="mcfoot-tag">The honest memecoin on Solana — anonymous, verifiable, on-chain.</p>
+          <a class="mcfoot-cross" :href="EXPLORER_URL" target="_blank" rel="noopener">Open the Explorer ↗</a>
+        </div>
 
-        <footer class="relative container mx-auto px-3.5 sm:px-6 pt-12 pb-[max(3rem,env(safe-area-inset-bottom,0px))] sm:pt-16 sm:pb-16">
-            <div class="footer-shell grid grid-cols-1 items-start gap-10 sm:gap-12 lg:grid-cols-12 lg:items-stretch lg:gap-x-10 lg:gap-y-0">
-                <!-- Left side — same brand block as header -->
-                <div class="lg:col-span-3">
-                    <BrandLogoName variant="footer" />
-                </div>
+        <nav class="mcfoot-cols" aria-label="Footer links">
+          <div v-for="col in columns" :key="col.title" class="mcfoot-col">
+            <h4>{{ col.title }}</h4>
+            <a
+              v-for="link in col.links"
+              :key="link.label"
+              :href="link.href"
+              target="_blank"
+              rel="noopener"
+            >
+              <svg v-if="link.icon === 'x'" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              <svg v-else-if="link.icon === 'discord'" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="currentColor"><path d="M20.317 4.369a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.6 12.6 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.006.127c-.598.349-1.225.645-1.873.892a.076.076 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.06.06 0 0 0-.031-.028zM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+              <span>{{ link.label }}</span>
+            </a>
+          </div>
+        </nav>
+      </div>
 
-                <!-- Middle: mobile stack; sm+ = grid (even column-gap + row-gap, flush edges) -->
-                <div class="lg:col-span-9 min-w-0">
-                    <!-- Mobile -->
-                    <div class="flex flex-col gap-8 sm:hidden">
-                        <div
-                            v-for="col in linkColumns"
-                            :key="col.title"
-                            class="flex flex-col gap-1 items-start"
-                        >
-                            <h4 class="font-display text-[0.8rem] font-semibold uppercase tracking-[0.22em] text-neutral-200">
-                                {{ col.title }}
-                            </h4>
-                            <div class="footer-link-icons w-max">
-                                <a
-                                    v-for="(link, i) in col.links"
-                                    :key="i"
-                                    v-show="link.logo"
-                                    :href="link.href"
-                                    target="_blank"
-                                    :aria-label="link.label"
-                                    class="footer-link-logo touch-manipulation"
-                                >
-                                    <span
-                                        v-if="link.logoTile"
-                                        class="footer-link-logo-tile"
-                                        :style="{ '--footer-logo-tile-scale': link.logoTileScale ?? 0.68 }"
-                                    >
-                                        <img :src="link.logo" :alt="link.label" />
-                                    </span>
-                                    <img v-else :src="link.logo" :alt="link.label" />
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- sm+: headers + logo grids per column -->
-                    <div
-                        class="footer-links-matrix hidden w-full min-w-0 sm:grid"
-                        role="navigation"
-                        aria-label="Official links"
-                    >
-                        <div
-                            v-for="col in linkColumns"
-                            :key="'h-' + col.title"
-                            class="footer-links-h text-left font-display text-[0.8rem] font-semibold uppercase tracking-[0.22em] text-neutral-200"
-                        >
-                            {{ col.title }}
-                        </div>
-                        <div
-                            v-for="col in linkColumns"
-                            :key="'c-' + col.title"
-                            class="footer-links-cell min-w-0"
-                        >
-                            <div class="footer-link-icons">
-                                <a
-                                    v-for="(link, i) in col.links"
-                                    :key="col.title + '-' + i"
-                                    v-show="link.logo"
-                                    :href="link.href"
-                                    :aria-label="link.label"
-                                    target="_blank"
-                                    class="footer-link-logo touch-manipulation"
-                                >
-                                    <span
-                                        v-if="link.logoTile"
-                                        class="footer-link-logo-tile"
-                                        :style="{ '--footer-logo-tile-scale': link.logoTileScale ?? 0.68 }"
-                                    >
-                                        <img :src="link.logo" :alt="link.label" />
-                                    </span>
-                                    <img v-else :src="link.logo" :alt="link.label" />
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <p class="footer-disclaimer mt-10 sm:mt-12 text-center font-body text-xs leading-relaxed text-neutral-500">
-                Informational only — not financial advice. $TOKE is a community token; always verify on-chain and do your own research.
-            </p>
-        </footer>
+      <div class="mcfoot-base">
+        <span>Built &amp; maintained by <b>SUPERTOKE</b> · <a :href="EXPLORER_URL" target="_blank" rel="noopener">explorer.mctoken.xyz</a></span>
+        <span class="mcfoot-disc">Informational only — not financial advice. $TOKE is a community token; always verify on-chain and do your own research.</span>
+      </div>
     </div>
+  </footer>
 </template>
 
 <style scoped>
-.footer-links-matrix {
-    --footer-link-lh: 1.25rem;
-}
-
-/* Logo grid — same layout for Trade, Platforms, and Explorers */
-.footer-link-icons {
-    --footer-link-icon-scale: 0.8;
-    --footer-link-logo-size: calc(2.25rem * var(--footer-link-icon-scale));
-    --footer-link-icon-gap: calc(0.5rem * var(--footer-link-icon-scale));
-    --footer-link-hit: calc(44px * var(--footer-link-icon-scale));
-    display: grid;
-    grid-template-columns: repeat(3, max-content);
-    column-gap: var(--footer-link-icon-gap);
-    row-gap: var(--footer-link-icon-gap);
-    justify-content: start;
-    justify-items: start;
-    align-items: center;
-    margin: 0;
-    padding: 0;
-}
-
-.footer-link-logo {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: flex-start;
-    min-height: var(--footer-link-hit);
-    min-width: var(--footer-link-logo-size);
-    padding: 0;
-    margin: 0;
-    border-radius: calc(0.5rem * var(--footer-link-icon-scale));
-    background: transparent;
-    opacity: 0.92;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.footer-link-logo:hover {
-    opacity: 1;
-}
-
-.footer-link-logo > img {
-    display: block;
-    height: var(--footer-link-logo-size);
-    width: var(--footer-link-logo-size);
-    object-fit: contain;
-}
-
-/* White square tile — same footprint as App Store icons in the grid */
-.footer-link-logo-tile {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    height: var(--footer-link-logo-size);
-    width: var(--footer-link-logo-size);
-    background: #fff;
-    border-radius: 0;
-    overflow: hidden;
-}
-
-.footer-link-logo-tile img {
-    display: block;
-    height: calc(var(--footer-link-logo-size) * var(--footer-logo-tile-scale, 0.68));
-    width: calc(var(--footer-link-logo-size) * var(--footer-logo-tile-scale, 0.68));
-    object-fit: contain;
-}
-
-@media (min-width: 640px) {
-    .footer-links-matrix {
-        width: 100%;
-        grid-template-columns: repeat(4, max-content);
-        justify-content: space-between;
-        column-gap: 0;
-        row-gap: calc(var(--footer-link-lh) / 2);
-        align-items: start;
-    }
-
-    .footer-link-icons {
-        --footer-link-logo-size: calc(2.375rem * var(--footer-link-icon-scale));
-        --footer-link-icon-gap: calc(0.625rem * var(--footer-link-icon-scale));
-    }
-}
-
-.footer-links-h {
-    font-weight: 600;
-    padding: 0;
-    margin: 0;
-    justify-self: start;
-}
-
-.footer-links-h,
-.footer-links-a {
-    line-height: var(--footer-link-lh);
-}
-
-.footer-links-cell {
-    justify-self: start;
-    width: max-content;
-    max-width: 100%;
-    padding: 0;
-    margin: 0;
-}
-
-.backdrop-blur-xl {
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+.mcfoot { background: var(--mc-bg); border-top: 1px solid var(--mc-line); font-family: var(--mc-sans); }
+.mcfoot-in { max-width: 1180px; margin: 0 auto; padding: 56px 22px 44px; }
+.mcfoot-grid { display: grid; grid-template-columns: 1.5fr 2.5fr; gap: 40px; }
+.mcfoot-tag { color: var(--mc-mut); font-size: 13px; line-height: 1.6; margin: 16px 0 14px; max-width: 280px; }
+.mcfoot-cross { font-family: var(--mc-display); font-size: 13px; color: var(--mc-blue); text-decoration: none; font-weight: 500; }
+.mcfoot-cross:hover { color: #74b1ff; }
+.mcfoot-cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.mcfoot-col h4 { font-family: var(--mc-display); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.4px; color: var(--mc-mut); margin: 0 0 14px; }
+.mcfoot-col a { display: flex; align-items: center; gap: 7px; color: var(--mc-text); text-decoration: none; font-size: 13.5px; padding: 5px 0; transition: color 0.12s var(--mc-ease); }
+.mcfoot-col a:hover { color: var(--mc-blue); }
+.mcfoot-col a svg { color: var(--mc-mut); flex: 0 0 auto; }
+.mcfoot-col a:hover svg { color: var(--mc-blue); }
+.mcfoot-base { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--mc-line); font-size: 11.5px; color: var(--mc-mut-2); }
+.mcfoot-base b { color: var(--mc-mut); font-weight: 500; }
+.mcfoot-base a { color: var(--mc-mut); text-decoration: none; }
+.mcfoot-base a:hover { color: var(--mc-blue); }
+.mcfoot-disc { max-width: 460px; text-align: right; }
+@media (max-width: 760px) {
+  .mcfoot-grid { grid-template-columns: 1fr; gap: 28px; }
+  .mcfoot-cols { grid-template-columns: repeat(2, 1fr); }
+  .mcfoot-disc { text-align: left; }
 }
 </style>
