@@ -2,90 +2,88 @@
 import { ERA_TIMELINE } from '../../data/mcVoteEraTimeline.js';
 
 /**
- * Slim teaser. The full, interactive Great McVote breakdown (quorum bars, exact
- * on-chain results, per-wallet Voted/NFT filtering) now lives on the explorer:
- * explorer.mctoken.xyz/#mcvault-era. This homepage section keeps the narrative beat
- * + the three medals, and links out — single source of truth = the explorer.
+ * Slim provenance feature bar. The full interactive Great McVote breakdown
+ * (quorum bars, exact on-chain results, per-wallet Voted/NFT filtering) lives on
+ * the explorer provenance bar — single source of truth. This bar gives the saga
+ * its visual beat (the three commemorative medals) right after the receipts
+ * section, then hands off.
  */
 const EXPLORER_MCVAULT_URL = 'https://explorer.mctoken.xyz/#mcvault-era';
-
-const MCVAULT_INTRO_LEAD =
-  'A critical mistake once left 7% of tokens locked on-chain.';
-const MCVAULT_INTRO_BODY =
-  'Unlocking it required a full 60% of the $TOKE supply to vote Yes during the annual 4/20 Great McVote.';
-const MCVAULT_INTRO_PAYOFF =
-  'In the 3rd year, the McVault was finally cracked.';
 </script>
 
 <template>
-  <section
-    id="TheMcVaultEra"
-    class="relative scroll-mt-[calc(5.25rem+env(safe-area-inset-top,0px))] py-12 sm:py-16 md:py-20"
-    aria-labelledby="the-mcvault-era-title"
-  >
-    <div class="relative container mx-auto px-3.5 sm:px-6 max-w-3xl">
-      <div
-        class="flex flex-col items-center text-center space-y-8 sm:space-y-10 w-full"
-      >
-        <p
-          id="the-mcvault-era-title"
-          class="font-display text-[1.65rem] min-[400px]:text-3xl sm:text-5xl md:text-6xl font-semibold text-center pb-1 relative leading-tight tracking-wide"
-        >
-          <span class="text-white">MCVAULT ERA</span>
-        </p>
-
-        <div class="mx-auto w-full max-w-2xl space-y-4 px-1 text-center sm:space-y-5">
-          <p
-            class="font-body m-0 text-[0.9375rem] leading-relaxed sm:text-base [text-wrap:balance]"
-          >
-            <span class="text-neutral-300">{{ MCVAULT_INTRO_LEAD }}</span><span class="text-neutral-400">{{ ' ' + MCVAULT_INTRO_BODY }}</span>
-          </p>
-          <p
-            class="font-body m-0 text-[0.9375rem] font-medium leading-relaxed text-blue-50 sm:text-base [text-wrap:balance] drop-shadow-[0_0_12px_rgba(90,162,255,0.4)]"
-          >
-            {{ MCVAULT_INTRO_PAYOFF }}
-          </p>
-        </div>
-
-        <ul
-          class="flex items-end justify-center gap-3 sm:gap-5 list-none p-0 m-0"
-          aria-label="The three Great McVote commemorative medals"
-        >
-          <li
-            v-for="row in ERA_TIMELINE"
-            :key="row.id"
-            class="flex flex-col items-center gap-2"
-          >
-            <div
-              class="relative block h-[7.75rem] w-[5.875rem] shrink-0 overflow-hidden rounded-lg border border-white/15 bg-black/40 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] sm:h-[9.5rem] sm:w-[7.25rem]"
-            >
-              <img
-                :src="row.commemorativeArt"
-                :alt="`Commemorative art for ${row.mcVoteLabel}`"
-                class="pointer-events-none absolute inset-0 h-full w-full object-contain object-center"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-            <span
-              class="font-display text-xs uppercase tracking-[0.1em] text-sky-300/90"
-            >{{ row.year }} · {{ row.eraName }}</span>
+  <section class="mvb" id="TheMcVaultEra" aria-labelledby="mvb-title">
+    <div class="mvb-in">
+      <div class="mvb-bar">
+        <ul class="mvb-medals" aria-label="The three Great McVote commemorative medals">
+          <li v-for="row in ERA_TIMELINE" :key="row.id" class="mvb-medal" :class="{ win: row.id === 'community' }">
+            <img
+              :src="row.commemorativeArt"
+              :alt="`Commemorative art for ${row.mcVoteLabel}`"
+              loading="lazy"
+              decoding="async"
+            />
+            <span class="mvb-yr">'{{ String(row.year).slice(-2) }}</span>
           </li>
         </ul>
 
-        <a
-          :href="EXPLORER_MCVAULT_URL"
-          target="_blank"
-          rel="noopener"
-          class="group inline-flex items-center gap-2 rounded-xl border border-blue-400/40 bg-blue-400/10 px-5 py-3 font-display text-sm font-semibold uppercase tracking-wide text-blue-50 transition hover:border-blue-300/70 hover:bg-blue-400/20 sm:text-base"
-        >
-          Explore the Great McVote
-          <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
+        <div class="mvb-txt">
+          <p class="mvb-eyebrow"><span class="mvb-dot" />The Great McVote</p>
+          <h2 id="mvb-title" class="mvb-h">A vault the community <span class="b">cracked on the third try.</span></h2>
+          <p class="mvb-sub">
+            7% of supply locked by an early mistake. Three annual 4/20 votes to free it.
+            In 2026, quorum finally hit — and the McVault opened.
+          </p>
+        </div>
+
+        <a class="mvb-go" :href="EXPLORER_MCVAULT_URL" target="_blank" rel="noopener">
+          Explore <span aria-hidden="true">→</span>
         </a>
-        <p class="font-body m-0 text-xs text-neutral-500 [text-wrap:balance]">
-          Quorum tracking, exact on-chain results, and every voter &amp; medal — live on the explorer.
-        </p>
       </div>
     </div>
   </section>
 </template>
+
+<style scoped>
+.mvb { background: var(--mc-bg); border-top: 1px solid var(--mc-line); font-family: var(--mc-sans); color: var(--mc-text); }
+.mvb-in { max-width: 1180px; margin: 0 auto; padding: 30px 22px; }
+.mvb-bar {
+  display: flex; align-items: center; gap: 26px;
+  background:
+    radial-gradient(120% 160% at 0% 0%, rgba(90, 162, 255, 0.06), transparent 60%),
+    var(--mc-panel);
+  border: 1px solid var(--mc-line); border-radius: var(--mc-r-lg); padding: 20px 24px;
+}
+.mvb-medals { display: flex; align-items: flex-end; gap: 9px; list-style: none; margin: 0; padding: 0; flex: 0 0 auto; }
+.mvb-medal { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.mvb-medal img {
+  height: 64px; width: 48px; object-fit: contain; object-position: center;
+  border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(0, 0, 0, 0.4);
+  display: block;
+}
+.mvb-medal.win img { border-color: rgba(231, 184, 74, 0.5); box-shadow: inset 0 0 0 1px rgba(231, 184, 74, 0.22); }
+.mvb-yr { font-family: var(--mc-mono); font-size: 9.5px; color: var(--mc-blue); }
+
+.mvb-txt { flex: 1; min-width: 0; }
+.mvb-eyebrow { font-family: var(--mc-mono); font-size: 10px; letter-spacing: 2.2px; text-transform: uppercase; color: var(--mc-blue); margin: 0 0 7px; display: flex; align-items: center; gap: 7px; }
+.mvb-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--mc-teal); }
+.mvb-h { font-family: var(--mc-display); font-weight: 600; font-size: clamp(17px, 2.2vw, 21px); letter-spacing: -0.3px; margin: 0 0 5px; line-height: 1.15; color: var(--mc-text); }
+.mvb-h .b { color: var(--mc-blue); }
+.mvb-sub { font-size: 13px; line-height: 1.5; color: var(--mc-mut); margin: 0; max-width: 580px; }
+
+.mvb-go {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px;
+  border: 1px solid rgba(90, 162, 255, 0.4); background: rgba(90, 162, 255, 0.1);
+  border-radius: 11px; padding: 11px 17px;
+  font-family: var(--mc-display); font-size: 13px; font-weight: 600; color: #dbe8ff;
+  text-decoration: none; white-space: nowrap; transition: background 0.15s var(--mc-ease), border-color 0.15s var(--mc-ease);
+}
+.mvb-go:hover { background: rgba(90, 162, 255, 0.2); border-color: rgba(90, 162, 255, 0.7); }
+
+@media (max-width: 760px) {
+  .mvb-bar { flex-wrap: wrap; gap: 16px; }
+  .mvb-medals { order: 1; }
+  .mvb-txt { order: 2; flex-basis: 100%; }
+  .mvb-go { order: 3; width: 100%; justify-content: center; }
+}
+</style>

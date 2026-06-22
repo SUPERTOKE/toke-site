@@ -16,13 +16,12 @@ const Footer = defineAsyncComponent(() => import('../Components/Footer.vue'));
       <div class="relative z-10">
 
       <WhatIsToke />
+      <McVoteEraTimeline />
       <MoonWorld />
 
       <HowToBuy />
 
       <CommunityX />
-
-      <McVoteEraTimeline />
       </div>
     </div>
     <Footer />

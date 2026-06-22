@@ -13,8 +13,8 @@ const cards = [
   },
   {
     key: 'community', title: 'The community',
-    body: 'Three years of Great McVotes. The community cracked its own accidentally-locked vault on the third try.',
-    factLabel: 'McVault', factValue: 'cracked · 2026',
+    body: 'A community that governs in the open — and shows up when it counts. Mods, memes, and the annual 4/20 vote.',
+    factLabel: 'Holder governance', factValue: 'on-chain',
   },
 ];
 </script>
