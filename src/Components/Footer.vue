@@ -69,7 +69,6 @@ onMounted(async () => {
       </div>
 
       <div class="mcfoot-base">
-        <span>Built &amp; maintained by <b>SUPERTOKE</b> · <a :href="EXPLORER_URL" target="_blank" rel="noopener">explorer.mctoken.xyz</a></span>
         <span class="mcfoot-disc">Informational only — not financial advice. $TOKE is a community token; always verify on-chain and do your own research.</span>
       </div>
     </div>
@@ -89,11 +88,8 @@ onMounted(async () => {
 .mcfoot-col a:hover { color: var(--mc-blue); }
 .mcfoot-col a svg { color: var(--mc-mut); flex: 0 0 auto; }
 .mcfoot-col a:hover svg { color: var(--mc-blue); }
-.mcfoot-base { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--mc-line); font-size: 11.5px; color: var(--mc-mut-2); }
-.mcfoot-base b { color: var(--mc-mut); font-weight: 500; }
-.mcfoot-base a { color: var(--mc-mut); text-decoration: none; }
-.mcfoot-base a:hover { color: var(--mc-blue); }
-.mcfoot-disc { max-width: 460px; text-align: right; }
+.mcfoot-base { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--mc-line); font-size: 11.5px; color: var(--mc-mut-2); }
+.mcfoot-disc { max-width: 640px; }
 @media (max-width: 760px) {
   .mcfoot-grid { grid-template-columns: 1fr; gap: 28px; }
   .mcfoot-cols { grid-template-columns: repeat(2, 1fr); }
