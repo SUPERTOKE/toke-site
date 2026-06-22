@@ -4,9 +4,11 @@ import './styles/tokens.css'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import Home from './Views/Home.vue'
+import NotFound from './Views/NotFound.vue'
 
 const routes = [
     { path: '/', component: Home },
+    { path: '/:pathMatch(.*)*', component: NotFound },
 ];
 
 /** Fragment deep-links: the browser scrolls before #app mounts, so the target id is missing. Wait for DOM then scroll. */
