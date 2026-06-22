@@ -7,9 +7,10 @@
    Docs: https://dev.jup.ag/tool-kits/plugin
    ========================================================================== */
 
-const SOL_MINT = 'So11111111111111111111111111111111111111112';
+const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const TOKE_MINT = 'AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo';
 const PLUGIN_SRC = 'https://plugin.jup.ag/plugin-v1.js';
+const DEFAULT_AMOUNT = '10'; // pre-fill ~$10 worth (USDC ≈ $1)
 
 /* ── Integrator fee ──────────────────────────────────────────────────────────
    To collect the ~1% fee on swaps routed through the embed, create a Jupiter
@@ -75,8 +76,9 @@ export async function openBuyToke() {
   }
 
   const formProps = {
-    initialInputMint: SOL_MINT,
+    initialInputMint: USDC_MINT, // pay with USDC by default
     initialOutputMint: TOKE_MINT,
+    initialAmount: DEFAULT_AMOUNT, // pre-fill ~$10
     fixedMint: TOKE_MINT, // lock the receive side to $TOKE — this is a "buy $TOKE" box
   };
   if (REFERRAL_ACCOUNT) {
