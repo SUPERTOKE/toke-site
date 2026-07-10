@@ -1,4 +1,5 @@
 import { fetchTokeLiveMarket } from '../lib/tokeSnapshotShared.js';
+import { fetchOracle } from '../lib/oracleClient.js';
 
 const REQUEST_TIMEOUT_MS = 8000;
 
@@ -11,7 +12,19 @@ export default async function handler(req, res) {
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const live = await fetchTokeLiveMarket(controller.signal);
+    // Canonical /v1/oracle first (one price implementation platform-wide);
+    // legacy DexScreener path only when the oracle is unreachable.
+    const oracle = await fetchOracle(controller.signal, 6000);
+    const live = oracle
+      ? {
+          price: oracle.price,
+          marketCap: oracle.marketCap,
+          marketCapSource: oracle.marketCap != null ? 'oracle' : null,
+          pairAddress: oracle.pairAddress,
+          priceChangeH24: oracle.priceChangeH24,
+          priceChangeH24Source: oracle.priceChangeH24 != null ? 'oracle' : null
+        }
+      : await fetchTokeLiveMarket(controller.signal);
 
     res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=30');
     return res.status(200).json({
@@ -21,6 +34,7 @@ export default async function handler(req, res) {
       pairAddress: live.pairAddress,
       priceChangeH24: live.priceChangeH24,
       priceChangeH24Source: live.priceChangeH24Source,
+      statsSource: oracle ? 'oracle' : 'fallback',
       updatedAt: new Date().toISOString()
     });
   } catch (error) {

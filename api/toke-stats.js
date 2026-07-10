@@ -1,4 +1,5 @@
 import { fetchTokeLiveMarket } from '../lib/tokeSnapshotShared.js';
+import { fetchOracle } from '../lib/oracleClient.js';
 import { resolveHolderSnapshotStats, latestRecordedHolderCount } from '../lib/holderSnapshotsKv.js';
 import { resolveMcapSnapshotStats } from '../lib/mcapSnapshotsKv.js';
 import { resolveLiquiditySnapshotStats } from '../lib/liquiditySnapshotsKv.js';
@@ -68,13 +69,36 @@ export default async function handler(req, res) {
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const live = await fetchTokeLiveMarket(controller.signal);
+    // Staged cutover (API-TOPOLOGY convergence items 4–5): the canonical /v1/oracle is
+    // the primary source for price/mcap/liquidity/supply — ONE implementation, zero
+    // site-side DexScreener/RPC calls. The legacy DexScreener+RPC path remains as the
+    // fallback only when the oracle is unreachable.
+    const oracle = await fetchOracle(controller.signal);
+    const statsSource = oracle ? 'oracle' : 'fallback';
+    const live = oracle
+      ? {
+          price: oracle.price,
+          marketCap: oracle.marketCap,
+          marketCapSource: oracle.marketCap != null ? 'oracle' : null,
+          pairAddress: oracle.pairAddress,
+          totalSupplyUi: oracle.supplyUi,
+          supplySource: oracle.supplyUi != null ? 'pipeline' : null,
+          supplyAsOf: oracle.asOf,
+          priceChangeH24: oracle.priceChangeH24,
+          priceChangeH24Source: oracle.priceChangeH24 != null ? 'oracle' : null,
+          liquidityUsd: oracle.liquidityUsd,
+          liquiditySource: oracle.liquidityUsd != null ? 'oracle' : null
+        }
+      : await fetchTokeLiveMarket(controller.signal);
 
     const now = Date.now();
     const cacheAge = now - holderCache.fetchedAt;
     const cacheStale = cacheAge >= HOLDER_CACHE_TTL_MS;
 
-    if (cacheStale && !holderCache.inFlight) {
+    // Holder count: the oracle already carries the canonical (Gate-A) number.
+    if (oracle && Number.isFinite(oracle.holders) && oracle.holders > 0 && cacheStale) {
+      onHolderCountResolved(Math.round(oracle.holders));
+    } else if (cacheStale && !holderCache.inFlight) {
       holderCache.inFlight = true;
       const holderAbort = new AbortController();
       const holderTimer = setTimeout(() => holderAbort.abort(), 8000);
@@ -148,9 +172,18 @@ export default async function handler(req, res) {
       liquidityPromise
     ]);
 
-    const holderCountChange24h = holderSnap.change24h;
-    const marketCapChangePct24h = mcapSnap.changePct24h;
-    const liquidityChangePct24h = liquiditySnap.changePct24h;
+    // 24h deltas: prefer the canonical oracle's rolling store (toke-api Upstash);
+    // the site's own snapshot KV remains the transition fallback. Once the oracle
+    // deltas are verified warm, the site's *SnapshotsKv layer can be deleted.
+    const holderCountChange24h = oracle?.holdersChange24h ?? holderSnap.change24h;
+    const marketCapChangePct24h = oracle?.mcapChangePct24h ?? mcapSnap.changePct24h;
+    const liquidityChangePct24h = oracle?.liquidityChangePct24h ?? liquiditySnap.changePct24h;
+    const deltaSource = {
+      holders: oracle?.holdersChange24h != null ? 'oracle' : holderSnap.change24h != null ? 'site-kv' : null,
+      mcap: oracle?.mcapChangePct24h != null ? 'oracle' : mcapSnap.changePct24h != null ? 'site-kv' : null,
+      liquidity:
+        oracle?.liquidityChangePct24h != null ? 'oracle' : liquiditySnap.changePct24h != null ? 'site-kv' : null
+    };
 
     let avgWalletUsd = null;
     if (
@@ -197,6 +230,10 @@ export default async function handler(req, res) {
       holderCountChange24h,
       holderCountFetchedAt: statsMeta.holderCountFetchedAt,
       statsMeta,
+      statsSource,
+      deltaSource,
+      supplySource: live.supplySource ?? null,
+      supplyAsOf: live.supplyAsOf ?? null,
       updatedAt: new Date().toISOString()
     });
   } catch (error) {
