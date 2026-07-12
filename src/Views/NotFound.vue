@@ -1,12 +1,14 @@
 <script setup>
 import moonmanSepia from '../assets/moonman-sepia.jpg';
 const EXPLORER_URL = 'https://explorer.mctoken.xyz';
+const VOYAGER_URL = 'https://voyager.mctoken.xyz';
 </script>
 
 <template>
   <main class="nf">
     <div class="nf-stars" aria-hidden="true"></div>
     <span class="nf-ghost" aria-hidden="true">404</span>
+    <svg class="nf-ship" viewBox="0 0 48 20" aria-hidden="true"><g fill="none" stroke="#8b94a3" stroke-width="1.2"><rect x="6" y="6" width="26" height="10" rx="2"/><path d="M32 11h9"/><path d="M6 11H1"/></g></svg>
 
     <div class="nf-inner">
       <figure class="nf-art">
@@ -16,13 +18,14 @@ const EXPLORER_URL = 'https://explorer.mctoken.xyz';
       <p class="nf-eyebrow">Error 404 · Lost signal</p>
       <h1 class="nf-h1">You've drifted <span class="b">off-orbit.</span></h1>
       <p class="nf-sub">
-        This page floated off into the void — or never existed. Moon Man can't find it either.
-        Let's get you back to base.
+        This sector is uncharted — the page drifted off into the void, or never existed.
+        Even the Explorer holds no receipt for it. Let's get you back to base.
       </p>
 
       <div class="nf-cta">
         <a class="nf-btn nf-btn--primary" href="/">← Back to base</a>
         <a class="nf-btn" :href="EXPLORER_URL" target="_blank" rel="noopener">Open the Explorer</a>
+        <a class="nf-btn" :href="VOYAGER_URL" target="_blank" rel="noopener">Board the Voyager</a>
       </div>
     </div>
   </main>
@@ -57,6 +60,15 @@ const EXPLORER_URL = 'https://explorer.mctoken.xyz';
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   font-family: var(--mc-display); font-weight: 700; font-size: 42vw; line-height: 1;
   color: rgba(90, 162, 255, 0.05); z-index: 0; pointer-events: none; letter-spacing: -0.04em;
+}
+.nf-ship {
+  position: absolute; top: 22%; left: -60px; width: 48px; opacity: 0.22; z-index: 1;
+  animation: nf-drift 38s linear infinite;
+}
+@keyframes nf-drift {
+  0% { transform: translateX(0) translateY(0) rotate(-4deg); }
+  50% { transform: translateX(55vw) translateY(18px) rotate(3deg); }
+  100% { transform: translateX(110vw) translateY(-8px) rotate(-4deg); }
 }
 .nf-inner { position: relative; z-index: 2; max-width: 540px; }
 .nf-art {

@@ -55,7 +55,10 @@ onMounted(async () => {
         <div class="mcfoot-brand">
           <BrandLogoName variant="footer" />
           <p class="mcfoot-tag">The honest memecoin on Solana — anonymous, verifiable, on-chain.</p>
-          <a class="mcfoot-cross" :href="EXPLORER_URL" target="_blank" rel="noopener">Open the Explorer ↗</a>
+          <div class="mcfoot-twins">
+            <a class="mcfoot-cross" :href="EXPLORER_URL" target="_blank" rel="noopener">Open the Explorer ↗</a>
+            <a class="mcfoot-cross" href="https://voyager.mctoken.xyz" target="_blank" rel="noopener">Board the Voyager ↗</a>
+          </div>
         </div>
 
         <nav class="mcfoot-cols" aria-label="Footer links">
@@ -91,6 +94,7 @@ onMounted(async () => {
 .mcfoot-in { max-width: 1180px; margin: 0 auto; padding: 56px 22px 44px; }
 .mcfoot-grid { display: grid; grid-template-columns: 1.5fr 2.5fr; gap: 40px; }
 .mcfoot-tag { color: var(--mc-mut); font-size: 13px; line-height: 1.6; margin: 16px 0 14px; max-width: 280px; }
+.mcfoot-twins { display: flex; gap: 18px; flex-wrap: wrap; }
 .mcfoot-cross { font-family: var(--mc-display); font-size: 13px; color: var(--mc-blue); text-decoration: none; font-weight: 500; }
 .mcfoot-cross:hover { color: #74b1ff; }
 .mcfoot-cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
