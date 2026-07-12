@@ -72,7 +72,7 @@ onMounted(async () => {
     lpLocked.value = token.lp_locked_pct ?? null;
   }
   if (health) {
-    grade.value = health.grade ?? null;
+    grade.value = health.grade ?? (typeof health.rugcheck === 'string' ? health.rugcheck.split(' ')[0] : null);
     top10.value = health.top10_pct ?? null;
     if (lpLocked.value == null) lpLocked.value = health.lp_locked_pct ?? null;
   }
