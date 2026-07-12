@@ -97,7 +97,7 @@ onMounted(async () => {
 .mcfoot-twins { display: flex; gap: 18px; flex-wrap: wrap; }
 .mcfoot-cross { font-family: var(--mc-display); font-size: 13px; color: var(--mc-blue); text-decoration: none; font-weight: 500; }
 .mcfoot-cross:hover { color: #74b1ff; }
-.mcfoot-cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.mcfoot-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 24px; }
 .mcfoot-col h4 { font-family: var(--mc-display); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.4px; color: var(--mc-mut); margin: 0 0 14px; }
 .mcfoot-col a { display: flex; align-items: center; gap: 7px; color: var(--mc-text); text-decoration: none; font-size: 13.5px; padding: 5px 0; transition: color 0.12s var(--mc-ease); }
 .mcfoot-col a:hover { color: var(--mc-blue); }
