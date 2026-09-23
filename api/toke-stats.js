@@ -1,11 +1,8 @@
 import { fetchTokeLiveMarket } from '../lib/tokeSnapshotShared.js';
 import { fetchOracle } from '../lib/oracleClient.js';
-import { resolveHolderSnapshotStats, latestRecordedHolderCount } from '../lib/holderSnapshotsKv.js';
-import { resolveMcapSnapshotStats } from '../lib/mcapSnapshotsKv.js';
-import { resolveLiquiditySnapshotStats } from '../lib/liquiditySnapshotsKv.js';
-import { getRedis } from '../lib/redisClient.js';
-import { buildStatsMeta, EMPTY_SNAPSHOT_LIST_META } from '../lib/statsMeta.js';
-import { SNAPSHOT_RECORD_INTERVAL_MS } from '../lib/snapshotKvShared.js';
+// 2026-09-22: the site's own Upstash *SnapshotsKv delta layer was retired. 24h deltas come solely
+// from the canonical /v1/oracle (toke-api Upstash) — deltaSource had read all-'oracle' since 07-13
+// and the site Redis was never configured (redisConfigured:false). No site-side KV remains.
 
 /** Canonical TOKE API base (explorer pipeline). Repoint to api.mctoken.xyz/v1 later via env. */
 const TOKE_API_BASE = (process.env.TOKE_API_BASE ?? 'https://explorer.mctoken.xyz/api/v1').replace(/\/+$/, '');
@@ -20,7 +17,6 @@ const STATS_CACHE_CONTROL = 'public, s-maxage=45, stale-while-revalidate=90';
 /** Server-side holder count cache — refreshed at most once every 5 minutes. */
 const HOLDER_CACHE_TTL_MS = 5 * 60 * 1000;
 let holderCache = { count: null, fetchedAt: 0, inFlight: false };
-let lastSnapshotRecordAt = 0;
 
 async function getHolderCount(signal) {
   // Source the canonical, reconciled holder count from the TOKE API (the explorer
@@ -55,9 +51,6 @@ function onHolderCountResolved(count) {
   if (!Number.isFinite(count) || count < 0) return;
   holderCache.count = count;
   holderCache.fetchedAt = Date.now();
-  resolveHolderSnapshotStats(count, Date.now(), { record: true }).catch((err) => {
-    console.error('[toke-stats] resolveHolderSnapshotStats (RPC):', err?.message ?? err);
-  });
 }
 
 export default async function handler(req, res) {
@@ -115,46 +108,15 @@ export default async function handler(req, res) {
       }
     }
 
-    let resolvedHolders = holderCache.count;
-    if (!Number.isFinite(resolvedHolders) || resolvedHolders < 0) {
-      resolvedHolders = await latestRecordedHolderCount();
-    }
-
-    const shouldRecordSnapshots = now - lastSnapshotRecordAt >= SNAPSHOT_RECORD_INTERVAL_MS;
-    if (shouldRecordSnapshots) {
-      lastSnapshotRecordAt = now;
-    }
+    const resolvedHolders = holderCache.count;
 
     const price = live.price;
     const supplyUi = live.totalSupplyUi;
-    let mcapTrack = null;
-    if (Number.isFinite(price) && price > 0 && Number.isFinite(supplyUi) && supplyUi > 0) {
-      mcapTrack = price * supplyUi;
-    } else if (Number.isFinite(live.marketCap) && live.marketCap > 0) {
-      mcapTrack = live.marketCap;
-    }
-
-    const holderPromise =
-      Number.isFinite(resolvedHolders) && resolvedHolders >= 0
-        ? resolveHolderSnapshotStats(resolvedHolders, now, {
-            record: shouldRecordSnapshots
-          })
-        : Promise.resolve({ change24h: null, meta: null });
-
-    const mcapPromise =
-      mcapTrack != null && Number.isFinite(mcapTrack) && mcapTrack > 0
-        ? resolveMcapSnapshotStats(mcapTrack, now, { record: shouldRecordSnapshots })
-        : Promise.resolve({ changePct24h: null, meta: null });
 
     const liquidityUsd =
       live.liquidityUsd != null && Number.isFinite(Number(live.liquidityUsd)) && live.liquidityUsd > 0
         ? Number(live.liquidityUsd)
         : null;
-
-    const liquidityPromise =
-      liquidityUsd != null
-        ? resolveLiquiditySnapshotStats(liquidityUsd, now, { record: shouldRecordSnapshots })
-        : Promise.resolve({ changePct24h: null, meta: null });
 
     let avgTokeUi = null;
     if (
@@ -166,23 +128,14 @@ export default async function handler(req, res) {
       avgTokeUi = Math.round((supplyUi / resolvedHolders) * 1000) / 1000;
     }
 
-    const [holderSnap, mcapSnap, liquiditySnap] = await Promise.all([
-      holderPromise,
-      mcapPromise,
-      liquidityPromise
-    ]);
-
-    // 24h deltas: prefer the canonical oracle's rolling store (toke-api Upstash);
-    // the site's own snapshot KV remains the transition fallback. Once the oracle
-    // deltas are verified warm, the site's *SnapshotsKv layer can be deleted.
-    const holderCountChange24h = oracle?.holdersChange24h ?? holderSnap.change24h;
-    const marketCapChangePct24h = oracle?.mcapChangePct24h ?? mcapSnap.changePct24h;
-    const liquidityChangePct24h = oracle?.liquidityChangePct24h ?? liquiditySnap.changePct24h;
+    // 24h deltas: canonical oracle only (null when the oracle is unreachable or still warming).
+    const holderCountChange24h = oracle?.holdersChange24h ?? null;
+    const marketCapChangePct24h = oracle?.mcapChangePct24h ?? null;
+    const liquidityChangePct24h = oracle?.liquidityChangePct24h ?? null;
     const deltaSource = {
-      holders: oracle?.holdersChange24h != null ? 'oracle' : holderSnap.change24h != null ? 'site-kv' : null,
-      mcap: oracle?.mcapChangePct24h != null ? 'oracle' : mcapSnap.changePct24h != null ? 'site-kv' : null,
-      liquidity:
-        oracle?.liquidityChangePct24h != null ? 'oracle' : liquiditySnap.changePct24h != null ? 'site-kv' : null
+      holders: holderCountChange24h != null ? 'oracle' : null,
+      mcap: marketCapChangePct24h != null ? 'oracle' : null,
+      liquidity: liquidityChangePct24h != null ? 'oracle' : null
     };
 
     let avgWalletUsd = null;
@@ -194,20 +147,12 @@ export default async function handler(req, res) {
       avgWalletUsd = Math.round(avgTokeUi * price * 100) / 100;
     }
 
-    const statsMeta = buildStatsMeta({
-      fetchedAtMs: holderCache.fetchedAt,
-      ttlMs: HOLDER_CACHE_TTL_MS,
-      redisConfigured: !!getRedis(),
-      holderMeta: holderSnap.meta ?? { ...EMPTY_SNAPSHOT_LIST_META },
-      mcapMeta: mcapSnap.meta ?? { ...EMPTY_SNAPSHOT_LIST_META },
-      liquidityMeta: liquiditySnap.meta ?? { ...EMPTY_SNAPSHOT_LIST_META },
-      avgTokeMeta: { ...EMPTY_SNAPSHOT_LIST_META },
-      holderCountChange24h,
-      marketCapChangePct24h,
-      liquidityChangePct24h,
-      avgTokeChange24h: null,
-      now
-    });
+    const holderCountFetchedAt = holderCache.fetchedAt ? new Date(holderCache.fetchedAt).toISOString() : null;
+    const statsMeta = {
+      holderCountFetchedAt,
+      holderCountStale: !holderCache.fetchedAt || now - holderCache.fetchedAt >= HOLDER_CACHE_TTL_MS,
+      deltaStore: 'oracle'
+    };
 
     res.setHeader('Cache-Control', STATS_CACHE_CONTROL);
     return res.status(200).json({
@@ -228,7 +173,7 @@ export default async function handler(req, res) {
       holderCount:
         Number.isFinite(resolvedHolders) && resolvedHolders >= 0 ? resolvedHolders : null,
       holderCountChange24h,
-      holderCountFetchedAt: statsMeta.holderCountFetchedAt,
+      holderCountFetchedAt,
       statsMeta,
       statsSource,
       deltaSource,

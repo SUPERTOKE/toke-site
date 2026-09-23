@@ -10,8 +10,6 @@
     "process:moonman": "node scripts/knockout-moonman-bg.mjs",
     "process:trade-previews": "node scripts/knockout-edge-transparent.mjs src/assets/trade-previews/toke-coinbase-mobile.png src/assets/trade-previews/toke-coinbase-mobile.png --max=58 --spread=34 && node scripts/knockout-edge-transparent.mjs src/assets/trade-previews/toke-jupiter-mobile.png src/assets/trade-previews/toke-jupiter-mobile.png --max=58 --spread=34",
     "preview": "vite preview",
-    "verify:redis": "node scripts/verify-redis-snapshots.mjs",
-    "check:stats-api": "node scripts/check-stats-api.mjs",
     "check": "npm run check:dead-code && npm run check:deps && npm run lint && npm run build",
     "check:dead-code": "knip",
     "check:deps": "depcheck --ignores=@vitejs/plugin-vue,sass,sharp,tailwindcss,vite",

@@ -7,3 +7,6 @@ dist
 .env
 .env.*
 .DS_Store
+
+# local trash staging (sandbox cannot delete)
+_to_delete/
