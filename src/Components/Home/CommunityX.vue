@@ -6,10 +6,11 @@ const DISCORD_URL = 'https://discord.com/invite/gTYuUCthvC';
 
 /* Featured post — curated highlight, rendered in-brand (editorial, always clean).
    Swap this for the latest post later if we wire the X API behind the same card. */
+const GROUP_URL = 'https://x.com/i/chat/group_join/g2102219613270610394/x2jHihm793';
 const featured = {
-  text: 'Great McVote #3 PASSED — the McVault is OPEN. Third time was the charm: the community banded together year after year, 69% voted YES, and ~6.78% of supply unlocked. A new era begins.',
-  date: 'Apr 23, 2026',
-  url: X_URL,
+  text: '$TOKE UP — the community group chat on X. Holders, mods and memes in one room. Tap in.',
+  date: 'Group chat',
+  url: GROUP_URL,
 };
 </script>
 
@@ -29,12 +30,13 @@ const featured = {
               <div class="cx-handle">@TokeCommunity</div>
             </div>
           </div>
-          <p class="cx-bio">Drifting moonward. 🌕 A community-run memecoin on Solana — the vault is open, a new era begins.</p>
+          <p class="cx-bio">To the moon. 🌕 A community-run memecoin on Solana.</p>
           <div class="cx-actions">
             <a class="cx-btn cx-btn--primary" :href="X_URL" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
               Follow on X
             </a>
+            <a class="cx-btn" :href="GROUP_URL" target="_blank" rel="noopener">Group chat</a>
             <a class="cx-btn" :href="DISCORD_URL" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M20.317 4.369a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.6 12.6 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.006.127c-.598.349-1.225.645-1.873.892a.076.076 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.06.06 0 0 0-.031-.028zM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
               Discord
@@ -49,10 +51,10 @@ const featured = {
               <span class="cx-post-name">TOKE | McToken</span>
               <span class="cx-post-handle">@TokeCommunity · {{ featured.date }}</span>
             </div>
-            <span class="cx-pinned">📌 Pinned</span>
+            <span class="cx-pinned">💬 Group</span>
           </div>
           <p class="cx-post-text">{{ featured.text }}</p>
-          <span class="cx-post-cta">View on X →</span>
+          <span class="cx-post-cta">Join the group chat →</span>
         </a>
       </div>
     </div>

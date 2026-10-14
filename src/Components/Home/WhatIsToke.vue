@@ -3,7 +3,7 @@ const EXPLORER_URL = 'https://explorer.mctoken.xyz';
 const cards = [
   {
     key: 'meme', title: 'The meme',
-    body: 'Moon Man and his cyborg moon-dog $DANK, the annual 4/20 ritual, and a supply number that could only be a joke.',
+    body: 'Moon Man, the blue astronaut, and a supply number that could only be a joke.',
     factLabel: 'Supply', factValue: '420,000,069',
   },
   {
@@ -13,7 +13,7 @@ const cards = [
   },
   {
     key: 'community', title: 'The community',
-    body: 'A community that governs in the open — and shows up when it counts. Mods, memes, and the annual 4/20 vote.',
+    body: 'A community that governs in the open — and shows up when it counts. Mods, memes, and votes that settle on-chain.',
     factLabel: 'Holder governance', factValue: 'on-chain',
   },
 ];

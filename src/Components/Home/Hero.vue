@@ -110,11 +110,11 @@ onBeforeUnmount(() => {
         <img class="mc-moon" :src="moonmanHero" alt="Moon Man — McToken" width="150" height="150" />
       </div>
 
-      <h1 class="mc-h1">The vault is open.<br /><span class="mc-h1-b">A new era begins.</span></h1>
+      <h1 class="mc-h1">Same joke as the rest.<br /><span class="mc-h1-b">Real receipts.</span></h1>
 
       <p class="mc-sub">
-        The honest memecoin — <b>every token accounted for on-chain</b>, a fixed supply of 420,000,069,
-        and a three-year governance saga the community actually won. Same joke as the rest. Real receipts.
+        The honest memecoin on Solana — <b>every token accounted for on-chain</b>, a fixed supply of 420,000,069,
+        and an open ledger anyone can check. The lore lives in the Explorer.
       </p>
 
       <div class="mc-cta">
