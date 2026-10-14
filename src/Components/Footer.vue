@@ -92,7 +92,8 @@ onMounted(async () => {
           </div>
           <div class="mcfoot-social">
             <a v-for="s in social" :key="s.label" :href="s.href" target="_blank" rel="noopener" :title="s.label" :aria-label="s.label">
-              <img v-if="logoFor(s)" :src="logoFor(s)" alt="" width="22" height="22" loading="lazy" decoding="async" />
+              <svg v-if="s.label === 'Group chat'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-4.6A8 8 0 1 1 21 12Z"/></svg>
+              <img v-else-if="logoFor(s)" :src="logoFor(s)" alt="" width="22" height="22" loading="lazy" decoding="async" />
               <span v-else>{{ s.label }}</span>
             </a>
           </div>
@@ -136,7 +137,7 @@ onMounted(async () => {
 .mcfoot-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 .mcfoot-social { display: flex; gap: 8px; margin-top: 18px; }
 .mcfoot-social a { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--mc-line); background: var(--mc-panel); color: var(--mc-mut); text-decoration: none; font-size: 11px; transition: border-color 0.12s var(--mc-ease); }
-.mcfoot-social a:hover { border-color: var(--mc-mut); }
+.mcfoot-social a:hover { border-color: var(--mc-mut); color: var(--mc-text); }
 .mcfoot-social img { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; }
 .mcfoot-col h4 { font-family: var(--mc-mono); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: 2px; color: var(--mc-mut-2); margin: 0 0 12px; }
 .mcfoot-col a { display: flex; align-items: center; gap: 7px; color: var(--mc-text); text-decoration: none; font-size: 13.5px; padding: 5px 0; transition: color 0.12s var(--mc-ease); }
