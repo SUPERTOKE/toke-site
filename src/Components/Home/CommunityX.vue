@@ -18,7 +18,7 @@ const featured = {
     <div class="cx-in">
       <p class="cx-eyebrow"><span class="cx-dot" />On X</p>
       <h2 class="cx-h2">Join the <span class="b">community.</span></h2>
-      <p class="cx-lede">$TOKE is community-run — the voyage happens out loud on X. Follow along and jump in.</p>
+      <p class="cx-lede">$TOKE is community-run — it happens out loud on X. Follow along and jump in.</p>
 
       <div class="cx-grid">
         <div class="cx-card cx-account">

@@ -1,7 +1,6 @@
 <script setup>
 import moonmanSepia from '../assets/moonman-sepia.jpg';
 const EXPLORER_URL = 'https://explorer.mctoken.xyz';
-const VOYAGER_URL = 'https://voyager.mctoken.xyz';
 </script>
 
 <template>
@@ -25,7 +24,6 @@ const VOYAGER_URL = 'https://voyager.mctoken.xyz';
       <div class="nf-cta">
         <a class="nf-btn nf-btn--primary" href="/">← Back to base</a>
         <a class="nf-btn" :href="EXPLORER_URL" target="_blank" rel="noopener">Open the Explorer</a>
-        <a class="nf-btn" :href="VOYAGER_URL" target="_blank" rel="noopener">Board the Voyager</a>
       </div>
     </div>
   </main>

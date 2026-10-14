@@ -19,16 +19,12 @@ import moonmanDank from '../../assets/moonman-dank.jpg';
           <div class="mw-duo">
             <div class="mw-m">
               <div class="mw-nm">Moon Man <span class="mw-tag">$TOKE</span></div>
-              <p>The blue astronaut explorer — the face of the voyage and the brand.</p>
+              <p>The blue astronaut explorer — the face of the brand.</p>
             </div>
             <div class="mw-m">
               <div class="mw-nm">$DANK <span class="mw-tag">companion</span></div>
               <p>The cyborg moon-dog. TOKE’s paired companion asset and sidekick.</p>
             </div>
-          </div>
-          <div class="mw-voyage">
-            <a class="mw-pill mw-pill-live" href="https://voyager.mctoken.xyz" target="_blank" rel="noopener">Live — play now</a>
-            <span class="mw-voyage-txt"><a class="mw-voyage-link" href="https://voyager.mctoken.xyz" target="_blank" rel="noopener">The Voyager</a> — Moon Man’s idle game: the lore render of the chain, twin to the Explorer. Rewards <b>holding</b>, not spending.</span>
           </div>
         </div>
       </div>
@@ -53,13 +49,5 @@ import moonmanDank from '../../assets/moonman-dank.jpg';
 .mw-nm { font-family: var(--mc-display); font-weight: 600; font-size: 15px; }
 .mw-tag { font-size: 10px; color: var(--mc-blue); font-family: var(--mc-mono); margin-left: 6px; }
 .mw-m p { color: var(--mc-mut); font-size: 12.5px; margin: 6px 0 0; line-height: 1.5; }
-.mw-voyage { margin-top: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.mw-pill { font-family: var(--mc-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 1px; color: var(--mc-gold); border: 1px solid rgba(231, 184, 74, 0.4); border-radius: 6px; padding: 3px 9px; }
-.mw-pill-live { color: var(--mc-teal); border-color: rgba(90, 209, 179, 0.45); text-decoration: none; transition: background 0.18s var(--mc-ease), border-color 0.18s; }
-.mw-pill-live:hover { background: rgba(90, 209, 179, 0.1); border-color: var(--mc-teal); }
-.mw-voyage-link { color: var(--mc-blue); text-decoration: none; }
-.mw-voyage-link:hover { text-decoration: underline; }
-.mw-voyage-txt { color: var(--mc-mut); font-size: 13.5px; }
-.mw-voyage-txt b { color: var(--mc-text); }
 @media (max-width: 760px) { .mw-grid { grid-template-columns: 1fr; } .mw-art { min-height: 220px; } }
 </style>

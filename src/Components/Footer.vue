@@ -57,7 +57,6 @@ onMounted(async () => {
           <p class="mcfoot-tag">The honest memecoin on Solana — anonymous, verifiable, on-chain.</p>
           <div class="mcfoot-twins">
             <a class="mcfoot-cross" :href="EXPLORER_URL" target="_blank" rel="noopener">Open the Explorer ↗</a>
-            <a class="mcfoot-cross" href="https://voyager.mctoken.xyz" target="_blank" rel="noopener">Board the Voyager ↗</a>
           </div>
         </div>
 
