@@ -53,7 +53,14 @@ const FALLBACK = [
   ]},
 ]
 
-const columns = ref(FALLBACK)
+const STORY_URL = 'https://story.mctoken.xyz'
+const LINK_COLS = ['Trade', 'Markets', 'Chain']
+const splitDir = (cols) => ({
+  cols: cols.filter((c) => LINK_COLS.includes(c.title)),
+  social: (cols.find((c) => c.title === 'Connect') || { links: [] }).links,
+})
+const columns = ref(splitDir(FALLBACK).cols)
+const social = ref(splitDir(FALLBACK).social)
 const statusUrl = ref('https://status.mctoken.xyz')
 const statusState = ref('idle')
 
@@ -61,7 +68,7 @@ onMounted(async () => {
   try {
     const r = await fetch(LINKS_URL, { cache: 'no-cache' })
     const j = await r.json()
-    if (j?.footer?.columns?.length) columns.value = j.footer.columns
+    if (j?.footer?.columns?.length) { const d = splitDir(j.footer.columns); columns.value = d.cols; if (d.social.length) social.value = d.social }
     if (j?.status?.href) statusUrl.value = j.status.href
   } catch { /* keep fallback */ }
   try {
@@ -80,7 +87,14 @@ onMounted(async () => {
           <BrandLogoName variant="footer" />
           <p class="mcfoot-tag">The honest memecoin on Solana — anonymous, verifiable, on-chain.</p>
           <div class="mcfoot-twins">
-            <a class="mcfoot-cross" :href="EXPLORER_URL" target="_blank" rel="noopener">Open the Explorer ↗</a>
+            <a class="mcfoot-cross" :href="EXPLORER_URL" target="_blank" rel="noopener">Explorer ↗</a>
+            <a class="mcfoot-cross" :href="STORY_URL" target="_blank" rel="noopener">The Story ↗</a>
+          </div>
+          <div class="mcfoot-social">
+            <a v-for="s in social" :key="s.label" :href="s.href" target="_blank" rel="noopener" :title="s.label" :aria-label="s.label">
+              <img v-if="logoFor(s)" :src="logoFor(s)" alt="" width="22" height="22" loading="lazy" decoding="async" />
+              <span v-else>{{ s.label }}</span>
+            </a>
           </div>
         </div>
 
@@ -105,7 +119,7 @@ onMounted(async () => {
         <a class="mcfoot-status" :href="statusUrl" target="_blank" rel="noopener" :title="'Systems: ' + statusState">
           <span class="sdot" :class="statusState"></span>Status
         </a>
-        <span class="mcfoot-disc">Informational only — not financial advice. $TOKE is a community token; always verify on-chain and do your own research.</span>
+        <span class="mcfoot-disc">Not financial advice. Verify on-chain, do your own research.</span>
       </div>
     </div>
   </footer>
@@ -113,19 +127,23 @@ onMounted(async () => {
 
 <style scoped>
 .mcfoot { background: var(--mc-bg); border-top: 1px solid var(--mc-line); font-family: var(--mc-sans); }
-.mcfoot-in { max-width: 1180px; margin: 0 auto; padding: 56px 22px 44px; }
-.mcfoot-grid { display: grid; grid-template-columns: 1.5fr 2.5fr; gap: 40px; }
+.mcfoot-in { max-width: 1180px; margin: 0 auto; padding: 44px 22px 36px; }
+.mcfoot-grid { display: grid; grid-template-columns: 1.4fr 2fr; gap: 48px; align-items: start; }
 .mcfoot-tag { color: var(--mc-mut); font-size: 13px; line-height: 1.6; margin: 16px 0 14px; max-width: 280px; }
 .mcfoot-twins { display: flex; gap: 18px; flex-wrap: wrap; }
 .mcfoot-cross { font-family: var(--mc-display); font-size: 13px; color: var(--mc-blue); text-decoration: none; font-weight: 500; }
 .mcfoot-cross:hover { color: #74b1ff; }
-.mcfoot-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 24px; }
-.mcfoot-col h4 { font-family: var(--mc-display); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.4px; color: var(--mc-mut); margin: 0 0 14px; }
+.mcfoot-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.mcfoot-social { display: flex; gap: 8px; margin-top: 18px; }
+.mcfoot-social a { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--mc-line); background: var(--mc-panel); color: var(--mc-mut); text-decoration: none; font-size: 11px; transition: border-color 0.12s var(--mc-ease); }
+.mcfoot-social a:hover { border-color: var(--mc-mut); }
+.mcfoot-social img { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; }
+.mcfoot-col h4 { font-family: var(--mc-mono); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: 2px; color: var(--mc-mut-2); margin: 0 0 12px; }
 .mcfoot-col a { display: flex; align-items: center; gap: 7px; color: var(--mc-text); text-decoration: none; font-size: 13.5px; padding: 5px 0; transition: color 0.12s var(--mc-ease); }
 .mcfoot-col a:hover { color: var(--mc-blue); }
 .mcfoot-ico { width: 18px; height: 18px; border-radius: 5px; object-fit: cover; flex: 0 0 auto; opacity: 0.85; transition: opacity 0.12s var(--mc-ease); }
 .mcfoot-col a:hover .mcfoot-ico { opacity: 1; }
-.mcfoot-base { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--mc-line); font-size: 11.5px; color: var(--mc-mut-2); }
+.mcfoot-base { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--mc-line); font-size: 11.5px; color: var(--mc-mut-2); }
 .mcfoot-disc { max-width: 560px; }
 .mcfoot-status { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mc-mono); font-size: 11.5px; color: var(--mc-mut); text-decoration: none; white-space: nowrap; }
 .mcfoot-status:hover { color: var(--mc-text); }
@@ -133,7 +151,7 @@ onMounted(async () => {
 .sdot.ok { background: #34d399; } .sdot.warn { background: #e7b84a; } .sdot.down { background: #ff6b6b; }
 @media (max-width: 760px) {
   .mcfoot-grid { grid-template-columns: 1fr; gap: 28px; }
-  .mcfoot-cols { grid-template-columns: repeat(2, 1fr); }
+  .mcfoot-cols { grid-template-columns: repeat(3, 1fr); gap: 14px; }
   .mcfoot-disc { text-align: left; }
 }
 </style>

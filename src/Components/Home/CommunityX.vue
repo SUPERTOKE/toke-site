@@ -8,7 +8,7 @@ const DISCORD_URL = 'https://discord.com/invite/gTYuUCthvC';
    Swap this for the latest post later if we wire the X API behind the same card. */
 const GROUP_URL = 'https://x.com/i/chat/group_join/g2102219613270610394/x2jHihm793';
 const featured = {
-  text: '$TOKE UP — the community group chat on X. Holders, mods and memes in one room. Tap in.',
+  text: '$TOKE UP — the group chat. Holders, mods and memes in one room.',
   date: 'Group chat',
   url: GROUP_URL,
 };
@@ -17,9 +17,7 @@ const featured = {
 <template>
   <section class="cx">
     <div class="cx-in">
-      <p class="cx-eyebrow"><span class="cx-dot" />On X</p>
-      <h2 class="cx-h2">Join the <span class="b">community.</span></h2>
-      <p class="cx-lede">$TOKE is community-run — it happens out loud on X. Follow along and jump in.</p>
+      <p class="cx-eyebrow"><span class="cx-dot" />Community</p>
 
       <div class="cx-grid">
         <div class="cx-card cx-account">
@@ -30,7 +28,7 @@ const featured = {
               <div class="cx-handle">@TokeCommunity</div>
             </div>
           </div>
-          <p class="cx-bio">To the moon. 🌕 A community-run memecoin on Solana.</p>
+          <p class="cx-bio">To the moon. 🌕 Community-run, out loud on X.</p>
           <div class="cx-actions">
             <a class="cx-btn cx-btn--primary" :href="X_URL" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -62,9 +60,9 @@ const featured = {
 </template>
 
 <style scoped>
-.cx { position: relative; background: var(--mc-bg); border-top: 1px solid var(--mc-line); font-family: var(--mc-sans); color: var(--mc-text); }
-.cx-in { max-width: 1180px; margin: 0 auto; padding: 72px 22px; }
-.cx-eyebrow { font-family: var(--mc-mono); font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--mc-blue); margin: 0 0 14px; display: flex; align-items: center; gap: 8px; justify-content: center; }
+.cx { position: relative; background: var(--mc-bg); font-family: var(--mc-sans); color: var(--mc-text); }
+.cx-in { max-width: 1180px; margin: 0 auto; padding: 0 22px 48px; }
+.cx-eyebrow { font-family: var(--mc-mono); font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--mc-blue); margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
 .cx-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mc-teal); }
 .cx-h2 { font-family: var(--mc-display); font-weight: 700; font-size: clamp(28px, 4.5vw, 46px); letter-spacing: -1px; text-align: center; margin: 0 0 14px; line-height: 1.05; color: var(--mc-text); }
 .cx-h2 .b { color: var(--mc-blue); }

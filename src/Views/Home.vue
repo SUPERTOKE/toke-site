@@ -1,8 +1,7 @@
 <script setup>
 import { defineAsyncComponent } from 'vue';
 import Hero from '../Components/Home/Hero.vue';
-import WhatIsToke from '../Components/Home/WhatIsToke.vue';
-import HowToBuy from '../Components/Home/HowToBuy.vue';
+import Receipts from '../Components/Home/Receipts.vue';
 import CommunityX from '../Components/Home/CommunityX.vue';
 const Footer = defineAsyncComponent(() => import('../Components/Footer.vue'));
 </script>
@@ -13,10 +12,7 @@ const Footer = defineAsyncComponent(() => import('../Components/Footer.vue'));
     <div class="home-scroll-surface relative overflow-x-hidden">
       <div class="relative z-10">
 
-      <WhatIsToke />
-
-      <HowToBuy />
-
+      <Receipts />
       <CommunityX />
       </div>
     </div>
