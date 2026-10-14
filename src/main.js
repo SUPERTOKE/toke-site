@@ -5,9 +5,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import Home from './Views/Home.vue'
 import NotFound from './Views/NotFound.vue'
+import Investors from './Views/Investors.vue'
 
 const routes = [
     { path: '/', component: Home },
+    { path: '/investors', component: Investors },
     { path: '/:pathMatch(.*)*', component: NotFound },
 ];
 

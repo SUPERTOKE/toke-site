@@ -30,6 +30,7 @@ onMounted(async () => {
         <nav class="mcfoot-links" aria-label="Footer">
           <a :href="EXPLORER_URL" target="_blank" rel="noopener">Explorer</a>
           <a :href="STORY_URL" target="_blank" rel="noopener">Story</a>
+          <a href="/investors">Investors</a>
         </nav>
         <span class="mcfoot-space" />
         <div class="mcfoot-social">

@@ -9,6 +9,10 @@
       "destination": "https://explorer.mctoken.xyz/api/v1/:path*"
     },
     {
+      "source": "/xapi/toke/:path*",
+      "destination": "https://api.mctoken.xyz/v1/:path*"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

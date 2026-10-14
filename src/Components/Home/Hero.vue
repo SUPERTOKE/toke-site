@@ -94,6 +94,7 @@ onBeforeUnmount(() => {
       <div class="mc-navspace" />
       <div class="mc-navlinks">
         <a :href="EXPLORER_URL" target="_blank" rel="noopener">Explorer</a>
+        <a href="/investors">Investors</a>
       </div>
       <a class="mc-btn mc-btn--primary" :href="BUY_URL" @click.prevent="openBuyToke" target="_blank" rel="noopener">Buy $TOKE</a>
     </nav>

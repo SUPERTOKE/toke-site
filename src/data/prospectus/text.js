@@ -1,0 +1,79 @@
+/**
+ * Owner-written sections of the Tokenholder Report. Everything numeric on the page comes from the
+ * pipeline (prospectus.json / oracle / status); this file holds only prose and the roadmap. Edits are
+ * versioned by git — bump `lastEdited` when you change a section.
+ *
+ * Drafted 2026-10-14 by the agent from the KB and handoffs for OG's review. Lines marked [OG] need
+ * the owner's call; counsel reviews `risks` and `disclosures` before publish.
+ */
+
+export const summary = {
+  lastEdited: '2026-10-14',
+  text:
+    '$TOKE (McToken) is a community-run SPL token on Solana, first seen on-chain in June 2023, with a fixed ' +
+    'supply of 420,000,069, mint authority revoked, three completed annual governance votes, and a public ' +
+    'ledger of every wallet that has ever held it. There is no revenue-generating product today. This page ' +
+    'states what is provable on-chain and nothing else; it is regenerated every six hours by the same ' +
+    'audited pipeline that feeds the Explorer.',
+};
+
+export const treasuryPolicy = {
+  lastEdited: '2026-10-14',
+  text:
+    '[OG] Purpose of each wallet, who controls it (multisig signers or governance), spend limits, and how ' +
+    'changes are announced. Until written, the table above is the policy: balances and 30-day flows are ' +
+    'published on every run.',
+};
+
+export const governanceHow = {
+  lastEdited: '2026-10-14',
+  mechanism:
+    'Annual Great McVote on 4/20 via SPL Governance (Realms). A proposal passes when wallets holding at ' +
+    'least 60% of supply vote Yes. Votes are weighted by balance and recorded on-chain; commemorative NFTs ' +
+    'mark participation.',
+  proposals: '[OG] Who can propose, where discussion happens (X group chat / Discord), notice period.',
+  nextAgenda: '[OG] Agenda for the 2027 vote, if any.',
+};
+
+export const risks = {
+  lastEdited: '2026-10-14',
+  items: [
+    { t: 'Volatility and thin liquidity', d: 'Pooled liquidity is small. Modest orders move the price materially; exits may be slow or costly.' },
+    { t: 'Concentration', d: 'A small number of wallets and pools hold most of the supply. Large holders can move the market or decide votes.' },
+    { t: 'No revenue', d: '$TOKE has no product generating fees. Any value is community- and market-driven only.' },
+    { t: 'Contributor dependence', d: 'Infrastructure, data and governance depend on a small, partly pseudonymous group. [OG to expand]' },
+    { t: 'Regulatory uncertainty', d: 'The legal treatment of tokens and DAOs varies by jurisdiction and may change. [counsel to review]' },
+    { t: 'Technical and data risk', d: 'Pools, programs and the data pipeline can fail. When the audit is not green this page serves last-known-good data and says so.' },
+  ],
+};
+
+export const roadmap = {
+  lastEdited: '2026-10-14',
+  items: [
+    { state: 'done', t: 'Reporting layer', d: 'This report, the audited pipeline, the Explorer, the oracle and the status page.' },
+    { state: 'in progress', t: 'Treasury and legal scaffolding', d: 'Written treasury policy, published signers, a legal wrapper for the DAO treasury.' },
+    { state: 'next', t: 'Revenue engine', d: 'A TOKE-native fee source. Until one exists, revenue is reported as none.' },
+    { state: 'later', t: 'Buyback / burn policy', d: 'A published rule, executed on-chain and reported here — only once there is revenue to fund it.' },
+    { state: 'optional', t: 'Public-vehicle optionality', d: 'Keep reporting in a diligence-ready shape. No action planned.' },
+  ],
+};
+
+export const contributors = {
+  lastEdited: '2026-10-14',
+  note: 'Roles, not identities. Pseudonymous where that is the norm. Nothing from the private knowledge base is ever published.',
+  items: [
+    { role: 'Counsel · TokeUP DAO', who: '[OG]' },
+    { role: 'Infrastructure and data', who: '[OG]' },
+    { role: 'Community and X', who: '[OG]' },
+    { role: 'Council', who: '[n] elected members' },
+  ],
+};
+
+export const disclosures = {
+  lastEdited: '2026-10-14',
+  text:
+    'This report is informational. It is not an offer to sell or a solicitation to buy any token or security, ' +
+    'and nothing here is investment, legal or tax advice. Figures are generated from public on-chain data by an ' +
+    'automated pipeline and may contain errors; each carries a source and a timestamp. Past activity does not ' +
+    'indicate future results. [counsel to finalize]',
+};
