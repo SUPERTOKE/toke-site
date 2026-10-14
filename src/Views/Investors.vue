@@ -48,11 +48,12 @@ onMounted(async () => {
 onBeforeUnmount(() => { if (unsub) unsub(); unsub = null; });
 
 /* ── formatters ── */
-const n0 = (v) => (Number.isFinite(+v) ? Math.round(+v).toLocaleString('en-US') : '—');
-const n3 = (v) => (Number.isFinite(+v) ? (+v).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : '—');
-const pct = (v, d = 2) => (Number.isFinite(+v) ? `${(+v).toFixed(d)}%` : '—');
-const usd = (v) => (Number.isFinite(+v) ? `$${Math.round(+v).toLocaleString('en-US')}` : '—');
-const signed = (v) => (Number.isFinite(+v) ? `${+v > 0 ? '+' : ''}${n0(v)}` : '—');
+const num = (v) => (v == null || v === '' || v === false ? NaN : +v);   // null/undefined/false → '—', never 0
+const n0 = (v) => (Number.isFinite(num(v)) ? Math.round(num(v)).toLocaleString('en-US') : '—');
+const n3 = (v) => (Number.isFinite(num(v)) ? num(v).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : '—');
+const pct = (v, d = 2) => (Number.isFinite(num(v)) ? `${num(v).toFixed(d)}%` : '—');
+const usd = (v) => (Number.isFinite(num(v)) ? `$${Math.round(num(v)).toLocaleString('en-US')}` : '—');
+const signed = (v) => (Number.isFinite(num(v)) ? `${num(v) > 0 ? '+' : ''}${n0(v)}` : '—');
 const short = (a) => (a ? `${a.slice(0, 4)}…${a.slice(-4)}` : '—');
 const when = (iso) => (iso ? iso.replace('T', ' ').replace(/:\d\d(\.\d+)?Z$/, ' UTC') : '—');
 const dt = (iso) => (iso ? iso.slice(0, 10) : '—');
