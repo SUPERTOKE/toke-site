@@ -11,7 +11,6 @@ const MAX_SUPPLY = 420000069;
 
 const EXPLORER_URL = 'https://explorer.mctoken.xyz';
 const BUY_URL = `https://jup.ag/tokens/${MINT}`;
-const X_URL = 'https://x.com/TokeCommunity';
 
 const priceStr = ref('—');
 const mcapStr = ref('—');
@@ -95,7 +94,6 @@ onBeforeUnmount(() => {
       <div class="mc-navspace" />
       <div class="mc-navlinks">
         <a :href="EXPLORER_URL" target="_blank" rel="noopener">Explorer</a>
-        <a :href="X_URL" target="_blank" rel="noopener">X</a>
       </div>
       <a class="mc-btn mc-btn--primary" :href="BUY_URL" @click.prevent="openBuyToke" target="_blank" rel="noopener">Buy $TOKE</a>
     </nav>

@@ -10,6 +10,14 @@ import solflare from '../../assets/logos/trade/app-icons/solflare.png';
 import backpack from '../../assets/logos/trade/app-icons/backpack.png';
 import jupiter from '../../assets/logos/trade/app-icons/jupiter.png';
 import coinbase from '../../assets/logos/trade/app-icons/coinbase.png';
+import okx from '../../assets/logos/trade/app-icons/okx.png';
+import cmc from '../../assets/logos/platforms/app-icons/coinmarketcap.png';
+import dexscreener from '../../assets/logos/platforms/app-icons/dexscreener.png';
+import birdeye from '../../assets/logos/platforms/app-icons/birdeye.png';
+import solscan from '../../assets/logos/explorers/app-icons/solscan.png';
+import orb from '../../assets/logos/explorers/app-icons/orb.png';
+import solanaExplorer from '../../assets/logos/explorers/app-icons/solana-explorer-icon-filled-256.png';
+import tokeMark from '../../assets/logo.png';
 
 const MINT = 'AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo';
 const BUY_URL = `https://jup.ag/tokens/${MINT}`;
@@ -32,9 +40,21 @@ const wallets = [
   { name: 'Backpack', logo: backpack },
 ];
 const venues = [
-  { name: 'Jupiter', logo: jupiter },
-  { name: 'Coinbase', logo: coinbase },
+  { name: 'Jupiter', logo: jupiter, href: BUY_URL },
+  { name: 'Coinbase', logo: coinbase, href: 'https://www.coinbase.com/price/mctoken-solana-amgumqeqw8h74trc8ukkjzzwtxbdps496wh4gly2mcpo-token' },
+  { name: 'OKX', logo: okx, href: `https://www.okx.com/en-us/trade-cedefi/solana/${MINT}` },
 ];
+const markets = [
+  { name: 'CoinMarketCap', logo: cmc, href: 'https://coinmarketcap.com/currencies/mctoken' },
+  { name: 'Dexscreener', logo: dexscreener, href: 'https://dexscreener.com/solana/ad6negrxhsbagwfsttbshmkqgedhotcjzyfwcgrraxc9' },
+  { name: 'Birdeye', logo: birdeye, href: `https://birdeye.so/token/${MINT}?chain=solana` },
+];
+const chain = [
+  { name: 'Solscan', logo: solscan, href: `https://solscan.io/token/${MINT}` },
+  { name: 'Orb', logo: orb, href: `https://orbmarkets.io/token/${MINT}` },
+  { name: 'Solana Explorer', logo: solanaExplorer, href: `https://explorer.solana.com/address/${MINT}` },
+];
+const explorer = [{ name: 'The Explorer', logo: tokeMark, href: EXPLORER_URL }];
 </script>
 
 <template>
@@ -47,15 +67,15 @@ const venues = [
           <ul class="rc-list">
             <li>
               <div><span class="rc-k">The meme</span><span class="rc-t">Moon Man, and a supply number that could only be a joke.</span></div>
-              <span class="rc-v">420,000,069</span>
+              <div class="rc-right"><span class="rc-v">420,000,069</span><span class="rc-icons"><a v-for="m in markets" :key="m.name" :href="m.href" target="_blank" rel="noopener" :title="m.name"><img :src="m.logo" :alt="m.name" /></a></span></div>
             </li>
             <li>
               <div><span class="rc-k">The ledger</span><span class="rc-t">Every wallet that ever touched $TOKE, verifiable on the Explorer.</span></div>
-              <span class="rc-v">{{ holdersStr }} <small>holders</small></span>
+              <div class="rc-right"><span class="rc-v">{{ holdersStr }} <small>holders</small></span><span class="rc-icons"><a v-for="e in explorer" :key="e.name" :href="e.href" target="_blank" rel="noopener" :title="e.name"><img :src="e.logo" :alt="e.name" /></a></span></div>
             </li>
             <li>
               <div><span class="rc-k">The rules</span><span class="rc-t">Mint authority revoked. Votes settle on-chain.</span></div>
-              <span class="rc-v rc-blue">fixed</span>
+              <div class="rc-right"><span class="rc-v rc-blue">fixed</span><span class="rc-icons"><a v-for="c in chain" :key="c.name" :href="c.href" target="_blank" rel="noopener" :title="c.name"><img :src="c.logo" :alt="c.name" /></a></span></div>
             </li>
           </ul>
           <a class="rc-link" :href="EXPLORER_URL" target="_blank" rel="noopener">See the proof on the Explorer →</a>
@@ -73,11 +93,12 @@ const venues = [
             <li>
               <span class="rc-n">02</span>
               <div><b>Swap SOL → $TOKE.</b> <span>Right here, in-page. Fiat? Coinbase.</span></div>
-              <span class="rc-logos"><img v-for="v in venues" :key="v.name" :src="v.logo" :alt="v.name" :title="v.name" /></span>
+              <span class="rc-logos"><a v-for="v in venues" :key="v.name" :href="v.href" target="_blank" rel="noopener" :title="v.name"><img :src="v.logo" :alt="v.name" /></a></span>
             </li>
             <li>
               <span class="rc-n">03</span>
               <div><b>Verify on the Explorer.</b> <span>Your wallet, and every other one.</span></div>
+              <span class="rc-logos"><a :href="EXPLORER_URL" target="_blank" rel="noopener" title="The Explorer"><img :src="tokeMark" alt="The Explorer" /></a></span>
             </li>
           </ol>
           <div class="rc-cta">
@@ -105,7 +126,11 @@ const venues = [
 .rc-h .b { color: var(--mc-blue); }
 
 .rc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.rc-list li { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 13px 0; border-top: 1px solid var(--mc-line); }
+.rc-list li { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 12px 0; border-top: 1px solid var(--mc-line); }
+.rc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: 0 0 auto; }
+.rc-icons { display: flex; gap: 5px; }
+.rc-icons img, .rc-logos img { width: 20px; height: 20px; border-radius: 6px; object-fit: cover; opacity: 0.8; transition: opacity 0.12s var(--mc-ease); display: block; }
+.rc-icons a:hover img, .rc-logos a:hover img { opacity: 1; }
 .rc-list li:last-child { border-bottom: 1px solid var(--mc-line); }
 .rc-k { display: block; font-family: var(--mc-display); font-weight: 600; font-size: 14px; }
 .rc-t { display: block; color: var(--mc-mut); font-size: 13px; line-height: 1.45; margin-top: 2px; }
@@ -123,7 +148,6 @@ const venues = [
 .rc-steps span:not(.rc-n):not(.rc-logos) { color: var(--mc-mut); }
 .rc-n { font-family: var(--mc-mono); font-size: 11px; color: var(--mc-blue); width: 22px; flex: 0 0 auto; }
 .rc-logos { display: flex; gap: 6px; flex: 0 0 auto; }
-.rc-logos img { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; opacity: 0.9; }
 .rc-cta { margin-top: auto; padding-top: 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .rc-btn { font-family: var(--mc-display); font-size: 14px; font-weight: 600; border-radius: 10px; padding: 11px 18px; background: var(--mc-blue); color: var(--mc-blue-ink); text-decoration: none; border: 1px solid var(--mc-blue); white-space: nowrap; }
 .rc-btn:hover { background: #74b1ff; border-color: #74b1ff; }
@@ -134,6 +158,5 @@ const venues = [
   .rc-col--buy { border-left: 0; border-top: 1px solid var(--mc-line); }
   .rc-col { padding: 24px 20px; }
   .rc-list li, .rc-steps li { align-items: flex-start; }
-  .rc-logos { display: none; }
 }
 </style>
