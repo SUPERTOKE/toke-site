@@ -1,5 +1,18 @@
 <script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { subscribeLiveStats } from '../../utils/liveStatsPoll';
+import { statNum } from '../../utils/statsApi';
 const EXPLORER_URL = 'https://explorer.mctoken.xyz';
+const holdersStr = ref('12,993');
+let unsub = null;
+onMounted(() => {
+  unsub = subscribeLiveStats(({ data, error }) => {
+    if (error || !data) return;
+    const n = statNum(data.holderCount ?? data.holders);
+    if (Number.isFinite(n) && n > 0) holdersStr.value = Math.round(n).toLocaleString('en-US');
+  });
+});
+onBeforeUnmount(() => { if (unsub) unsub(); unsub = null; });
 const cards = [
   {
     key: 'meme', title: 'The meme',
@@ -9,7 +22,7 @@ const cards = [
   {
     key: 'substance', title: 'The substance',
     body: 'A real on-chain explorer for every wallet that ever touched $TOKE. Mint authority revoked — the supply can’t inflate.',
-    factLabel: 'Holders · on-chain', factValue: '12,993',
+    factLabel: 'Holders · on-chain', factValue: null,
   },
   {
     key: 'community', title: 'The community',
@@ -38,7 +51,7 @@ const cards = [
           </span>
           <h3 class="wit-card-h">{{ c.title }}</h3>
           <p class="wit-card-p">{{ c.body }}</p>
-          <div class="wit-fact"><span>{{ c.factLabel }}</span><b>{{ c.factValue }}</b></div>
+          <div class="wit-fact"><span>{{ c.factLabel }}</span><b>{{ c.key === 'substance' ? holdersStr : c.factValue }}</b></div>
         </div>
       </div>
 
