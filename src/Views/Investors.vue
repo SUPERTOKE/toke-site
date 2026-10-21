@@ -184,7 +184,7 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
             <div class="row"><span class="k">24h change · price / mcap / liquidity</span><span class="v">{{ spct(od.price_change_h24) }} · {{ spct(od.mcap_change_pct_24h) }} · {{ spct(od.liquidity_change_pct_24h) }}</span></div>
             <div class="row"><span class="k">24h volume</span><span class="v">{{ usd(od.total_volume_h24_usd) }}</span></div>
             <div class="row"><span class="k">Implied market cap</span><span class="v">{{ usd(od.implied_mcap_usd) }}</span></div>
-            <div class="row"><span class="k">Pools priced · used in VWAP</span><span class="v">{{ od.pools ? `${od.pools.length} · ${od.pools.filter((p) => p.in_vwap).length}` : '—' }}</span></div>
+            <div class="row"><span class="k">Pools priced · used in price</span><span class="v">{{ od.pools ? `${od.pools.length} · ${od.pools.filter((p) => p.in_vwap).length}` : '—' }}</span></div>
             <div class="row"><span class="k">Price source</span><span class="v">TOKE oracle · quotes: {{ O && O.source ? Object.entries(O.source).map(([k, v]) => `${String(v).replace('dexscreener', 'DexScreener')}, ${k}`).join(' · ') : '—' }}</span></div>
           </div>
           <div class="asof">Source: TOKE oracle, api.mctoken.xyz/v1/oracle (liquidity-weighted across pools; quotes from DexScreener) · as of {{ when(O && O.as_of) }}</div>
@@ -234,7 +234,7 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
                 <td><span class="tag" :class="{ ok: w.confidence === 'corroborated' }">{{ w.confidence || '—' }}</span></td>
                 <td class="r"><a :href="`${EXPLORER_URL}/?v=${w.address}`" target="_blank" rel="noopener">↗</a></td>
               </tr>
-              <tr v-if="P"><td colspan="2" class="sum">Total DAO-held</td><td class="r m sum">{{ n3(P.treasury.total_balance) }}</td><td class="r m sum">{{ pct(P.treasury.total_pct, 3) }}</td><td colspan="3"></td></tr>
+              <tr v-if="P"><td colspan="2" class="sum">Total in DAO &amp; governance wallets</td><td class="r m sum">{{ n3(P.treasury.total_balance) }}</td><td class="r m sum">{{ pct(P.treasury.total_pct, 3) }}</td><td colspan="3"></td></tr>
             </tbody>
           </table>
         </div>
@@ -317,7 +317,7 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
         <p class="eyebrow"><i />09 · Risk factors</p>
         <h2>Plainly, <b>what could go wrong.</b></h2>
         <div class="risk"><div v-for="r in risks.items" :key="r.t"><b>{{ r.t }}</b>{{ r.d }}</div></div>
-        <div class="asof">Owner-written · counsel-reviewed · last edited {{ risks.lastEdited }}</div>
+        <div class="asof">Owner-written · not counsel-reviewed · last edited {{ risks.lastEdited }}</div>
       </section>
 
       <!-- 10 -->
