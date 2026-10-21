@@ -5,6 +5,14 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/explorer/",
+      "destination": "https://explorer.mctoken.xyz/"
+    },
+    {
+      "source": "/explorer/:path*",
+      "destination": "https://explorer.mctoken.xyz/:path*"
+    },
+    {
       "source": "/xapi/explorer/:path*",
       "destination": "https://explorer.mctoken.xyz/api/v1/:path*"
     },
@@ -46,6 +54,11 @@
     }
   ],
   "redirects": [
+    {
+      "source": "/explorer",
+      "destination": "/explorer/",
+      "permanent": true
+    },
     {
       "source": "/(.*)",
       "has": [

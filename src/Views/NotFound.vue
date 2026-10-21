@@ -1,6 +1,6 @@
 <script setup>
 import moonmanSepia from '../assets/moonman-sepia.jpg';
-const EXPLORER_URL = 'https://explorer.mctoken.xyz';
+const EXPLORER_URL = 'https://mctoken.xyz/explorer/';
 </script>
 
 <template>

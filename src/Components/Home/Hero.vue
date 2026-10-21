@@ -9,7 +9,7 @@ import { openBuyToke, preloadBuyToke } from '../../lib/buyToke';
 const MINT = 'AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo';
 const MAX_SUPPLY = 420000069;
 
-const EXPLORER_URL = 'https://explorer.mctoken.xyz';
+const EXPLORER_URL = 'https://mctoken.xyz/explorer/';
 const BUY_URL = `https://jup.ag/tokens/${MINT}`;
 
 const priceStr = ref('—');
@@ -86,18 +86,15 @@ onBeforeUnmount(() => {
          :style="{ left: s.left, top: s.top, opacity: s.opacity, transform: `scale(${s.scale})` }" />
     </div>
 
-    <nav class="mc-nav">
-      <a class="mc-brand" href="/">
-        <img class="mc-mark" :src="moonman" alt="McToken" width="34" height="34" />
-        <span class="mc-wordmark">McToken</span>
-      </a>
-      <div class="mc-navspace" />
-      <div class="mc-navlinks">
+    <nav class="mcx-nav">
+      <a class="mcx-brand" href="/"><img :src="moonman" alt="McToken" width="34" height="34" /><span>McToken</span></a>
+      <span class="mcx-space" />
+      <div class="mcx-links">
         <a href="/" class="on" aria-current="page">Home</a>
-        <a :href="EXPLORER_URL" target="_blank" rel="noopener">Explorer</a>
+        <a :href="EXPLORER_URL">Explorer</a>
         <a href="/investors">Report</a>
       </div>
-      <a class="mc-btn mc-btn--primary" :href="BUY_URL" @click.prevent="openBuyToke" target="_blank" rel="noopener">Buy $TOKE</a>
+      <a class="mcx-btn" :href="BUY_URL" @click.prevent="openBuyToke" target="_blank" rel="noopener">Buy $TOKE</a>
     </nav>
 
     <div class="mc-hero-body">
@@ -168,18 +165,6 @@ onBeforeUnmount(() => {
 .mc-stars { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
 .mc-stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #9fb4d8; }
 
-.mc-nav {
-  position: relative; z-index: 5;
-  display: flex; align-items: center; gap: 24px;
-  max-width: 1180px; margin: 0 auto; width: 100%; padding: 20px 22px;
-}
-.mc-brand { display: flex; align-items: center; gap: 11px; text-decoration: none; }
-.mc-mark { border-radius: 8px; display: block; }
-.mc-wordmark { font-family: var(--mc-display); font-weight: 700; font-size: 19px; letter-spacing: -0.3px; color: var(--mc-text); }
-.mc-navlinks { display: flex; gap: 26px; margin-right: 6px; font-family: var(--mc-mono); font-size: 11.5px; letter-spacing: 2px; text-transform: uppercase; }
-.mc-navlinks a { color: var(--mc-mut); text-decoration: none; transition: color 0.12s var(--mc-ease); }
-.mc-navlinks a:hover, .mc-navlinks a.on { color: var(--mc-text); }
-.mc-navspace { flex: 1; }
 
 .mc-btn {
   font-family: var(--mc-display); font-size: 13.5px; font-weight: 500;
@@ -232,8 +217,6 @@ onBeforeUnmount(() => {
 @keyframes mc-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
 @media (max-width: 760px) {
-  .mc-navlinks { gap: 14px; margin-right: 0; }
-  .mc-nav { gap: 14px; }
   .mc-strip-in { grid-template-columns: repeat(2, 1fr); }
   .mc-stat { border-bottom: 1px solid var(--mc-line); }
 }

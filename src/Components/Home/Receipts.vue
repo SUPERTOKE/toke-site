@@ -21,7 +21,7 @@ import tokeMark from '../../assets/logo.png';
 
 const MINT = 'AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo';
 const BUY_URL = `https://jup.ag/tokens/${MINT}`;
-const EXPLORER_URL = 'https://explorer.mctoken.xyz';
+const EXPLORER_URL = 'https://mctoken.xyz/explorer/';
 
 const holdersStr = ref('—');
 let unsub = null;

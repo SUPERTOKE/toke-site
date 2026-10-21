@@ -1,0 +1,38 @@
+/* McToken shared chrome — header + footer for mctoken.xyz, /explorer and /investors.
+   Single source: served from https://mctoken.xyz/chrome.css and loaded by every page. Self-contained tokens. */
+:root{--mcx-bg:#0a0c10;--mcx-panel:#13161d;--mcx-line:#242a33;--mcx-text:#e7eaef;--mcx-mut:#8b94a3;--mcx-mut2:#5b6472;--mcx-blue:#5aa2ff;--mcx-ink:#0a0c10;
+  --mcx-display:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;--mcx-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;--mcx-sans:'Inter',ui-sans-serif,system-ui,-apple-system,sans-serif}
+
+/* header */
+.mcx-nav{position:relative;z-index:5;display:flex;align-items:center;gap:24px;max-width:1180px;margin:0 auto;width:100%;padding:20px 22px;box-sizing:border-box}
+.mcx-brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--mcx-text)}
+.mcx-brand img{width:34px;height:34px;border-radius:8px;display:block;object-fit:cover}
+.mcx-brand span{font-family:var(--mcx-display);font-weight:700;font-size:19px;letter-spacing:-.3px;color:var(--mcx-text)}
+.mcx-space{flex:1}
+.mcx-links{display:flex;gap:26px;margin-right:6px;font-family:var(--mcx-mono);font-size:11.5px;letter-spacing:2px;text-transform:uppercase}
+.mcx-links a{color:var(--mcx-mut);text-decoration:none;transition:color .12s ease}
+.mcx-links a:hover,.mcx-links a.on{color:var(--mcx-text)}
+.mcx-btn{font-family:var(--mcx-display);font-size:13.5px;font-weight:600;border-radius:10px;padding:9px 16px;background:var(--mcx-blue);color:var(--mcx-ink);text-decoration:none;white-space:nowrap;border:1px solid var(--mcx-blue)}
+.mcx-btn:hover{filter:brightness(1.08);color:var(--mcx-ink)}
+
+/* footer */
+.mcx-foot{background:var(--mcx-bg);border-top:1px solid var(--mcx-line);font-family:var(--mcx-sans)}
+.mcx-foot-in{max-width:1180px;margin:0 auto;padding:22px 22px 20px;box-sizing:border-box}
+.mcx-foot-bar{display:flex;align-items:center;gap:24px}
+.mcx-foot-bar .mcx-links{margin-left:10px;gap:22px;font-size:11px}
+.mcx-links a.prov{color:var(--mcx-mut2)}.mcx-links a.prov:hover{color:var(--mcx-text)}
+.mcx-social{display:flex;gap:8px}
+.mcx-social a{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;border:1px solid var(--mcx-line);background:var(--mcx-panel);color:var(--mcx-mut);text-decoration:none;transition:border-color .12s ease,color .12s ease}
+.mcx-social a:hover{border-color:var(--mcx-mut);color:var(--mcx-text)}
+.mcx-social img{width:20px;height:20px;border-radius:6px;object-fit:cover;display:block}
+.mcx-status{display:inline-flex;align-items:center;gap:7px;font-family:var(--mcx-mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mcx-mut);text-decoration:none;white-space:nowrap}
+.mcx-status:hover{color:var(--mcx-text)}
+.mcx-sdot{width:8px;height:8px;border-radius:50%;background:var(--mcx-mut2);display:inline-block}
+.mcx-sdot.ok{background:#34d399}.mcx-sdot.warn{background:#e7b84a}.mcx-sdot.down{background:#ff6b6b}
+.mcx-disc{margin:14px 0 0;font-size:11px;color:var(--mcx-mut2)}
+
+@media(max-width:760px){
+  .mcx-nav{padding:14px 16px;gap:14px}.mcx-links{gap:14px;margin-right:0}
+  .mcx-foot-bar{flex-wrap:wrap;gap:14px}.mcx-foot-bar .mcx-links{margin-left:0}.mcx-foot-bar .mcx-space{display:none}.mcx-status{margin-left:auto}
+}
+@media print{.mcx-nav,.mcx-foot{display:none!important}}

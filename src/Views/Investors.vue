@@ -26,7 +26,7 @@ const dexIcon = (d) => DEX_ICON[String(d || '').toLowerCase()] || null;
 const tokIcon = (t) => TOK_ICON[String(t || '').toUpperCase()] || null;
 const DEX_NAME = { meteora: 'Meteora', raydium: 'Raydium', orca: 'Orca', jupiter: 'Jupiter' };
 const dexName = (d) => DEX_NAME[String(d || '').toLowerCase()] || String(d || '—');
-const EXPLORER_URL = 'https://explorer.mctoken.xyz';
+const EXPLORER_URL = 'https://mctoken.xyz/explorer/';
 const API = 'https://explorer.mctoken.xyz/api/v1';
 
 const P = ref(null);          // prospectus.json
@@ -41,6 +41,7 @@ const jf = async (u) => { const r = await fetch(u, { cache: 'no-cache' }); if (!
 const first = async (...urls) => { for (const u of urls) { try { return await jf(u); } catch { /* next */ } } return null; };
 
 onMounted(async () => {
+  document.title = 'McToken — Tokenholder Report';
   unsub = subscribeLiveStats(({ data, error }) => {
     if (error || !data) return;
     const p = statNum(data.price), m = statNum(data.marketCap), h = statNum(data.holderCount ?? data.holders);
@@ -111,12 +112,12 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
 
 <template>
   <div class="iv">
-    <nav class="iv-nav">
-      <a class="iv-brand" href="/"><img :src="moonman" alt="McToken" width="34" height="34" /><span>McToken</span></a>
-      <span class="iv-space" />
-      <div class="iv-links">
+    <nav class="mcx-nav">
+      <a class="mcx-brand" href="/"><img :src="moonman" alt="McToken" width="34" height="34" /><span>McToken</span></a>
+      <span class="mcx-space" />
+      <div class="mcx-links">
         <a href="/">Home</a>
-        <a :href="EXPLORER_URL" target="_blank" rel="noopener">Explorer</a>
+        <a :href="EXPLORER_URL">Explorer</a>
         <a href="/investors" aria-current="page" class="on">Report</a>
       </div>
     </nav>
@@ -375,14 +376,6 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
 
 <style scoped>
 .iv { background: var(--mc-bg); color: var(--mc-text); font-family: var(--mc-sans); min-height: 100vh; }
-.iv-nav { max-width: 1180px; margin: 0 auto; padding: 20px 22px; display: flex; align-items: center; gap: 24px; }
-.iv-brand { display: flex; align-items: center; gap: 11px; text-decoration: none; color: var(--mc-text); }
-.iv-brand img { border-radius: 8px; display: block; }
-.iv-brand span { font-family: var(--mc-display); font-weight: 700; font-size: 19px; letter-spacing: -0.3px; }
-.iv-space { flex: 1; }
-.iv-links { display: flex; gap: 26px; margin-right: 6px; font-family: var(--mc-mono); font-size: 11.5px; letter-spacing: 2px; text-transform: uppercase; }
-.iv-links a { color: var(--mc-mut); text-decoration: none; } .iv-links a.on, .iv-links a:hover { color: var(--mc-text); }
-.iv-btn { font-family: var(--mc-display); font-size: 13.5px; font-weight: 600; border-radius: 10px; padding: 9px 16px; background: var(--mc-blue); color: var(--mc-blue-ink); text-decoration: none; white-space: nowrap; }
 .iv-main { max-width: 1180px; margin: 0 auto; padding: 28px 22px 60px; }
 
 .eyebrow { font-family: var(--mc-mono); font-size: 10.5px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--mc-blue); display: flex; align-items: center; gap: 8px; margin: 0; }
@@ -459,7 +452,6 @@ td.sum { color: var(--mc-text); font-weight: 600; }
 a { color: var(--mc-blue); }
 
 @media (max-width: 820px) {
-  .iv-links { gap: 14px; }
   .iv-title, .two { grid-template-columns: 1fr; }
   td .sub.m { display: none; }
   td .sub { white-space: nowrap; }
