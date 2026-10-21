@@ -93,6 +93,7 @@ onBeforeUnmount(() => {
       </a>
       <div class="mc-navspace" />
       <div class="mc-navlinks">
+        <a href="/" class="on" aria-current="page">Home</a>
         <a :href="EXPLORER_URL" target="_blank" rel="noopener">Explorer</a>
         <a href="/investors">Report</a>
       </div>
@@ -177,7 +178,7 @@ onBeforeUnmount(() => {
 .mc-wordmark { font-family: var(--mc-display); font-weight: 700; font-size: 19px; letter-spacing: -0.3px; color: var(--mc-text); }
 .mc-navlinks { display: flex; gap: 26px; margin-right: 6px; font-family: var(--mc-mono); font-size: 11.5px; letter-spacing: 2px; text-transform: uppercase; }
 .mc-navlinks a { color: var(--mc-mut); text-decoration: none; transition: color 0.12s var(--mc-ease); }
-.mc-navlinks a:hover { color: var(--mc-text); }
+.mc-navlinks a:hover, .mc-navlinks a.on { color: var(--mc-text); }
 .mc-navspace { flex: 1; }
 
 .mc-btn {
@@ -231,7 +232,7 @@ onBeforeUnmount(() => {
 @keyframes mc-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
 @media (max-width: 760px) {
-  .mc-navlinks { display: none; }
+  .mc-navlinks { gap: 14px; margin-right: 0; }
   .mc-nav { gap: 14px; }
   .mc-strip-in { grid-template-columns: repeat(2, 1fr); }
   .mc-stat { border-bottom: 1px solid var(--mc-line); }

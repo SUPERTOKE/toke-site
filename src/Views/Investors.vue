@@ -115,6 +115,7 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
       <a class="iv-brand" href="/"><img :src="moonman" alt="McToken" width="34" height="34" /><span>McToken</span></a>
       <span class="iv-space" />
       <div class="iv-links">
+        <a href="/">Home</a>
         <a :href="EXPLORER_URL" target="_blank" rel="noopener">Explorer</a>
         <a href="/investors" aria-current="page" class="on">Report</a>
       </div>
