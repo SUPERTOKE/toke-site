@@ -74,13 +74,13 @@ export const roadmap = {
 };
 
 export const contributors = {
-  lastEdited: '2026-10-14',
+  lastEdited: '2026-10-21',
   note: 'Roles, not identities. Pseudonymous where that is the norm. Nothing from the private knowledge base is ever published.',
   items: [
-    { role: 'Counsel · TokeUP DAO', who: '[OG]' },
-    { role: 'Infrastructure and data', who: '[OG]' },
-    { role: 'Community and X', who: '[OG]' },
-    { role: 'Council', who: '[n] elected members' },
+    { role: 'Council', who: '5 elected members' },
+    { role: 'Counsel · TokeUP DAO', who: 'engaged (pseudonymous); this page not yet reviewed' },
+    { role: 'Infrastructure and data', who: 'one operator (OG, pseudonymous)' },
+    { role: 'Community and X', who: 'one operator (OG, pseudonymous)' },
   ],
 };
 
