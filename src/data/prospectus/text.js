@@ -81,9 +81,8 @@ export const contributors = {
   note: 'Pseudonymous where that is the norm. Nothing from the private knowledge base is ever published.',
   items: [
     { role: 'Council', who: '5 elected members' },
-    { role: 'Counsel · TokeUP DAO', who: 'engaged (pseudonymous); this page not yet reviewed' },
-    { role: 'Infrastructure and data', who: 'one operator (OG, pseudonymous)' },
-    { role: 'Community and X', who: 'one operator (OG, pseudonymous)' },
+    { role: 'Infrastructure and data', who: 'supertoke.sol' },
+    { role: 'Community and X', who: 'pulselabs.sol' },
   ],
 };
 
