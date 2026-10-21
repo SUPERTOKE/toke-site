@@ -456,5 +456,11 @@ a { color: var(--mc-blue); }
   .row .k, .body, .lede, .tl .t, .legend, .asof, .sub, th { color: #444; }
   h1 b, h2 b, .blue { color: #1f5fbf; } .teal, .tag.ok, .chip.ok { color: #0b7a5a; }
   a { color: #1f5fbf; text-decoration: none; }
+  b, strong, .sum, .legend b, .note b, .tl .t b, .body b, .stat .l, .classes .l, .row .v, td, .m, .k, .risk b, .archive .l { color: #111; }
+  .tag.no { color: #8a2b2b; border-color: #c99; } .tag, .chip { background: #fff; }
+  .classes .bar { border: 1px solid #ccc; }
+  .policy, .note { color: #333; }
+  .pair img { background: #fff; outline-color: #fff; }
+  @page { margin: 14mm; }
 }
 </style>
