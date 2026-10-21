@@ -63,10 +63,10 @@ export const risks = {
 };
 
 export const roadmap = {
-  lastEdited: '2026-10-14',
+  lastEdited: '2026-10-21',
   items: [
-    { state: 'done', t: 'Reporting layer', d: 'This report, the audited pipeline, the Explorer, the oracle and the status page.' },
-    { state: 'in progress', t: 'Treasury and legal scaffolding', d: 'Written treasury policy, published signers, a legal wrapper for the DAO treasury.' },
+    { state: 'done', t: 'Reporting layer', d: 'This report, the self-checking pipeline, the Explorer, the oracle and the status page. Every figure carries its source and a timestamp.' },
+    { state: 'in progress', t: 'Treasury and governance scaffolding', d: 'Treasury policy published (this page, 2026-10-21). Next: a multisig for the council wallet, a written spend rule, and a formal proposal threshold and notice period — all before the 2027 vote.' },
     { state: 'next', t: 'Revenue engine', d: 'A TOKE-native fee source. Until one exists, revenue is reported as none.' },
     { state: 'later', t: 'Buyback / burn policy', d: 'A published rule, executed on-chain and reported here — only once there is revenue to fund it.' },
     { state: 'optional', t: 'Public-vehicle optionality', d: 'Keep reporting in a diligence-ready shape. No action planned.' },
