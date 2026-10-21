@@ -67,7 +67,7 @@ const classes = computed(() => {
     { k: 'Treasury & governance', v: c['treasury-gov'], color: '#9b8cff' },
     { k: 'Programs & routers', v: c['program'], color: '#e7b84a' },
     { k: 'Top-100 people', v: c['top100-people'], color: '#5ad1b3' },
-    { k: 'Everyone else', v: c['rest'], color: '#2e3540' },
+    { k: 'All other people', v: c['rest'], color: '#2e3540' },
   ].filter((x) => Number.isFinite(+x.v));
 });
 const treasuryPct = computed(() => P.value && P.value.treasury ? pct(P.value.treasury.total_pct) : '—');
@@ -183,8 +183,8 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
           <div class="panel rows">
             <div class="row"><span class="k">Wallets that ever held $TOKE</span><span class="v">{{ n0(P && P.holders.universe) }}</span></div>
             <div class="row"><span class="k">Current holders (balance &gt; 0)</span><span class="v">{{ n0(P && P.holders.holders) }}</span></div>
-            <div class="row"><span class="k">New wallets · 1d / 7d / 30d</span><span class="v">{{ P ? ['1d', '7d', '30d'].map((f) => n0(P.holders.growth[f] && P.holders.growth[f].new_wallets)).join(' / ') : '—' }}</span></div>
-            <div class="row"><span class="k">Holders with a domain name</span><span class="v">{{ n0(P && P.holders.with_domains.total) }} <small>({{ n0(P && P.holders.with_domains.sol) }} .sol · {{ n0(P && P.holders.with_domains.ans) }} ANS)</small></span></div>
+            <div class="row"><span class="k">First-time wallets · 1d / 7d / 30d</span><span class="v">{{ P ? ['1d', '7d', '30d'].map((f) => n0(P.holders.growth[f] && P.holders.growth[f].new_wallets)).join(' / ') : '—' }}</span></div>
+            <div class="row"><span class="k">Holders with a domain name</span><span class="v">{{ n0(P && P.holders.with_domains.total) }} <small>(.sol {{ n0(P && P.holders.with_domains.sol) }} · ANS {{ n0(P && P.holders.with_domains.ans) }} · some both)</small></span></div>
             <div class="row"><span class="k">Top-10 / 50 / 100 — all wallets</span><span class="v">{{ P ? [10, 50, 100].map((n) => pct(P.holders.concentration_all[`top${n}_pct`], 1)).join(' / ') : '—' }}</span></div>
             <div class="row"><span class="k">Top-10 / 50 / 100 — people only</span><span class="v">{{ P ? [10, 50, 100].map((n) => pct(P.holders.concentration_people[`top${n}_pct`], 1)).join(' / ') : '—' }}</span></div>
           </div>
@@ -194,6 +194,7 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
             <div class="legend">
               <span v-for="c in classes" :key="c.k"><i :style="{ background: c.color }" />{{ c.k }} <b>{{ pct(c.v, 1) }}</b></span>
             </div>
+            <p class="note" v-if="P && P.holders.class_pct">Plainly: excluding pools, programs and treasury wallets, the 100 largest people hold <b>{{ pct(P.holders.class_pct['top100-people'], 0) }}</b> of supply and all other people hold <b>{{ pct(P.holders.class_pct['rest'], 0) }}</b>.</p>
             <div class="asof">"People" = wallets not labelled as a pool, program or treasury. Labels are proven on-chain (labels.json).</div>
           </div>
         </div>
@@ -377,6 +378,8 @@ h1 b, h2 b { color: var(--mc-blue); font-weight: 700; }
 .body { color: var(--mc-mut); font-size: 14px; line-height: 1.6; max-width: 760px; margin: 0 0 20px; }
 .body.small { font-size: 12.5px; line-height: 1.6; margin: 12px 0 0; }
 .body b { color: var(--mc-text); }
+.note { color: var(--mc-mut); font-size: 13px; line-height: 1.55; margin: 12px 0 4px; }
+.note b { color: var(--mc-text); font-family: var(--mc-mono, inherit); }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
 .two.tight { gap: 20px; }
 .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
