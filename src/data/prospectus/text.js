@@ -8,13 +8,14 @@
  */
 
 export const summary = {
-  lastEdited: '2026-10-14',
+  lastEdited: '2026-10-21',
   text:
-    '$TOKE (McToken) is a community-run SPL token on Solana, first seen on-chain in June 2023, with a fixed ' +
-    'supply of 420,000,069, mint authority revoked, three completed annual governance votes, and a public ' +
-    'ledger of every wallet that has ever held it. There is no revenue-generating product today. This page ' +
-    'states what is provable on-chain and nothing else; it is regenerated every six hours by the same ' +
-    'audited pipeline that feeds the Explorer.',
+    '$TOKE (McToken) is a community-run SPL token on Solana, first seen on-chain in June 2023, with a capped ' +
+    'supply of 420,000,069 (0.07% burned, mint authority revoked), three annual on-chain governance votes — the ' +
+    'latest of which passed — and a public ledger of every wallet that has ever held it. There is no ' +
+    'revenue-generating product today. Figures on this page are generated from public on-chain data and named ' +
+    'market sources; prose sections are owner-written and dated. The page is regenerated every six hours by the ' +
+    'same self-checking pipeline that feeds the Explorer.',
 };
 
 export const treasuryPolicy = {

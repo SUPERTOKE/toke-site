@@ -70,6 +70,13 @@ const classes = computed(() => {
   ].filter((x) => Number.isFinite(+x.v));
 });
 const treasuryPct = computed(() => P.value && P.value.treasury ? pct(P.value.treasury.total_pct) : '—');
+// DAO treasury proper (treasury/dao wallets) vs the Realms governance escrow (members' voting deposits)
+const treSplit = computed(() => {
+  const ws = P.value && P.value.treasury && P.value.treasury.wallets;
+  if (!ws) return { dao: '—', escrow: '—' };
+  const sum = (f) => ws.filter(f).reduce((a, w) => a + (num(w.pct) || 0), 0);
+  return { dao: pct(sum((w) => w.category !== 'governance')), escrow: pct(sum((w) => w.category === 'governance')) };
+});
 const opsOk = computed(() => (S.value && S.value.current && S.value.current.overall) || 'idle');
 const statusDays = computed(() => {
   const h = (S.value && (S.value.history || S.value.days)) || [];
@@ -126,10 +133,10 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
         <p class="body">{{ summary.text }}</p>
         <div class="stats">
           <div class="panel stat"><div class="l">Price</div><div class="n blue">{{ live.price }}</div><div class="s" :class="live.change != null ? (live.change >= 0 ? 'up' : 'down') : ''">{{ live.change != null ? `24h ${live.change >= 0 ? '+' : ''}${live.change.toFixed(1)}%` : 'live' }}</div></div>
-          <div class="panel stat"><div class="l">Market cap</div><div class="n">{{ live.mcap }}</div><div class="s">fully diluted</div></div>
+          <div class="panel stat"><div class="l">Market cap</div><div class="n">{{ live.mcap }}</div><div class="s">price × supply</div></div>
           <div class="panel stat"><div class="l">Holders</div><div class="n">{{ live.holders }}</div><div class="s">on-chain</div></div>
           <div class="panel stat"><div class="l">Liquidity</div><div class="n">{{ usd(od.total_pool_liquidity_usd) }}</div><div class="s">{{ od.pools ? od.pools.length : '—' }} pools</div></div>
-          <div class="panel stat"><div class="l">Treasury</div><div class="n purple">{{ treasuryPct }}</div><div class="s">of supply, DAO-held</div></div>
+          <div class="panel stat"><div class="l">DAO treasury</div><div class="n purple">{{ treSplit.dao }}</div><div class="s">of supply · {{ treSplit.escrow }} in governance escrow</div></div>
         </div>
         <div class="asof">Source: oracle (live) · prospectus.json · last edited {{ summary.lastEdited }}</div>
       </section>
