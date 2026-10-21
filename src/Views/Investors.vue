@@ -344,7 +344,7 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
           <div class="panel body small">
             {{ disclosures.text }}
             <div class="archive">
-              <span class="l">Quarterly editions</span>
+              <span class="l">Quarterly editions (frozen data, JSON)</span>
               <a v-for="e in editions" :key="e" class="tag" :href="pdfUrl(e)" target="_blank" rel="noopener">{{ e }} ↗</a>
               <span v-if="!editions.length" class="tag no">first edition freezes at quarter close</span>
               <a class="tag" href="https://github.com/ogxrish/mctoken-site/commits/main/src/data/prospectus" target="_blank" rel="noopener">changelog ↗</a>

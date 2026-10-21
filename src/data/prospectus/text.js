@@ -85,10 +85,12 @@ export const contributors = {
 };
 
 export const disclosures = {
-  lastEdited: '2026-10-14',
+  lastEdited: '2026-10-21',
   text:
     'This report is informational. It is not an offer to sell or a solicitation to buy any token or security, ' +
-    'and nothing here is investment, legal or tax advice. Figures are generated from public on-chain data by an ' +
-    'automated pipeline and may contain errors; each carries a source and a timestamp. Past activity does not ' +
-    'indicate future results. [counsel to finalize]',
+    'and nothing here is investment, legal or tax advice. Figures are generated from public on-chain data and ' +
+    'named market sources by an automated pipeline and may contain errors; each carries a source and a timestamp. ' +
+    'Prose sections are written by the operator and dated; no part of this page has been reviewed by counsel. ' +
+    'Past activity does not indicate future results. The quarterly editions below are frozen copies of the data ' +
+    'as published on the first run of each quarter.',
 };
