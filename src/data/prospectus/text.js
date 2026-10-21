@@ -21,13 +21,16 @@ export const summary = {
 export const treasuryPolicy = {
   lastEdited: '2026-10-21',
   text:
-    'Four wallets hold or have held DAO funds. The TOKE Council treasury (tokecouncil.sol) received 28,474,786 ' +
+    'DAO-related wallets fall into three tiers: (1) council-controlled — the TOKE Council wallet and the Align ' +
+    'org wallet; (2) member-controlled escrow — the Realms deposits, owned by the individuals who deposited them; ' +
+    '(3) member-controlled individual — every wallet that has voted in a DAO proposal, including council members\' ' +
+    'own wallets, shown only in aggregate. The TOKE Council treasury (tokecouncil.sol) received 28,474,786 ' +
     '$TOKE from the McVault under TIP-4, approved on-chain on 2026-04-23 after the 2026 Great McVote passed; it is ' +
-    'a standard wallet whose signing key is held by the council. Its only spend to date is the vote payout: on ' +
+    'held by the elected council; today it is a standard wallet with a single signing key. Its only spend to date is the vote payout: on ' +
     '2026-04-28 it distributed 13,742,077 $TOKE to 43 of the 44 wallets on the 2026 McVote roll; the 44th is the ' +
     'council wallet itself, which voted with 10,000,000 $TOKE and took no allocation. The Align org ' +
     'wallet is the DAO\'s earlier ' +
-    'treasury under the Align governance program and has been dormant since January 2025. The McVault is the ' +
+    'treasury, program-governed under Align (multisig-style), dormant since January 2025. The McVault is the ' +
     'original Realms treasury, emptied by TIP-4. The Realms escrow is not treasury: it holds members\' voting ' +
     'deposits, which depositors withdraw at will. There is no written spend rule yet. Until the council adopts ' +
     'one, this table is the policy: every balance and 30-day flow is published on each run, and any movement out ' +

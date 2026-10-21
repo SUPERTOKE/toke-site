@@ -87,6 +87,10 @@ const classes = computed(() => {
   ].filter((x) => Number.isFinite(+x.v));
 });
 const treasuryPct = computed(() => P.value && P.value.treasury ? pct(P.value.treasury.total_pct) : '—');
+const TIERS = { 1: 'council-controlled', 2: 'member-controlled escrow', 3: 'member-controlled individual' };
+const tierOf = (w) => w.tier || (w.category === 'governance' ? 2 : 1);
+const tierName = (t) => TIERS[t] || '—';
+const mem = computed(() => (P.value && P.value.treasury && P.value.treasury.members) || null);
 // DAO treasury proper (treasury/dao wallets) vs the Realms governance escrow (members' voting deposits)
 const treSplit = computed(() => {
   const ws = P.value && P.value.treasury && P.value.treasury.wallets;
@@ -223,9 +227,10 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
         <h2>Where the DAO's tokens sit, <b>live.</b></h2>
         <div class="panel scroll">
           <table>
-            <thead><tr><th>Wallet</th><th>Role</th><th class="r">$TOKE balance</th><th class="r">% supply</th><th class="r">30d net flow</th><th>Proof</th><th></th></tr></thead>
+            <thead><tr><th>Control</th><th>Wallet</th><th>Role</th><th class="r">$TOKE balance</th><th class="r">% supply</th><th class="r">30d net flow</th><th>Proof</th><th></th></tr></thead>
             <tbody>
               <tr v-for="w in (P ? P.treasury.wallets : [])" :key="w.address">
+                <td><span class="tier" :class="`t${tierOf(w)}`">{{ tierOf(w) }}</span><div class="sub">{{ tierName(tierOf(w)) }}</div></td>
                 <td><div class="m">{{ w.sns || short(w.address) }}</div><div class="m sub">{{ w.address }}</div></td>
                 <td>{{ w.name }}<div class="sub">{{ w.display }}</div></td>
                 <td class="r m">{{ n3(w.balance) }}</td>
@@ -234,7 +239,16 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
                 <td><span class="tag" :class="{ ok: w.confidence === 'corroborated' }">{{ w.confidence || '—' }}</span></td>
                 <td class="r"><a :href="`${EXPLORER_URL}/?v=${w.address}`" target="_blank" rel="noopener">↗</a></td>
               </tr>
-              <tr v-if="P"><td colspan="2" class="sum">Total in DAO &amp; governance wallets</td><td class="r m sum">{{ n3(P.treasury.total_balance) }}</td><td class="r m sum">{{ pct(P.treasury.total_pct, 3) }}</td><td colspan="3"></td></tr>
+              <tr v-if="P"><td colspan="3" class="sum">Total in council and escrow wallets (tiers 1–2)</td><td class="r m sum">{{ n3(P.treasury.total_balance) }}</td><td class="r m sum">{{ pct(P.treasury.total_pct, 3) }}</td><td colspan="3"></td></tr>
+              <tr v-if="P">
+                <td><span class="tier t3">3</span><div class="sub">{{ tierName(3) }}</div></td>
+                <td colspan="2">DAO members — every wallet that has voted in a McToken DAO proposal<div class="sub">{{ mem ? `${n0(mem.wallets)} wallets · ${n0(mem.holding)} still holding · ${mem.proposals} proposals` : 'aggregate only · available after the next pipeline run' }}</div></td>
+                <td class="r m">{{ mem ? n3(mem.balance) : '—' }}</td>
+                <td class="r m">{{ mem ? pct(mem.pct, 3) : '—' }}</td>
+                <td class="r m">—</td>
+                <td><span class="tag ok" v-if="mem">on-chain rolls</span></td>
+                <td class="r"><a :href="`https://app.realms.today/dao/${REALM}`" target="_blank" rel="noopener" title="McToken DAO on Realms">↗</a></td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -398,6 +412,8 @@ h1 b, h2 b { color: var(--mc-blue); font-weight: 700; }
 .body b { color: var(--mc-text); }
 .note { color: var(--mc-mut); font-size: 13px; line-height: 1.55; margin: 12px 0 4px; }
 .note b { color: var(--mc-text); font-family: var(--mc-mono, inherit); }
+.tier { display: inline-block; min-width: 20px; padding: 2px 7px; border-radius: 6px; font-family: var(--mc-mono); font-size: 11px; text-align: center; border: 1px solid var(--mc-line); color: var(--mc-text); }
+.tier.t1 { border-color: #9b8cff; color: #9b8cff; } .tier.t2 { border-color: #5aa2ff; color: #5aa2ff; } .tier.t3 { border-color: #5ad1b3; color: #5ad1b3; }
 .ent { display: inline-flex; align-items: center; gap: 8px; }
 .ent img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
 .pair { display: inline-flex; align-items: center; gap: 6px; }
