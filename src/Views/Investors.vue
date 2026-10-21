@@ -10,6 +10,7 @@ import { summary, treasuryPolicy, governanceHow, risks, roadmap, contributors, d
 const Footer = defineAsyncComponent(() => import('../Components/Footer.vue'));
 
 const MINT = 'AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo';
+const REALM = 'BEmzTQaiwyj69uvxmdL9fSEuETg9vsVrRDAkmDE1HWTD'; // McToken DAO on Realms
 const EXPLORER_URL = 'https://explorer.mctoken.xyz';
 const API = 'https://explorer.mctoken.xyz/api/v1';
 
@@ -242,7 +243,7 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
                   <td class="r m">{{ pct(v.turnout_pct, 1) }}</td>
                   <td class="r m">{{ pct(v.yes_pct_of_supply, 1) }}</td>
                   <td><span class="tag" :class="v.passed ? 'ok' : 'no'">{{ v.passed ? 'passed' : 'quorum missed' }}</span></td>
-                  <td class="r"><a v-if="v.proposal" :href="`https://app.realms.today/dao/${P.governance.program}/proposal/${v.proposal}`" target="_blank" rel="noopener" title="Proposal on Realms">↗</a></td>
+                  <td class="r"><a v-if="v.proposal" :href="`https://app.realms.today/dao/${REALM}/proposal/${v.proposal}`" target="_blank" rel="noopener" title="Proposal on Realms">↗</a></td>
                 </tr>
               </tbody>
             </table>
@@ -250,7 +251,8 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
           <div class="panel tl">
             <div><span class="d">Mechanism</span><span class="t">{{ governanceHow.mechanism }}</span></div>
             <div><span class="d">Quorum</span><span class="t"><b>{{ P ? P.governance.quorum_pct : 60 }}% of supply</b> voting Yes.</span></div>
-            <div><span class="d">Escrow</span><span class="t"><b>{{ P && P.governance.escrow.length ? n3(P.governance.escrow[0].balance) : '—' }} $TOKE</b> held in the Realms governance escrow.</span></div>
+            <div><span class="d">Escrow</span><span class="t"><b>{{ P && P.governance.escrow.length ? n3(P.governance.escrow[0].balance) : '—' }} $TOKE</b> in the Realms governance escrow — members' voting deposits, withdrawable by each depositor; not treasury.</span></div>
+            <div><span class="d">Delivered</span><span class="t">The 2026 vote unlocked <b>28,474,786 $TOKE</b> from the McVault to the council (TIP-4, 2026-04-23); <b>13,742,077 $TOKE</b> was paid to voters on 2026-04-28 <a :href="`https://app.realms.today/dao/${REALM}/proposal/7Xk2w2q4mGTy66UEW59NHkJb3ixwimra3CGspdRr174d`" target="_blank" rel="noopener" title="TIP-4 execution proposal on Realms">↗</a></span></div>
             <div><span class="d">Proposals</span><span class="t">{{ governanceHow.proposals }}</span></div>
             <div><span class="d">Next vote</span><span class="t"><b>{{ P ? P.governance.next_vote : '2027-04-20' }}.</b> {{ governanceHow.nextAgenda }}</span></div>
           </div>

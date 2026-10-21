@@ -24,7 +24,8 @@ export const treasuryPolicy = {
     'Four wallets hold or have held DAO funds. The TOKE Council treasury (tokecouncil.sol) received 28,474,786 ' +
     '$TOKE from the McVault under TIP-4, approved on-chain on 2026-04-23 after the 2026 Great McVote passed; it is ' +
     'a standard wallet whose signing key is held by the council. Its only spend to date is the vote payout: on ' +
-    '2026-04-28 it distributed 13,742,077 $TOKE to 43 of the 44 wallets on the 2026 McVote roll. The Align org ' +
+    '2026-04-28 it distributed 13,742,077 $TOKE to 43 of the 44 wallets on the 2026 McVote roll; the 44th is the ' +
+    'council wallet itself, which voted with 10,000,000 $TOKE and took no allocation. The Align org ' +
     'wallet is the DAO\'s earlier ' +
     'treasury under the Align governance program and has been dormant since January 2025. The McVault is the ' +
     'original Realms treasury, emptied by TIP-4. The Realms escrow is not treasury: it holds members\' voting ' +
@@ -34,13 +35,17 @@ export const treasuryPolicy = {
 };
 
 export const governanceHow = {
-  lastEdited: '2026-10-14',
+  lastEdited: '2026-10-21',
   mechanism:
     'Annual Great McVote on 4/20 via SPL Governance (Realms). A proposal passes when wallets holding at ' +
     'least 60% of supply vote Yes. Votes are weighted by balance and recorded on-chain; commemorative NFTs ' +
     'mark participation.',
-  proposals: '[OG] Who can propose, where discussion happens (X group chat / Discord), notice period.',
-  nextAgenda: '[OG] Agenda for the 2027 vote, if any.',
+  proposals:
+    'The council drafts each proposal; holders discuss it in the X group chat and Discord; the vote opens on ' +
+    'the Realms DAO on 4/20. Six proposals have been created since 2024: the three annual McVotes, the TIP-4 ' +
+    'execution vote, and two cancelled 2024 proposals (one of which sought to lower the quorum to 5%). No formal ' +
+    'proposal threshold or notice period has been adopted yet.',
+  nextAgenda: 'No agenda has been set. The council will publish one here before 2027-04-20.',
 };
 
 export const risks = {
