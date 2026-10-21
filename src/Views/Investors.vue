@@ -11,6 +11,21 @@ const Footer = defineAsyncComponent(() => import('../Components/Footer.vue'));
 
 const MINT = 'AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo';
 const REALM = 'BEmzTQaiwyj69uvxmdL9fSEuETg9vsVrRDAkmDE1HWTD'; // McToken DAO on Realms
+// official marks, self-hosted (no CDN): DEX venues + pair tokens
+import dexMeteora from '../assets/logos/dex/meteora.png';
+import dexRaydium from '../assets/logos/dex/raydium.png';
+import dexOrca from '../assets/logos/dex/orca.png';
+import dexJupiter from '../assets/logos/dex/jupiter.png';
+import tokToke from '../assets/logos/tokens/toke.png';
+import tokSol from '../assets/logos/tokens/sol.png';
+import tokUsdc from '../assets/logos/tokens/usdc.png';
+import tokDank from '../assets/logos/tokens/dank.svg';
+const DEX_ICON = { meteora: dexMeteora, raydium: dexRaydium, orca: dexOrca, jupiter: dexJupiter };
+const TOK_ICON = { TOKE: tokToke, SOL: tokSol, WSOL: tokSol, USDC: tokUsdc, DANK: tokDank };
+const dexIcon = (d) => DEX_ICON[String(d || '').toLowerCase()] || null;
+const tokIcon = (t) => TOK_ICON[String(t || '').toUpperCase()] || null;
+const DEX_NAME = { meteora: 'Meteora', raydium: 'Raydium', orca: 'Orca', jupiter: 'Jupiter' };
+const dexName = (d) => DEX_NAME[String(d || '').toLowerCase()] || String(d || '—');
 const EXPLORER_URL = 'https://explorer.mctoken.xyz';
 const API = 'https://explorer.mctoken.xyz/api/v1';
 
@@ -170,9 +185,9 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
             <div class="row"><span class="k">24h volume</span><span class="v">{{ usd(od.total_volume_h24_usd) }}</span></div>
             <div class="row"><span class="k">Implied market cap</span><span class="v">{{ usd(od.implied_mcap_usd) }}</span></div>
             <div class="row"><span class="k">Pools priced · used in VWAP</span><span class="v">{{ od.pools ? `${od.pools.length} · ${od.pools.filter((p) => p.in_vwap).length}` : '—' }}</span></div>
-            <div class="row"><span class="k">Price source</span><span class="v">{{ O && O.source ? Object.entries(O.source).map(([k, v]) => `${String(v).replace('dexscreener', 'DexScreener')} (${k})`).join(' · ') : '—' }}</span></div>
+            <div class="row"><span class="k">Price source</span><span class="v">TOKE oracle · quotes: {{ O && O.source ? Object.entries(O.source).map(([k, v]) => `${String(v).replace('dexscreener', 'DexScreener')}, ${k}`).join(' · ') : '—' }}</span></div>
           </div>
-          <div class="asof">Source: api.mctoken.xyz/v1/oracle · as of {{ when(O && O.as_of) }}</div>
+          <div class="asof">Source: TOKE oracle, api.mctoken.xyz/v1/oracle (liquidity-weighted across pools; quotes from DexScreener) · as of {{ when(O && O.as_of) }}</div>
         </section>
       </div>
 
@@ -267,32 +282,33 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
           <h2>Pools, <b>by address.</b></h2>
           <div class="panel scroll">
             <table>
-              <thead><tr><th>DEX</th><th>Pair · pool</th><th class="r">Liquidity</th><th class="r">Price</th><th class="r">VWAP</th></tr></thead>
+              <thead><tr><th>DEX</th><th>Pair · pool</th><th class="r">Liquidity</th><th class="r">$TOKE price here</th><th class="r" title="Counted in the liquidity-weighted price in 03">In price?</th></tr></thead>
               <tbody>
                 <tr v-for="p in (od.pools || [])" :key="p.cite && p.cite.ref">
-                  <td style="text-transform:capitalize">{{ p.dex }}</td>
-                  <td class="m">{{ p.base }}/{{ p.quote }} · <a :href="`https://solscan.io/account/${p.cite.ref}`" target="_blank" rel="noopener">{{ short(p.cite.ref) }}</a></td>
+                  <td><span class="ent"><img v-if="dexIcon(p.dex)" :src="dexIcon(p.dex)" :alt="dexName(p.dex)" width="18" height="18" />{{ dexName(p.dex) }}</span></td>
+                  <td class="m"><span class="pair"><img v-if="tokIcon(p.base)" :src="tokIcon(p.base)" :alt="p.base" width="16" height="16" /><img v-if="tokIcon(p.quote)" :src="tokIcon(p.quote)" :alt="p.quote" width="16" height="16" class="q" />{{ p.base }}/{{ p.quote }}</span> · <a :href="`https://solscan.io/account/${p.cite.ref}`" target="_blank" rel="noopener">{{ short(p.cite.ref) }}</a></td>
                   <td class="r m">{{ usd(p.liquidityUsd) }}</td>
-                  <td class="r m">${{ p.priceUsd }}</td>
+                  <td class="r m">{{ String(p.base).toUpperCase() === 'TOKE' && p.priceUsd ? `$${p.priceUsd}` : '—' }}<div class="sub" v-if="String(p.base).toUpperCase() !== 'TOKE'">{{ p.base }}-priced pool</div></td>
                   <td class="r"><span class="tag" :class="p.in_vwap ? 'ok' : 'no'">{{ p.in_vwap ? 'yes' : 'no' }}</span></td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <div class="asof">Source: oracle (live, DexScreener; registry pools backfilled from GeckoTerminal) · as of {{ when(O && O.as_of) }}</div>
+          <div class="asof">Source: TOKE oracle (api.mctoken.xyz) · quotes: DexScreener, live; registry pools backfilled from GeckoTerminal · as of {{ when(O && O.as_of) }}</div>
         </section>
         <section id="s8" class="sec">
           <p class="eyebrow"><i />08 · Operations</p>
           <h2>What runs, <b>and its uptime.</b></h2>
           <div class="panel rows">
-            <div class="row"><span class="k">Overall status now</span><span class="v" :class="opsOk === 'ok' ? 'teal' : ''">{{ opsOk }}</span></div>
-            <div class="row"><span class="k">Days all-OK (status history)</span><span class="v">{{ statusDays ? `${statusDays.ok} / ${statusDays.n}` : '—' }}</span></div>
-            <div class="row"><span class="k">Data pipeline</span><span class="v">every 6h · publish only on GREEN</span></div>
-            <div class="row"><span class="k">Gating checks passing</span><span class="v">{{ R && R.gating ? `${R.gating.filter((g) => g.status === 'pass').length} / ${R.gating.length}` : '—' }}</span></div>
-            <div class="row"><span class="k">Independent cross-check</span><span class="v">public-RPC supply</span></div>
+            <div class="row"><span class="k">All services now</span><span class="v" :class="opsOk === 'ok' ? 'teal' : ''">{{ opsOk === 'ok' ? 'operational' : opsOk }}</span></div>
+            <div class="row"><span class="k">Last pipeline run</span><span class="v">{{ when(R && R.generated) }}</span></div>
+            <div class="row"><span class="k">Days with every service OK</span><span class="v">{{ statusDays ? `${statusDays.ok} / ${statusDays.n}` : '—' }}</span></div>
+            <div class="row"><span class="k">Data pipeline</span><span class="v">4 runs/day · publishes only when every check passes</span></div>
+            <div class="row"><span class="k">Checks passing this run</span><span class="v">{{ R && R.gating ? `${R.gating.filter((g) => g.status === 'pass').length} / ${R.gating.length}` : '—' }}</span></div>
+            <div class="row"><span class="k">Independent cross-check</span><span class="v">supply re-read from a public RPC each run</span></div>
             <div class="row"><span class="k">Source code</span><span class="v"><a href="https://github.com/ogxrish/toke-explorer" target="_blank" rel="noopener">toke-explorer</a> · <a href="https://github.com/ogxrish/toke-status" target="_blank" rel="noopener">toke-status</a></span></div>
           </div>
-          <div class="asof">Source: status.mctoken.xyz/api/history · reliability.json</div>
+          <div class="asof">Source: <a href="https://status.mctoken.xyz" target="_blank" rel="noopener">status.mctoken.xyz</a> (history) · reliability.json</div>
         </section>
       </div>
 
@@ -382,6 +398,11 @@ h1 b, h2 b { color: var(--mc-blue); font-weight: 700; }
 .body b { color: var(--mc-text); }
 .note { color: var(--mc-mut); font-size: 13px; line-height: 1.55; margin: 12px 0 4px; }
 .note b { color: var(--mc-text); font-family: var(--mc-mono, inherit); }
+.ent { display: inline-flex; align-items: center; gap: 8px; }
+.ent img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
+.pair { display: inline-flex; align-items: center; gap: 6px; }
+.pair img { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; background: #0a0c10; }
+.pair img.q { margin-left: -9px; outline: 2px solid var(--mc-panel); }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
 .two.tight { gap: 20px; }
 .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
