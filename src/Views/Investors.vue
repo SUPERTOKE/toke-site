@@ -442,8 +442,11 @@ td.sum { color: var(--mc-text); font-weight: 600; }
 a { color: var(--mc-blue); }
 
 @media (max-width: 820px) {
-  .iv-links { display: none; }
+  .iv-links { gap: 14px; }
   .iv-title, .two { grid-template-columns: 1fr; }
+  td .sub.m { display: none; }
+  td .sub { white-space: nowrap; }
+  th, td { white-space: nowrap; }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .risk { grid-template-columns: 1fr; }
   .toc { display: none; }
