@@ -52,6 +52,7 @@ const n3 = (v) => (Number.isFinite(num(v)) ? num(v).toLocaleString('en-US', { mi
 const pct = (v, d = 2) => (Number.isFinite(num(v)) ? `${num(v).toFixed(d)}%` : '—');
 const usd = (v) => (Number.isFinite(num(v)) ? `$${Math.round(num(v)).toLocaleString('en-US')}` : '—');
 const signed = (v) => (Number.isFinite(num(v)) ? `${num(v) > 0 ? '+' : ''}${n0(v)}` : '—');
+const spct = (v, d = 1) => (Number.isFinite(num(v)) ? `${num(v) > 0 ? '+' : ''}${num(v).toFixed(d)}%` : '—');
 const short = (a) => (a ? `${a.slice(0, 4)}…${a.slice(-4)}` : '—');
 const when = (iso) => (iso ? iso.replace('T', ' ').replace(/:\d\d(\.\d+)?Z$/, ' UTC') : '—');
 const dt = (iso) => (iso ? iso.slice(0, 10) : '—');
@@ -153,7 +154,8 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
             <div class="row"><span class="k">Burned</span><span class="v">{{ n3(P && P.token.burned) }} <small>({{ pct(P && P.token.burned_pct, 3) }})</small></span></div>
             <div class="row"><span class="k">Decimals · program</span><span class="v">{{ P ? P.token.decimals : '—' }} · SPL Token</span></div>
             <div class="row"><span class="k">Mint authority</span><span class="v teal">{{ P && P.token.authorities && P.token.authorities.mint === null ? 'revoked' : '—' }}</span></div>
-            <div class="row"><span class="k">Freeze authority</span><span class="v">{{ P && P.token.authorities ? String(P.token.authorities.freeze).replace('likely_null', 'none (likely)') : '—' }}</span></div>
+            <div class="row"><span class="k">Freeze authority</span><span class="v teal">{{ P && P.token.authorities ? (P.token.authorities.freeze == null || P.token.authorities.freeze === 'likely_null' ? 'none' : short(P.token.authorities.freeze)) : '—' }}</span></div>
+            <div class="row"><span class="k">Metadata authority</span><span class="v">{{ P && P.token.authorities && P.token.authorities.update ? short(P.token.authorities.update) : '—' }} <small>active — name, symbol, image editable</small></span></div>
             <div class="row"><span class="k">First seen on-chain</span><span class="v">{{ dt(P && P.token.launched) }}</span></div>
           </div>
           <div class="asof">Source: token.json · base_lean.json · as of {{ when(P && P.as_of) }}</div>
@@ -162,12 +164,12 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
           <p class="eyebrow"><i />03 · Market</p>
           <h2>Liquidity-weighted, <b>no single venue.</b></h2>
           <div class="panel rows">
-            <div class="row"><span class="k">Price (VWAP, TOKE-base pairs)</span><span class="v">{{ od.liquidity_weighted_price_usd ? `$${od.liquidity_weighted_price_usd.toFixed(7)}` : '—' }}</span></div>
-            <div class="row"><span class="k">24h · price / mcap / liquidity</span><span class="v">{{ pct(od.price_change_h24, 1) }} · {{ pct(od.mcap_change_pct_24h, 1) }} · {{ pct(od.liquidity_change_pct_24h, 1) }}</span></div>
+            <div class="row"><span class="k">Price (liquidity-weighted across pools)</span><span class="v">{{ od.liquidity_weighted_price_usd ? `$${od.liquidity_weighted_price_usd.toFixed(7)}` : '—' }}</span></div>
+            <div class="row"><span class="k">24h change · price / mcap / liquidity</span><span class="v">{{ spct(od.price_change_h24) }} · {{ spct(od.mcap_change_pct_24h) }} · {{ spct(od.liquidity_change_pct_24h) }}</span></div>
             <div class="row"><span class="k">24h volume</span><span class="v">{{ usd(od.total_volume_h24_usd) }}</span></div>
             <div class="row"><span class="k">Implied market cap</span><span class="v">{{ usd(od.implied_mcap_usd) }}</span></div>
-            <div class="row"><span class="k">Pools counted · in VWAP</span><span class="v">{{ od.pools ? `${od.pools.length} · ${od.pools.filter((p) => p.in_vwap).length}` : '—' }}</span></div>
-            <div class="row"><span class="k">Oracle source</span><span class="v">{{ O && O.source ? Object.entries(O.source).map(([k, v]) => `${k}: ${v}`).join(' · ') : '—' }}</span></div>
+            <div class="row"><span class="k">Pools priced · used in VWAP</span><span class="v">{{ od.pools ? `${od.pools.length} · ${od.pools.filter((p) => p.in_vwap).length}` : '—' }}</span></div>
+            <div class="row"><span class="k">Price source</span><span class="v">{{ O && O.source ? Object.entries(O.source).map(([k, v]) => `${String(v).replace('dexscreener', 'DexScreener')} (${k})`).join(' · ') : '—' }}</span></div>
           </div>
           <div class="asof">Source: api.mctoken.xyz/v1/oracle · as of {{ when(O && O.as_of) }}</div>
         </section>
