@@ -49,14 +49,16 @@ export const governanceHow = {
 };
 
 export const risks = {
-  lastEdited: '2026-10-14',
+  lastEdited: '2026-10-21',
   items: [
     { t: 'Volatility and thin liquidity', d: 'Pooled liquidity is small. Modest orders move the price materially; exits may be slow or costly.' },
     { t: 'Concentration', d: 'A small number of wallets and pools hold most of the supply. Large holders can move the market or decide votes.' },
     { t: 'No revenue', d: '$TOKE has no product generating fees. Any value is community- and market-driven only.' },
-    { t: 'Contributor dependence', d: 'Infrastructure, data and governance depend on a small, partly pseudonymous group. [OG to expand]' },
-    { t: 'Regulatory uncertainty', d: 'The legal treatment of tokens and DAOs varies by jurisdiction and may change. [counsel to review]' },
-    { t: 'Technical and data risk', d: 'Pools, programs and the data pipeline can fail. When the audit is not green this page serves last-known-good data and says so.' },
+    { t: 'Treasury custody', d: 'The council treasury (about 5.9% of supply) is a standard wallet controlled by a single signing key. There is no multisig or on-chain spend limit yet; loss or misuse of that key would be unrecoverable.' },
+    { t: 'Mutable metadata', d: 'The token\'s name, symbol and image can still be changed by the holder of the metadata authority. Supply cannot: mint and freeze authorities are revoked.' },
+    { t: 'Contributor dependence', d: 'Infrastructure, data and governance depend on a small, partly pseudonymous group. The data pipeline is maintained by one operator; if it stopped, this page would keep serving its last-good data and say so, but would no longer update.' },
+    { t: 'Regulatory uncertainty', d: 'The legal treatment of tokens and DAOs varies by jurisdiction and may change. Nothing on this page has been reviewed by counsel.' },
+    { t: 'Technical and data risk', d: 'Pools, programs and the data pipeline can fail. When any check fails, nothing new is published; this page serves last-known-good data and says so.' },
   ],
 };
 
