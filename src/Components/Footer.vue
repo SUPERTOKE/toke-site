@@ -1,12 +1,11 @@
 <script setup>
-/* One bar that mirrors the header: brand · Explorer · Story · socials · status · disclaimer. */
+/* One bar that mirrors the header: brand · Explorer · Report · socials · status · disclaimer. Story is provenance and lives only in the Explorer. */
 import { ref, onMounted } from 'vue'
 import BrandLogoName from './BrandLogoName.vue'
 import xIcon from '../assets/logos/socials/app-icons/x.png'
 import discordIcon from '../assets/logos/socials/app-icons/discord.png'
 
 const EXPLORER_URL = 'https://explorer.mctoken.xyz'
-const STORY_URL = 'https://story.mctoken.xyz'
 const X_URL = 'https://x.com/TokeCommunity'
 const GROUP_URL = 'https://x.com/i/chat/group_join/g2102219613270610394/x2jHihm793'
 const DISCORD_URL = 'https://discord.com/invite/gTYuUCthvC'
@@ -29,7 +28,6 @@ onMounted(async () => {
         <BrandLogoName variant="footer" />
         <nav class="mcfoot-links" aria-label="Footer">
           <a :href="EXPLORER_URL" target="_blank" rel="noopener">Explorer</a>
-          <a :href="STORY_URL" target="_blank" rel="noopener">Story</a>
           <a href="/investors">Report</a>
         </nav>
         <span class="mcfoot-space" />
