@@ -6,12 +6,10 @@ import { ref, computed, onMounted, onBeforeUnmount, defineAsyncComponent } from 
 import moonman from '../assets/moonman-head.png';
 import { subscribeLiveStats } from '../utils/liveStatsPoll';
 import { statNum, formatTokePriceDisplay, formatMarketCapDisplay } from '../utils/statsApi';
-import { openBuyToke } from '../lib/buyToke';
 import { summary, treasuryPolicy, governanceHow, risks, roadmap, contributors, disclosures } from '../data/prospectus/text.js';
 const Footer = defineAsyncComponent(() => import('../Components/Footer.vue'));
 
 const MINT = 'AmgUMQeqW8H74trc8UkKjzZWtxBdpS496wh4GLy2mCpo';
-const BUY_URL = `https://jup.ag/tokens/${MINT}`;
 const EXPLORER_URL = 'https://explorer.mctoken.xyz';
 const API = 'https://explorer.mctoken.xyz/api/v1';
 
@@ -90,9 +88,8 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
       <span class="iv-space" />
       <div class="iv-links">
         <a :href="EXPLORER_URL" target="_blank" rel="noopener">Explorer</a>
-        <a href="/investors" aria-current="page" class="on">Investors</a>
+        <a href="/investors" aria-current="page" class="on">Report</a>
       </div>
-      <a class="iv-btn" :href="BUY_URL" @click.prevent="openBuyToke" target="_blank" rel="noopener">Buy $TOKE</a>
     </nav>
 
     <main class="iv-main">
@@ -100,16 +97,16 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
       <div class="iv-title">
         <div>
           <p class="eyebrow"><i />Tokenholder report · living edition</p>
-          <h1>Every number on this page is<br /><b>rendered from the chain.</b></h1>
-          <p class="lede">An informational report on the $TOKE token, regenerated every six hours by the audited pipeline that feeds the Explorer. Not an offering. Not advice. Receipts.</p>
+          <h1>Every number on this page<br /><b>carries its source.</b></h1>
+          <p class="lede">An informational report on the $TOKE token, regenerated every six hours by the self-checking, publicly verifiable pipeline that feeds the Explorer. Not an offering. Not advice. Receipts.</p>
         </div>
         <div class="panel badge">
           <div class="chips">
-            <span class="chip" :class="{ ok: gateOk, warn: R && !gateOk }"><i />Gate-A {{ R ? R.gate_a : '…' }}</span>
-            <span class="chip" :class="{ ok: R && R.flow_reconciled }">flow {{ R && R.flow_reconciled ? 'reconciled' : '—' }}</span>
-            <span class="chip ok">redaction pass</span>
+            <span class="chip" :class="{ ok: gateOk, warn: R && !gateOk }" title="Gate-A: the pipeline's publish gate. GREEN = genesis, exact balances, complete listing, independent cross-index and freshness all passed on this run."><i />Audit {{ R ? R.gate_a : '…' }}</span>
+            <span class="chip" :class="{ ok: R && R.flow_reconciled }" title="Every wallet's net transfer history equals its on-chain balance.">Flows {{ R && R.flow_reconciled ? 'reconciled' : '—' }}</span>
+            <span class="chip" :class="{ ok: R && R.publish_allowed }" title="The redaction gate scans every published file for private data before it can go live; nothing is published if it fails.">Redaction {{ R && R.publish_allowed ? 'passed' : '—' }}</span>
           </div>
-          <div class="asof">Data as of {{ when(R && R.as_of) }} · generated {{ when(R && R.generated) }} · lag {{ R ? R.lag_hours : '—' }} h · <a :href="`${API}/reliability.json`" target="_blank" rel="noopener">reliability.json ↗</a></div>
+          <div class="asof" title="The chain snapshot is the last block the pipeline has fully reconciled; the page is published after each six-hourly run, so it trails the chain by up to half a day.">Chain snapshot {{ when(R && R.as_of) }} · published {{ when(R && R.generated) }}<template v-if="R && R.lag_hours != null"> · {{ Math.round(R.lag_hours) }} h behind chain</template> · <a :href="`${API}/reliability.json`" target="_blank" rel="noopener">proof ↗</a></div>
           <div class="acts">
             <button type="button" class="ghost" @click="printPage">Save as PDF</button>
             <a class="ghost" href="#s12">Quarterly archive</a>
