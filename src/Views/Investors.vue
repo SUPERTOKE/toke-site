@@ -92,12 +92,13 @@ const TIERS = { 1: 'council-controlled', 2: 'member-controlled escrow', 3: 'memb
 const tierOf = (w) => w.tier || (w.category === 'governance' ? 2 : 1);
 const tierName = (t) => TIERS[t] || '—';
 const mem = computed(() => (P.value && P.value.treasury && P.value.treasury.members) || null);
-// DAO treasury proper (treasury/dao wallets) vs the Realms governance escrow (members' voting deposits)
+// Summary tile: tier 1 (council-controlled) on its own, tiers 1–2 (with member escrow) as the 05 total
 const treSplit = computed(() => {
-  const ws = P.value && P.value.treasury && P.value.treasury.wallets;
-  if (!ws) return { dao: '—', escrow: '—' };
+  const t = P.value && P.value.treasury;
+  const ws = t && t.wallets;
+  if (!ws) return { council: '—', total: '—' };
   const sum = (f) => ws.filter(f).reduce((a, w) => a + (num(w.pct) || 0), 0);
-  return { dao: pct(sum((w) => w.category !== 'governance')), escrow: pct(sum((w) => w.category === 'governance')) };
+  return { council: pct(sum((w) => tierOf(w) === 1)), total: pct(t.total_pct) };
 });
 const opsOk = computed(() => (S.value && S.value.current && S.value.current.overall) || 'idle');
 const statusDays = computed(() => {
@@ -159,7 +160,7 @@ function printPage() { try { window.print(); } catch { /* no print */ } }
           <div class="panel stat"><div class="l">Market cap</div><div class="n">{{ live.mcap }}</div><div class="s">price × supply</div></div>
           <div class="panel stat"><div class="l">Holders</div><div class="n">{{ live.holders }}</div><div class="s">on-chain</div></div>
           <div class="panel stat"><div class="l">Liquidity</div><div class="n">{{ usd(od.total_pool_liquidity_usd) }}</div><div class="s">{{ od.pools ? od.pools.length : '—' }} pools</div></div>
-          <div class="panel stat"><div class="l">DAO treasury</div><div class="n purple">{{ treSplit.dao }}</div><div class="s">of supply · {{ treSplit.escrow }} in governance escrow</div></div>
+          <div class="panel stat"><div class="l">Council treasury</div><div class="n purple">{{ treSplit.council }}</div><div class="s">of supply · {{ treSplit.total }} with member escrow (05)</div></div>
         </div>
         <div class="asof">Source: oracle (live) · prospectus.json · last edited {{ summary.lastEdited }}</div>
       </section>
